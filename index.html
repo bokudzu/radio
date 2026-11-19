@@ -813,16 +813,63 @@
   var localPlace = localZone.split('/').pop().replace(/_/g, ' ');
   var sameAsKyiv = function (d) { return zoneOffset(d.getTime(), ZONE) === -d.getTimezoneOffset() * 60000; };
 
+  // ---- the timetable's source: the public Google Calendar of KCMD Radio ----
+  // Event title: "English name / Ukrainian name" (the part after " / " is optional).
+  // Event description (optional): the piece or programme, the same way: "English / Ukrainian".
+  // If the calendar can't be read or has no events, the list written in KCMD_TIMETABLE above is shown.
+  var CAL_ID = 'c_2640deb818abc8193de53033aef29ae5a87dbaad32a022933e537d0399c1b478@group.calendar.google.com';
+  var CAL_KEY = 'AIzaSyAm5BWlW4kiZ3885wEo7nzhLd9oil7mMas';
+  var calItems = null;   // null until the calendar has answered with events
+  function twoLangs(text) {
+    var parts = String(text || '').split(' / ');
+    return { en: parts[0].trim(), uk: (parts[1] || parts[0]).trim() };
+  }
+  function plainText(html) {
+    var d = document.createElement('div');
+    d.innerHTML = String(html || '').replace(/<br\s*\/?>/gi, '\n');
+    return (d.textContent || '').split('\n')[0].trim();   // the first line of the description
+  }
+  function kyivHHMM(d) {
+    return d.toLocaleTimeString('en-GB', { timeZone: ZONE, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+  }
+  function loadCalendar() {
+    var since = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();   // the past week too, shown greyed
+    var url = 'https://www.googleapis.com/calendar/v3/calendars/' + encodeURIComponent(CAL_ID) + '/events' +
+      '?key=' + encodeURIComponent(CAL_KEY) + '&singleEvents=true&orderBy=startTime&maxResults=50' +
+      '&timeMin=' + encodeURIComponent(since);
+    fetch(url, { cache: 'no-store' }).then(function (r) {
+      if (!r.ok) throw new Error('calendar ' + r.status);
+      return r.json();
+    }).then(function (data) {
+      var items = (data.items || []).filter(function (e) { return e.status !== 'cancelled' && e.start; }).map(function (e) {
+        var start = new Date(e.start.dateTime || e.start.date);
+        var end = new Date((e.end && (e.end.dateTime || e.end.date)) || (start.getTime() + 3600000));
+        var who = twoLangs(e.summary), what = twoLangs(plainText(e.description));
+        return {
+          start: start, end: end, time: kyivHHMM(start),
+          artist: who.en, artist_uk: who.uk, title: what.en, title_uk: what.uk
+        };
+      });
+      calItems = items.length ? items : null;
+      renderTimetable();
+    }).catch(function (err) {
+      console.warn('[timetable] Google Calendar not reachable, showing the list in the page', err);
+    });
+  }
+
   function renderTimetable() {
     var list = document.getElementById('timetable');
-    var items = (window.KCMD_TIMETABLE || []).map(function (s) {
+    var items = (calItems || (window.KCMD_TIMETABLE || []).map(function (s) {
       var start = kyivToDate(s.date, s.time);
-      return { s: s, start: start, end: new Date(start.getTime() + (s.length || 60) * 60000) };
-    }).sort(function (a, b) { return a.start - b.start; });
+      return {
+        start: start, end: new Date(start.getTime() + (s.length || 60) * 60000), time: s.time,
+        artist: s.artist, artist_uk: s.artist_uk, title: s.title, title_uk: s.title_uk
+      };
+    })).slice().sort(function (a, b) { return a.start - b.start; });
     var now = new Date();
     var nextFound = false;
     list.innerHTML = items.map(function (it) {
-      var s = it.s, cls = 'slot', flag = '';
+      var cls = 'slot', flag = '';
       if (now >= it.end) cls += ' is-past';
       else if (now >= it.start) { cls += ' is-now'; flag = '<span class="slot-flag">' + esc(t('onNow')) + '</span>'; nextFound = true; }
       else if (!nextFound) { cls += ' is-next'; flag = '<span class="slot-flag">' + esc(t('next')) + '</span>'; nextFound = true; }
@@ -833,16 +880,21 @@
       if (localDay !== day) local = localDay + ', ' + local;
       var localLine = sameAsKyiv(it.start) ? '' :
         '<span class="slot-local">' + esc(localPlace ? t('localIn', { t: local, place: localPlace }) : t('localYours', { t: local })) + '</span>';
+      var who = (lang === 'uk' && it.artist_uk) || it.artist;
+      var what = (lang === 'uk' && it.title_uk) || it.title;
       return '<li class="' + cls + '">' +
         '<span class="slot-date">' + esc(day) + '</span>' +
-        '<span class="slot-artist">' + esc((lang === 'uk' && s.artist_uk) || s.artist) + flag +
-          (((lang === 'uk' && s.title_uk) || s.title) ? '<span class="slot-title">' + esc((lang === 'uk' && s.title_uk) || s.title) + '</span>' : '') + '</span>' +
-        '<span class="slot-time"><span class="slot-kyiv">' + esc(s.time) + '</span>' + localLine + '</span>' +
+        '<span class="slot-artist">' + esc(who) + flag +
+          (what ? '<span class="slot-title">' + esc(what) + '</span>' : '') + '</span>' +
+        '<span class="slot-time"><span class="slot-kyiv">' + esc(it.time) + '</span>' + localLine + '</span>' +
         '</li>';
     }).join('');
     var note = document.getElementById('tz-note');
     note.textContent = items.length && !sameAsKyiv(items[0].start) ? t('tzNoteLocal') : t('tzNote');
   }
+  loadCalendar();
+  setInterval(loadCalendar, 5 * 60000);   // calendar changes reach the page within five minutes
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) loadCalendar(); });
   onLangChange.push(renderTimetable);
   setInterval(renderTimetable, 60000);   // keeps "Next" and "On air now" current
 
