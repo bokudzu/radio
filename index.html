@@ -262,9 +262,36 @@
   .slot.is-past { color: var(--muted); }
   .slot.is-past .slot-kyiv { font-weight: 400; }
   .tz-note { margin: 1rem 0 0; color: var(--muted); font-size: 0.9rem; }
+  .slot-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-top: 0.35rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--accent);
+    font: inherit;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  .slot-more svg { width: 0.9rem; height: 0.9rem; transition: transform 0.2s ease; }
+  .slot-more[aria-expanded="true"] svg { transform: rotate(180deg); }
+  .slot-desc {
+    grid-column: 2 / -1;
+    max-width: 36rem;
+    padding: 0.75rem 0 0.25rem;
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+  .slot-desc p { margin: 0 0 0.75rem; }
+  .slot-desc p:last-child { margin-bottom: 0; }
+  .slot-desc[hidden] { display: none; }
+  @media (prefers-reduced-motion: reduce) { .slot-more svg { transition: none; } }
   @media (max-width: 30rem) {
     .slot { grid-template-columns: 1fr auto; }
     .slot-date { grid-column: 1 / -1; }
+    .slot-desc { grid-column: 1 / -1; }
   }
 
   .artists {
@@ -418,7 +445,7 @@
       silence: 'Air-raid alert in Kyiv.',
       silenceRest: ' Every channel is silent until it ends, then plays a short piece of Ukrainian music and goes back to its programme.',
       linkListen: 'Listen to all Radio Väin stations', linkPropose: 'Propose your material', linkLinktree: 'Radio Tallinn 1965 linktree',
-      timetable: 'Timetable', next: 'Next', onNow: 'On air now',
+      timetable: 'Timetable', next: 'Next', onNow: 'On air now', descMore: 'Read more', descLess: 'Hide',
       tzNote: 'Times are in Kyiv and Tallinn time.', tzNoteLocal: 'Times are in Kyiv and Tallinn time, with your local time below each.',
       localIn: '{t} in {place}', localYours: '{t} your time',
       about: 'About the project',
@@ -451,7 +478,7 @@
       silence: 'Повітряна тривога в Києві.',
       silenceRest: ' Усі канали мовчать до відбою. Після відбою тишу на всіх каналах порушує 15-секундний сигнал, створений українськими артист_ками, а потім кожен канал повертається до своєї програми.',
       linkListen: 'Слухати всі станції Radio Väin', linkPropose: 'Запропонувати свій матеріал', linkLinktree: 'Linktree Radio Tallinn 1965',
-      timetable: 'Розклад', next: 'Далі', onNow: 'Зараз в ефірі',
+      timetable: 'Розклад', next: 'Далі', onNow: 'Зараз в ефірі', descMore: 'Детальніше', descLess: 'Згорнути',
       tzNote: 'Час указано за Києвом і Таллінном.', tzNoteLocal: 'Час указано за Києвом і Таллінном, під ним — ваш місцевий час.',
       localIn: '{t} за вашим часом ({place})', localYours: '{t} за вашим часом',
       about: 'Про проєкт',
@@ -824,10 +851,21 @@
     var parts = String(text || '').split(' / ');
     return { en: parts[0].trim(), uk: (parts[1] || parts[0]).trim() };
   }
+  // the description as plain text with its line breaks (Google may send it as HTML)
   function plainText(html) {
     var d = document.createElement('div');
-    d.innerHTML = String(html || '').replace(/<br\s*\/?>/gi, '\n');
-    return (d.textContent || '').split('\n')[0].trim();   // the first line of the description
+    d.innerHTML = String(html || '').replace(/<br\s*\/?>/gi, '\n').replace(/<\/(p|div|li)>/gi, '\n');
+    return (d.textContent || '').replace(/\r/g, '').trim();
+  }
+  // Description layout: first line "English title / Ukrainian title"; then the full text, English first,
+  // then a line with only a dash (—), then Ukrainian. Without the dash, both languages show the same text.
+  function splitDescription(html) {
+    var text = plainText(html);
+    var lines = text.split('\n');
+    var head = twoLangs(lines.shift() || '');
+    var body = lines.join('\n').trim();
+    var parts = body.split(/\n\s*[—–-]{1,3}\s*\n/);
+    return { title: head, en: (parts[0] || '').trim(), uk: (parts[1] || parts[0] || '').trim() };
   }
   function kyivHHMM(d) {
     return d.toLocaleTimeString('en-GB', { timeZone: ZONE, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
@@ -844,10 +882,11 @@
       var items = (data.items || []).filter(function (e) { return e.status !== 'cancelled' && e.start; }).map(function (e) {
         var start = new Date(e.start.dateTime || e.start.date);
         var end = new Date((e.end && (e.end.dateTime || e.end.date)) || (start.getTime() + 3600000));
-        var who = twoLangs(e.summary), what = twoLangs(plainText(e.description));
+        var who = twoLangs(e.summary), d = splitDescription(e.description);
         return {
-          start: start, end: end, time: kyivHHMM(start),
-          artist: who.en, artist_uk: who.uk, title: what.en, title_uk: what.uk
+          id: e.id || (start.toISOString() + who.en), start: start, end: end, time: kyivHHMM(start),
+          artist: who.en, artist_uk: who.uk, title: d.title.en, title_uk: d.title.uk,
+          desc: d.en, desc_uk: d.uk
         };
       });
       calItems = items.length ? items : null;
@@ -856,6 +895,26 @@
       console.warn('[timetable] Google Calendar not reachable, showing the list in the page', err);
     });
   }
+
+  var openDesc = new Set();   // which descriptions are open, kept across the minute's redraw
+  // plain text to paragraphs: blank lines split paragraphs, single line breaks stay, links become clickable
+  function paragraphs(text) {
+    return text.split(/\n\s*\n/).map(function (para) {
+      var html = esc(para.trim()).replace(/\n/g, '<br>')
+        .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+      return '<p>' + html + '</p>';
+    }).join('');
+  }
+  document.getElementById('timetable').addEventListener('click', function (e) {
+    var b = e.target.closest('.slot-more');
+    if (!b) return;
+    var key = b.getAttribute('data-key');
+    if (openDesc.has(key)) openDesc.delete(key); else openDesc.add(key);
+    var open = openDesc.has(key), panel = document.getElementById(b.getAttribute('aria-controls'));
+    b.setAttribute('aria-expanded', String(open));
+    b.querySelector('span').textContent = t(open ? 'descLess' : 'descMore');
+    if (panel) panel.hidden = !open;
+  });
 
   function renderTimetable() {
     var list = document.getElementById('timetable');
@@ -882,11 +941,20 @@
         '<span class="slot-local">' + esc(localPlace ? t('localIn', { t: local, place: localPlace }) : t('localYours', { t: local })) + '</span>';
       var who = (lang === 'uk' && it.artist_uk) || it.artist;
       var what = (lang === 'uk' && it.title_uk) || it.title;
+      var desc = (lang === 'uk' && it.desc_uk) || it.desc || '';
+      var key = it.id || (it.start.toISOString() + it.artist);
+      var open = openDesc.has(key), descId = 'desc-' + String(key).replace(/[^a-z0-9_-]/gi, '');
+      var more = desc ? '<button type="button" class="slot-more" data-key="' + esc(key) + '" aria-expanded="' + open + '" aria-controls="' + descId + '">' +
+          '<span>' + esc(t(open ? 'descLess' : 'descMore')) + '</span>' +
+          '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+        '</button>' : '';
+      var panel = desc ? '<div class="slot-desc" id="' + descId + '"' + (open ? '' : ' hidden') + '>' + paragraphs(desc) + '</div>' : '';
       return '<li class="' + cls + '">' +
         '<span class="slot-date">' + esc(day) + '</span>' +
         '<span class="slot-artist">' + esc(who) + flag +
-          (what ? '<span class="slot-title">' + esc(what) + '</span>' : '') + '</span>' +
+          (what ? '<span class="slot-title">' + esc(what) + '</span>' : '') + more + '</span>' +
         '<span class="slot-time"><span class="slot-kyiv">' + esc(it.time) + '</span>' + localLine + '</span>' +
+        panel +
         '</li>';
     }).join('');
     var note = document.getElementById('tz-note');
