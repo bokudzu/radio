@@ -492,6 +492,7 @@
       st_idle: 'Press play to listen', st_connecting: 'Connecting…', st_onair: 'On air', st_buffering: 'Buffering…',
       st_reconnecting: 'Reconnecting…', st_paused: 'Paused', st_failed: 'The stream could not start. Press play to try again.',
       offline: 'Offline',
+      unreachable: 'The radio cannot be reached right now. Trying again.',
       silenceAt: 'Air-raid alert in Kyiv since {t} Kyiv time.',
       silence: 'Air-raid alert in Kyiv.',
       silenceRest: ' Every channel is silent until it ends, then plays a short piece of Ukrainian music and goes back to its programme.',
@@ -524,6 +525,7 @@
       st_idle: 'Натисніть, щоб слухати', st_connecting: 'Підключення…', st_onair: 'В ефірі', st_buffering: 'Буферизація…',
       st_reconnecting: 'Перепідключення…', st_paused: 'Пауза', st_failed: 'Не вдалося запустити стрім. Натисніть ще раз.',
       offline: 'Не в ефірі',
+      unreachable: 'Радіо зараз недоступне. Пробуємо ще раз.',
       silenceAt: 'Повітряна тривога в Києві з {t} за київським часом.',
       silence: 'Повітряна тривога в Києві.',
       silenceRest: ' Усі канали мовчать до відбою. Після відбою тишу на всіх каналах порушує 15-секундний сигнал, створений українськими артист_ками, а потім кожен канал повертається до своєї програми.',
@@ -956,6 +958,7 @@
       silent = true;
       text = (nowState.at ? t('silenceAt', { t: nowState.at }) : t('silence')) + t('silenceRest');
     } else if (nowState.kind === 'offline') text = t('offline');
+    else if (nowState.kind === 'unreachable') { text = t('unreachable'); silent = true; }
     else if (nowState.kind === 'line') text = nowState.text;
     nowEl.textContent = text;
     nowEl.hidden = !text;
@@ -967,9 +970,18 @@
     nowState = st; renderNow();
     if (changed && wanted) updateMediaSession();
   }
+  // the radio counts as unreachable after two failed checks in a row (about 10 s), so one hiccup shows nothing
+  var nowFails = 0;
   function pollNow() {
     if (document.hidden) return;
-    fetch(NOW_API, { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (data) {
+    var ctl = window.AbortController ? new AbortController() : null;
+    var timer = ctl ? setTimeout(function () { ctl.abort(); }, 8000) : null;   // a server that hangs counts as down
+    fetch(NOW_API, { cache: 'no-store', signal: ctl ? ctl.signal : undefined }).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(function (data) {
+      clearTimeout(timer);
+      nowFails = 0;
       var ch = (data.channels || []).filter(function (x) { return x && x.id === CHANNEL_ID; })[0];
       if (!ch) return setNow({ kind: 'none' });
       if (ch.status === 'silent') {
@@ -984,7 +996,11 @@
           .filter(Boolean).join(', ') || 'Live';
       }
       setNow(line ? { kind: 'line', text: line } : { kind: 'none' });
-    }).catch(function () { setNow({ kind: 'none' }); });   // the radio cannot be reached: keep the line empty
+    }).catch(function () {
+      clearTimeout(timer);
+      nowFails += 1;
+      if (nowFails >= 2) setNow({ kind: 'unreachable' });
+    });
   }
   setInterval(pollNow, 5000);
   document.addEventListener('visibilitychange', function () { if (!document.hidden) pollNow(); });
