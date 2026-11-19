@@ -706,6 +706,19 @@
     return true;
   }
 
+  function drawSilence(w, color) {
+    var cv = w.canvas, dpr = window.devicePixelRatio || 1;
+    var cw = Math.round(cv.clientWidth * dpr), h = Math.round(cv.clientHeight * dpr);
+    if (!cw || !h) return;
+    if (cv.width !== cw || cv.height !== h) { cv.width = cw; cv.height = h; w.col = null; }
+    var g = cv.getContext('2d');
+    g.clearRect(0, 0, cw, h);
+    g.fillStyle = color;
+    g.globalAlpha = 0.7;
+    g.fillRect(0, Math.round(h / 2) - Math.max(1, Math.round(dpr / 2)), cw, Math.max(1, Math.round(dpr)));
+    g.globalAlpha = 1;
+    w.amp = 1; w.drawn = true; w.top = null;
+  }
   var strip = { canvas: document.getElementById('wave') };
   var stillMq = window.matchMedia('(prefers-reduced-motion: reduce)');
   var lastFrame = 0, zeroTime = 0, lastSound = -1e9;
@@ -714,16 +727,19 @@
     var dt = lastFrame ? Math.min(0.1, (now - lastFrame) / 1000) : 0;
     lastFrame = now;
     var on = !!(cur && cur.analyser && player.classList.contains('is-playing'));
-    // open the strip only while there is sound to picture: during an alert the stream is silent,
-    // so the strip stays closed instead of leaving an empty band under the player
+    // the strip is open whenever the stream plays; while the signal is silence (during an alert)
+    // it shows a thin flat line, the picture of silence, and the spectrogram takes over when sound returns
+    var silent = false;
     if (on) {
       cur.analyser.getFloatTimeDomainData(cur.buf);
       var level = 0;
       for (var li = 0; li < cur.buf.length; li++) { var lv = Math.abs(cur.buf[li]); if (lv > level) level = lv; }
       if (level > 0.001) lastSound = now;
+      silent = now - lastSound >= 1500;   // a short gap between pieces doesn't count as silence
     }
-    player.classList.toggle('wave-open', on && now - lastSound < 1500);
-    drawSpectre(strip, {
+    player.classList.toggle('wave-open', on);
+    if (on && silent) drawSilence(strip, cssVar('--accent'));
+    else drawSpectre(strip, {
       on: on, analyser: cur && cur.analyser, buf: cur && cur.buf, dt: dt,
       still: stillMq.matches, color: cssVar('--accent'), sr: ctx ? ctx.sampleRate : 48000
     });
