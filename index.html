@@ -303,6 +303,31 @@
     line-height: 1.35;
   }
   .note { color: var(--muted); }
+  .artists a, .slot-artist a.person, .team a { color: inherit; text-decoration-color: var(--line); }
+  .artists a:hover, .slot-artist a.person:hover, .team a:hover { color: var(--accent); text-decoration-color: var(--accent); }
+  .subscribe {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.25rem;
+    margin: 1.25rem 0 0;
+  }
+  .subscribe-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .subscribe-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .subscribe-btn svg { width: 1.1rem; height: 1.1rem; }
+  .subscribe-alt { color: var(--muted); font-size: 0.9rem; }
 
   .team + .team { margin-top: 1.25rem; }
   .team h3 { margin: 0 0 0.25rem; font-weight: 600; font-size: 1rem; }
@@ -359,6 +384,13 @@
     <h2 id="timetable-title" data-i18n="timetable">Timetable</h2>
     <ol class="timetable" id="timetable"></ol>
     <p class="tz-note" id="tz-note"></p>
+    <p class="subscribe">
+      <a class="subscribe-btn" href="https://calendar.google.com/calendar/u/0?cid=Y18yNjQwZGViODE4YWJjODE5M2RlNTMwMzNhZWYyOWFlNWE4N2RiYWFkMzJhMDIyOTMzZTUzN2QwMzk5YzFiNDc4QGdyb3VwLmNhbGVuZGFyLmdvb2dsZS5jb20" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M3.5 9.5h17M8 3v4M16 3v4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <span data-i18n="subscribe">Subscribe to the events calendar</span>
+      </a>
+      <a class="subscribe-alt" href="webcal://calendar.google.com/calendar/ical/c_2640deb818abc8193de53033aef29ae5a87dbaad32a022933e537d0399c1b478%40group.calendar.google.com/public/basic.ics" data-i18n="subscribeIcal">Apple / Outlook (iCal)</a>
+    </p>
   </section>
 
   <!-- ===== TIMETABLE: edit here =====
@@ -394,19 +426,13 @@
     <dl>
       <div class="row"><dt data-i18n="listen">Listen</dt><dd data-i18n-html="listenText"><a href="https://v2in.stream/">v2in.stream</a>, on a phone or computer.</dd></div>
       <div class="row"><dt data-i18n="when">When</dt><dd data-i18n-html="whenText">From 20 November 2026 onwards. Premieres are listed in the <a href="#timetable-title">timetable</a>.</dd></div>
-      <div class="row" id="take-part"><dt data-i18n="takePart">Take part</dt><dd data-i18n-html="takePartText">Fill in the <a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener">form</a>. The project runs pro bono, with technical support from ECCM.</dd></div>
+      <div class="row" id="take-part"><dt data-i18n="takePart">Take part</dt><dd data-i18n-html="takePartText">Fill in the <a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener">form</a>. The project runs pro bono, with technical support from Radio Tallinn 1965.</dd></div>
     </dl>
   </section>
 
   <section aria-labelledby="artists">
     <h2 id="artists" data-i18n="artists">KCMD Radio artists</h2>
-    <ul class="artists">
-      <li data-i18n="a1">Boris Loginov</li>
-      <li data-i18n="a2">Tetiana Khoroshun</li>
-      <li data-i18n="a3">Antonii Baryshevskyi</li>
-      <li data-i18n="a4">Orest Smovzh</li>
-      <li data-i18n="a5">Albert Saprykin</li>
-    </ul>
+    <ul class="artists" id="artists-list"></ul>
     <p class="note" data-i18n-html="more">More to come.</p>
   </section>
 
@@ -418,7 +444,7 @@
     </div>
     <div class="team">
       <h3>KCMD</h3>
-      <p data-i18n="teamKCMD">Albert Saprykin; advisory group: Tetiana Khoroshun, Boris Loginov</p>
+      <p data-i18n-names="teamKCMD">Albert Saprykin; advisory group: Tetiana Khoroshun, Boris Loginov</p>
     </div>
   </section>
 </main>
@@ -445,7 +471,7 @@
       silence: 'Air-raid alert in Kyiv.',
       silenceRest: ' Every channel is silent until it ends, then plays a short piece of Ukrainian music and goes back to its programme.',
       linkListen: 'Listen to all Radio Väin stations', linkPropose: 'Propose your material', linkLinktree: 'Radio Tallinn 1965 linktree',
-      timetable: 'Timetable', next: 'Next', onNow: 'On air now', descMore: 'Read more', descLess: 'Hide',
+      timetable: 'Timetable', next: 'Next', onNow: 'Now', subscribe: 'Subscribe to the events calendar', subscribeIcal: 'Apple / Outlook (iCal)', descMore: 'Read more', descLess: 'Hide',
       tzNote: 'Times are in Kyiv and Tallinn time.', tzNoteLocal: 'Times are in Kyiv and Tallinn time, with your local time below each.',
       localIn: '{t} in {place}', localYours: '{t} your time',
       about: 'About the project',
@@ -455,9 +481,8 @@
       practical: 'Practical information',
       listen: 'Listen', listenText: '<a href="https://v2in.stream/">v2in.stream</a>, on a phone or computer.',
       when: 'When', whenText: 'From 20 November 2026 onwards. Premieres are listed in the <a href="#timetable-title">timetable</a>.',
-      takePart: 'Take part', takePartText: 'Fill in the <a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener">form</a>. The project runs pro bono, with technical support from ECCM.',
+      takePart: 'Take part', takePartText: 'Fill in the <a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener">form</a>. The project runs pro bono, with technical support from Radio Tallinn 1965.',
       artists: 'KCMD Radio artists',
-      a1: 'Boris Loginov', a2: 'Tetiana Khoroshun', a3: 'Antonii Baryshevskyi', a4: 'Orest Smovzh', a5: 'Albert Saprykin',
       more: 'More to come.',
       teams: 'Teams',
       teamRT: 'Maria Hansar, Asja Dolgaja, Kristjan Jansen, Tarmo Johannes, Andrus Laansalu and Mike Cole',
@@ -478,7 +503,7 @@
       silence: 'Повітряна тривога в Києві.',
       silenceRest: ' Усі канали мовчать до відбою. Після відбою тишу на всіх каналах порушує 15-секундний сигнал, створений українськими артист_ками, а потім кожен канал повертається до своєї програми.',
       linkListen: 'Слухати всі станції Radio Väin', linkPropose: 'Запропонувати свій матеріал', linkLinktree: 'Linktree Radio Tallinn 1965',
-      timetable: 'Розклад', next: 'Далі', onNow: 'Зараз в ефірі', descMore: 'Детальніше', descLess: 'Згорнути',
+      timetable: 'Розклад', next: 'наступн_а', onNow: 'зараз', subscribe: 'Підписатися на календар подій', subscribeIcal: 'Apple / Outlook (iCal)', descMore: 'Детальніше', descLess: 'Згорнути',
       tzNote: 'Час указано за Києвом і Таллінном.', tzNoteLocal: 'Час указано за Києвом і Таллінном, під ним — ваш місцевий час.',
       localIn: '{t} за вашим часом ({place})', localYours: '{t} за вашим часом',
       about: 'Про проєкт',
@@ -488,9 +513,8 @@
       practical: 'Практична інформація',
       listen: 'Слухати', listenText: '<a href="https://v2in.stream/">v2in.stream</a>, на телефоні чи компʼютері.',
       when: 'Коли', whenText: 'З 20 листопада 2026 року. Премʼєри — у <a href="#timetable-title">розкладі</a>.',
-      takePart: 'Долучитися', takePartText: 'Заповніть <a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener">форму</a>. Проєкт працює pro bono, технічну підтримку надає ECCM.',
+      takePart: 'Долучитися', takePartText: 'Заповніть <a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener">форму</a>. Проєкт працює pro bono, технічну підтримку надає Radio Tallinn 1965.',
       artists: 'Артист_ки KCMD Radio',
-      a1: 'Борис Логінов', a2: 'Тетяна Хорошун', a3: 'Антоній Баришевський', a4: 'Орест Смовж', a5: 'Альберт Саприкін',
       more: '<a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener">Долучитися</a>',
       teams: 'Команди',
       teamRT: 'Maria Hansar, Asja Dolgaja, Kristjan Jansen, Tarmo Johannes, Andrus Laansalu і Mike Cole',
@@ -502,6 +526,53 @@
   // ---- analytics (Umami): quiet no-op until the Umami script has loaded with a real Website ID ----
   function track(name, data) {
     try { if (window.umami && typeof window.umami.track === 'function') window.umami.track(name, data); } catch (e) {}
+  }
+
+  // ---- KCMD Radio artists: names in both languages, profiles in the KCMD Portfolio ----
+  // Edit here. "list: true" shows the person in the artists list (sorted by surname, the one with "last: true" at the end);
+  // every person here is linked wherever their name appears (list, timetable, team).
+  var PORTFOLIO = 'https://www.kcmd.eu/portfolio/';
+  var PEOPLE = [
+    { en: 'Anna Arkushyna',       uk: 'Анна Аркушина',        url: PORTFOLIO + 'composers/anna-arkushyna',        list: true },
+    { en: 'Antonii Baryshevskyi', uk: 'Антоній Баришевський', url: PORTFOLIO + 'performers/antonii-baryshevskyi', list: true },
+    { en: 'Mykhailo Chedryk',     uk: 'Михайло Чедрик',       url: PORTFOLIO + 'composers/mykhailo-chedryk',      list: true },
+    { en: 'Tetiana Khoroshun',    uk: 'Тетяна Хорошун',       url: PORTFOLIO + 'composers/tetiana-khoroshun',     list: true },
+    { en: 'Viktor Rekalo',        uk: 'Віктор Рекало',        url: PORTFOLIO + 'performers/viktor-rekalo',        list: true },
+    { en: 'Orest Smovzh',         uk: 'Орест Смовж',          url: PORTFOLIO + 'performers/orest-smovzh',         list: true },
+    { en: 'Nazarii Stets',        uk: 'Назарій Стець',        url: PORTFOLIO + 'performers/nazarii-stets',        list: true },
+    { en: 'Vitalii Vyshynskyi',   uk: 'Віталій Вишинський',   url: PORTFOLIO + 'composers/vitalii-vyshynskyi',    list: true },
+    { en: 'Ihor Zavhorodnii',     uk: 'Ігор Завгородній',     url: PORTFOLIO + 'composers/ihor-zavhorodnii',      list: true },
+    { en: 'Albert Saprykin',      uk: 'Альберт Саприкін',     url: PORTFOLIO + 'composers/albert-saprykin',       list: true, last: true },
+    { en: 'Boris Loginov',        uk: 'Борис Логінов',        url: PORTFOLIO + 'composers/boris-loginov',         list: true }
+  ];
+  function surname(name) { var w = name.trim().split(/\s+/); return w[w.length - 1]; }
+  function personFor(name) {
+    var n = String(name || '').trim().toLowerCase();
+    return PEOPLE.filter(function (p) { return p.en.toLowerCase() === n || p.uk.toLowerCase() === n; })[0];
+  }
+  function escHtml(x) { return String(x).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function personLink(name, cls) {
+    var p = personFor(name);
+    if (!p) return escHtml(name);
+    return '<a' + (cls ? ' class="' + cls + '"' : '') + ' href="' + p.url + '" target="_blank" rel="noopener">' + escHtml(name) + '</a>';
+  }
+  function renderArtists() {
+    var key = lang === 'uk' ? 'uk' : 'en';
+    var people = PEOPLE.filter(function (p) { return p.list; }).sort(function (a, b) {
+      if (a.last !== b.last) return a.last ? 1 : -1;
+      return surname(a[key]).localeCompare(surname(b[key]), key);
+    });
+    document.getElementById('artists-list').innerHTML = people.map(function (p) {
+      return '<li><a href="' + p.url + '" target="_blank" rel="noopener">' + escHtml(p[key]) + '</a></li>';
+    }).join('');
+  }
+  // a text with people's names in it (the team line): each known name becomes a link
+  function linkNames(text) {
+    var html = escHtml(text);
+    PEOPLE.forEach(function (p) {
+      [p.en, p.uk].forEach(function (n) { html = html.split(escHtml(n)).join(personLink(n)); });
+    });
+    return html;
   }
 
   var LANG_KEY = 'kcmd-radio-lang';
@@ -527,6 +598,8 @@
     document.title = t('docTitle');
     document.querySelectorAll('[data-i18n]').forEach(function (el) { el.textContent = t(el.getAttribute('data-i18n')); });
     document.querySelectorAll('[data-i18n-html]').forEach(function (el) { el.innerHTML = t(el.getAttribute('data-i18n-html')); });
+    document.querySelectorAll('[data-i18n-names]').forEach(function (el) { el.innerHTML = linkNames(t(el.getAttribute('data-i18n-names'))); });
+    renderArtists();
     document.querySelectorAll('[data-i18n-href]').forEach(function (el) { el.setAttribute('href', t(el.getAttribute('data-i18n-href'))); });
     document.querySelectorAll('[data-i18n-aria]').forEach(function (el) { el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria'))); });
     document.querySelectorAll('.lang button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-lang') === lang)); });
@@ -876,7 +949,10 @@
       '?key=' + encodeURIComponent(CAL_KEY) + '&singleEvents=true&orderBy=startTime&maxResults=50' +
       '&timeMin=' + encodeURIComponent(since);
     fetch(url, { cache: 'no-store' }).then(function (r) {
-      if (!r.ok) throw new Error('calendar ' + r.status);
+      // on an error Google says why (a blocked referrer, a disabled API, a private calendar): pass that on
+      if (!r.ok) return r.json().catch(function () { return {}; }).then(function (j) {
+        throw new Error('HTTP ' + r.status + ': ' + ((j.error && j.error.message) || r.statusText));
+      });
       return r.json();
     }).then(function (data) {
       var items = (data.items || []).filter(function (e) { return e.status !== 'cancelled' && e.start; }).map(function (e) {
@@ -892,7 +968,7 @@
       calItems = items.length ? items : null;
       renderTimetable();
     }).catch(function (err) {
-      console.warn('[timetable] Google Calendar not reachable, showing the list in the page', err);
+      console.warn('[timetable] Google Calendar could not be read, showing the list in the page. ' + err.message);
     });
   }
 
@@ -951,7 +1027,7 @@
       var panel = desc ? '<div class="slot-desc" id="' + descId + '"' + (open ? '' : ' hidden') + '>' + paragraphs(desc) + '</div>' : '';
       return '<li class="' + cls + '">' +
         '<span class="slot-date">' + esc(day) + '</span>' +
-        '<span class="slot-artist">' + esc(who) + flag +
+        '<span class="slot-artist">' + personLink(who, 'person') + flag +
           (what ? '<span class="slot-title">' + esc(what) + '</span>' : '') + more + '</span>' +
         '<span class="slot-time"><span class="slot-kyiv">' + esc(it.time) + '</span>' + localLine + '</span>' +
         panel +
