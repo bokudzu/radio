@@ -396,9 +396,9 @@
   </div>
 
   <ul class="links">
-    <li><a href="https://v2in.stream/" target="_blank" rel="noopener" data-i18n="linkListen">Listen to all Radio V2in stations</a></li>
+    <li><a href="https://v2in.stream/" target="_blank" rel="noopener" data-i18n="linkListen">Listen to all V2in stations</a></li>
+    <li><a href="https://linktr.ee/radiotallinn1965" target="_blank" rel="noopener" data-i18n="linkLinktree">Tallinn 1965</a></li>
     <li><a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener" data-i18n="linkPropose">Join in</a></li>
-    <li><a href="https://linktr.ee/radiotallinn1965" target="_blank" rel="noopener" data-i18n="linkLinktree">Radio Tallinn 1965 linktree</a></li>
   </ul>
 
   <section aria-labelledby="timetable-title">
@@ -469,7 +469,7 @@
     </div>
     <div class="team">
       <h3>KCMD</h3>
-      <p data-i18n-names="teamKCMD">Albert Saprykin, Tetiana Khoroshun, Boris Loginov</p>
+      <p data-i18n="teamKCMD">Albert Saprykin, Tetiana Khoroshun, Boris Loginov</p>
     </div>
   </section>
 </main>
@@ -495,7 +495,7 @@
       silenceAt: 'Air-raid alert in Kyiv since {t} Kyiv time.',
       silence: 'Air-raid alert in Kyiv.',
       silenceRest: ' Every channel is silent until it ends, then plays a short piece of Ukrainian music and goes back to its programme.',
-      linkListen: 'Listen to all Radio V2in stations', linkPropose: 'Join in', linkLinktree: 'Radio Tallinn 1965 linktree',
+      linkListen: 'Listen to all V2in stations', linkPropose: 'Join in', linkLinktree: 'Tallinn 1965',
       timetable: 'Timetable', next: 'Next', onNow: 'Now', subscribe: 'Subscribe to the events calendar', subGoogle: 'Google Calendar', subscribeIcal: 'Apple / Outlook (iCal)', descMore: 'Read more', descLess: 'Hide',
       tzNote: 'Times are in Kyiv and Tallinn time.', tzNoteLocal: 'Times are in Kyiv and Tallinn time, with your local time below each.',
       localIn: '{t} in {place}', localYours: '{t} your time',
@@ -527,7 +527,7 @@
       silenceAt: 'Повітряна тривога в Києві з {t} за київським часом.',
       silence: 'Повітряна тривога в Києві.',
       silenceRest: ' Усі канали мовчать до відбою. Після відбою тишу на всіх каналах порушує 15-секундний сигнал, створений українськими артист_ками, а потім кожен канал повертається до своєї програми.',
-      linkListen: 'Слухати всі станції Radio V2in', linkPropose: 'Приєднатися', linkLinktree: 'Linktree Radio Tallinn 1965',
+      linkListen: 'Слухати всі станції V2in', linkPropose: 'Приєднатися', linkLinktree: 'Tallinn 1965',
       timetable: 'Розклад', next: 'наступн_а', onNow: 'зараз', subscribe: 'Підписатися на календар подій', subGoogle: 'Google Calendar', subscribeIcal: 'Apple / Outlook (iCal)', descMore: 'Детальніше', descLess: 'Згорнути',
       tzNote: 'Час указано за Києвом і Таллінном.', tzNoteLocal: 'Час указано за Києвом і Таллінном, під ним — ваш місцевий час.',
       localIn: '{t} за вашим часом ({place})', localYours: '{t} за вашим часом',
@@ -677,7 +677,12 @@
     var c = { audio: a, src: null, gain: null, analyser: null, buf: null };
     if (!plain) {
       try {
-        ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+        if (!ctx) {
+          ctx = new (window.AudioContext || window.webkitAudioContext)();
+          ctx.onstatechange = function () {
+            if (wanted && (ctx.state === 'suspended' || ctx.state === 'interrupted')) { try { ctx.resume(); } catch (e) {} }
+          };
+        }
         ctx.resume();
         a.crossOrigin = 'anonymous';
         c.src = ctx.createMediaElementSource(a);
@@ -693,16 +698,22 @@
     if (plain) a.volume = Number(vol.value);
     cur = c;
     zeroTime = 0;
-    a.onplaying = function () { setPlaying(true); setStatus('st_onair'); };
+    c.played = false;
+    lastProgress = Date.now(); lastTime = -1; stallLimit = STALL_FIRST;
+    a.onplaying = function () { c.played = true; lastProgress = Date.now(); setPlaying(true); setStatus('st_onair'); };
     a.onwaiting = function () { if (wanted) setStatus('st_buffering'); };
-    // a stream the server ends is dialled again, as a radio app does (as on v2in.stream);
-    // 'stalled' is left alone: phones fire it in the background while the stream is fine
-    a.onended = retry;
+    // the stream moving on is what counts as alive (also during an alert: the silence still flows)
+    a.ontimeupdate = function () {
+      if (a.currentTime !== lastTime) { lastTime = a.currentTime; lastProgress = Date.now(); stallLimit = STALL_FIRST; }
+    };
+    // a stream the server ends is dialled again, as a radio app does (as on v2in.stream)
+    a.onended = function () { if (cur === c) reconnect(); };
     a.onerror = function () {
       if (!wanted || cur !== c) return;
-      // the stream refused Web Audio (no cross-origin access): play it plainly instead
-      if (!plain) { plain = true; start(); return; }
-      retry();
+      // the stream refused Web Audio before it ever played (no cross-origin access): play it plainly instead
+      if (!plain && !c.played) { plain = true; start(); return; }
+      // a dropped connection later on: dial again on the same player
+      setTimeout(reconnect, 2000);
     };
     a.src = STREAM + '?t=' + Date.now();
     setStatus('st_connecting');
@@ -725,6 +736,37 @@
     clearTimeout(retryTimer);
     retryTimer = setTimeout(start, 3000);
   }
+
+  // ---- keeping a long listen alive on phones ----
+  // Reconnect on the SAME audio element (not a new one): in the background a phone may refuse to start a
+  // new player, but lets the one already playing load its source again. The lock-screen controls stay.
+  var STALL_FIRST = 12000, STALL_MAX = 30000;
+  var lastProgress = 0, lastTime = -1, stallLimit = STALL_FIRST, lastReconnect = 0;
+  function reconnect() {
+    if (!wanted) return;
+    if (!cur) { start(); return; }
+    var a = cur.audio;
+    lastReconnect = Date.now();
+    lastProgress = Date.now();
+    setStatus('st_reconnecting');
+    if (ctx && ctx.state !== 'running') { try { ctx.resume(); } catch (e) {} }
+    a.src = STREAM + '?t=' + Date.now();
+    a.load();
+    var p = a.play();
+    if (p && p.catch) p.catch(function () {});
+  }
+  // the watchdog: a stream stuck in "buffering" with no progress is dialled again,
+  // first after 12 s, then waiting longer each time (up to 30 s) so a bad network is not hammered
+  setInterval(function () {
+    if (!wanted || !cur || cur.audio.paused) return;
+    var now = Date.now();
+    if (now - lastProgress > stallLimit && now - lastReconnect > stallLimit) {
+      stallLimit = Math.min(STALL_MAX, stallLimit + 8000);
+      reconnect();
+    }
+  }, 2000);
+  // a phone back on the network (Wi-Fi to mobile data and back) gets the stream again at once
+  window.addEventListener('online', function () { if (wanted) reconnect(); });
 
   // listening time counts only the seconds the sound actually plays (not connecting, not paused)
   var PING_MIN = 5;          // one 'listening' event per 5 minutes of playback (keeps the event count low)
@@ -759,7 +801,9 @@
 
   // phones can suspend a stream in the background; pick it up again on return
   document.addEventListener('visibilitychange', function () {
-    if (!document.hidden && wanted && (!cur || cur.audio.error || cur.audio.ended || cur.audio.paused)) start();
+    if (document.hidden || !wanted) return;
+    if (!cur) start();
+    else if (cur.audio.error || cur.audio.ended || cur.audio.paused || Date.now() - lastProgress > STALL_FIRST) reconnect();
   });
 
   // ---- Media Session: the phone's lock screen / notification controls, as on v2in.stream ----
