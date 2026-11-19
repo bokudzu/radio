@@ -631,6 +631,7 @@
   function setPlaying(on) {
     player.classList.toggle('is-playing', on);
     btn.setAttribute('aria-label', t(on ? 'pause' : 'play'));
+    if (typeof updateMediaSession === 'function') updateMediaSession();
   }
   function release() {
     if (!cur) return;
@@ -669,7 +670,8 @@
     zeroTime = 0;
     a.onplaying = function () { setPlaying(true); setStatus('st_onair'); };
     a.onwaiting = function () { if (wanted) setStatus('st_buffering'); };
-    a.onstalled = retry;
+    // a stream the server ends is dialled again, as a radio app does (as on v2in.stream);
+    // 'stalled' is left alone: phones fire it in the background while the stream is fine
     a.onended = retry;
     a.onerror = function () {
       if (!wanted || cur !== c) return;
@@ -732,8 +734,31 @@
 
   // phones can suspend a stream in the background; pick it up again on return
   document.addEventListener('visibilitychange', function () {
-    if (!document.hidden && wanted && (!cur || cur.audio.paused || cur.audio.readyState < 2)) start();
+    if (!document.hidden && wanted && (!cur || cur.audio.error || cur.audio.ended || cur.audio.paused)) start();
   });
+
+  // ---- Media Session: the phone's lock screen / notification controls, as on v2in.stream ----
+  // With it Android treats the page as a media player and keeps it playing in the background.
+  var hasMS = 'mediaSession' in navigator && typeof MediaMetadata !== 'undefined';
+  function updateMediaSession() {
+    if (!hasMS) return;
+    var line = nowState && nowState.kind === 'line' ? nowState.text : '';
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: line || 'KCMD Radio',
+      artist: line ? 'KCMD Radio · Väin' : 'Väin',
+      artwork: [192, 512].map(function (n) {
+        return { src: new URL('icon-' + n + '.png', location.href).href, sizes: n + 'x' + n, type: 'image/png' };
+      })
+    });
+    navigator.mediaSession.playbackState = wanted ? 'playing' : 'paused';
+  }
+  if (hasMS) {
+    try {
+      navigator.mediaSession.setActionHandler('play', function () { if (!wanted) btn.click(); });
+      navigator.mediaSession.setActionHandler('pause', function () { if (wanted) btn.click(); });
+      navigator.mediaSession.setActionHandler('stop', function () { if (wanted) btn.click(); });
+    } catch (e) {}
+  }
 
   // ---- the signal picture: v2in.stream's own spectrogram (web/wave.mjs, drawSpectre), carried over as is ----
   // A scrolling spectrogram from the analyser's time-domain samples: rows log-spaced 60 Hz to 12 kHz, ink in the
@@ -868,7 +893,11 @@
     nowEl.classList.toggle('is-silent', silent);
   }
   onLangChange.push(renderNow);
-  function setNow(st) { nowState = st; renderNow(); }
+  function setNow(st) {
+    var changed = JSON.stringify(st) !== JSON.stringify(nowState);
+    nowState = st; renderNow();
+    if (changed && wanted) updateMediaSession();
+  }
   function pollNow() {
     if (document.hidden) return;
     fetch(NOW_API, { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (data) {
