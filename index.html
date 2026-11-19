@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kyiv Contemporary Music Days at Väin radio</title>
+<meta name="description" content="A joint project of KCMD and Radio Tallinn 1965 on Väin radio: a place where Ukrainian musicians and their friends can always hear the voices of their own.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@300;400;500;600&family=Ubuntu+Sans+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #eef1f4;
+    --surface: #ffffff;
+    --text: #0b0e14;
+    --muted: #59616f;
+    --line: #cfd5dd;
+    --accent: #2c6478;
+    --accent-ink: #ffffff;
+    --wave: #9db1bd;
+    color-scheme: light;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b0e14;
+      --surface: #131823;
+      --text: #e7eaf0;
+      --muted: #8e97a8;
+      --line: #252c3a;
+      --accent: #9cc7d8;
+      --accent-ink: #0b0e14;
+      --wave: #2b3a48;
+      color-scheme: dark;
+    }
+  }
+  *, *::before, *::after { box-sizing: inherit; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Libre Franklin", "Helvetica Neue", Arial, sans-serif;
+    font-weight: 400;
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  main {
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 0;
+  }
+  a { color: inherit; text-decoration-color: var(--accent); text-underline-offset: 0.2em; text-decoration-thickness: 1px; }
+  a:hover { color: var(--accent); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+  /* masthead */
+  .wordmark {
+    margin: 0 0 3.5rem;
+    font-weight: 500;
+    font-size: 0.95rem;
+    letter-spacing: 0.32em;
+    color: var(--muted);
+  }
+  .wordmark a { text-decoration: none; }
+  h1 {
+    margin: 0;
+    font-weight: 300;
+    font-size: clamp(2.1rem, 7vw, 3.25rem);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+  }
+  .sub {
+    margin: 1rem 0 2.25rem;
+    color: var(--muted);
+    font-size: 1.0625rem;
+  }
+
+  /* player */
+  .player {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-areas: "btn info" "wave wave";
+    gap: 1rem 1.1rem;
+    align-items: center;
+    padding: 1.25rem 1.25rem 1rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+  }
+  .play {
+    grid-area: btn;
+    width: 3.5rem; height: 3.5rem;
+    border-radius: 50%;
+    border: 0;
+    background: var(--accent);
+    color: var(--accent-ink);
+    cursor: pointer;
+    display: grid; place-items: center;
+  }
+  .play svg { width: 1.35rem; height: 1.35rem; }
+  .play .i-pause { display: none; }
+  .player.is-playing .play .i-play { display: none; }
+  .player.is-playing .play .i-pause { display: block; }
+  .info { grid-area: info; min-width: 0; }
+  .channel { margin: 0; font-weight: 600; font-size: 1.05rem; }
+  .status {
+    margin: 0.1rem 0 0;
+    font-family: "Ubuntu Sans Mono", ui-monospace, monospace;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .status::before {
+    content: "";
+    display: inline-block;
+    width: 0.5rem; height: 0.5rem;
+    margin-right: 0.45rem;
+    border-radius: 50%;
+    background: var(--line);
+    vertical-align: 0.05em;
+  }
+  .player.is-playing .status::before { background: var(--accent); }
+  .wave {
+    grid-area: wave;
+    display: block;
+    width: 100%;
+    height: 56px;
+  }
+  .volume {
+    grid-area: info;
+    justify-self: end;
+    width: 6.5rem;
+    accent-color: var(--accent);
+  }
+  .player .info { padding-right: 7.5rem; }
+  @media (max-width: 26rem) {
+    .player { grid-template-areas: "btn info" "wave wave" "vol vol"; }
+    .volume { grid-area: vol; justify-self: stretch; width: 100%; }
+    .player .info { padding-right: 0; }
+  }
+
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    margin: 1.25rem 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.95rem;
+  }
+
+  /* content */
+  section { margin-top: 4.5rem; }
+  h2 {
+    margin: 0 0 1.25rem;
+    font-weight: 500;
+    font-size: 1.35rem;
+    letter-spacing: -0.01em;
+  }
+  p { margin: 0 0 1.1rem; }
+  .tacet {
+    margin-top: 1.75rem;
+    padding: 0.25rem 0 0.25rem 1.25rem;
+    border-left: 2px solid var(--accent);
+  }
+  .tacet p { margin: 0; }
+
+  dl { margin: 0; }
+  .row {
+    display: grid;
+    grid-template-columns: 7.5rem 1fr;
+    gap: 0.25rem 1.5rem;
+    padding: 1rem 0;
+    border-top: 1px solid var(--line);
+  }
+  .row:last-child { border-bottom: 1px solid var(--line); }
+  dt { font-weight: 600; }
+  dd { margin: 0; }
+  @media (max-width: 30rem) {
+    .row { grid-template-columns: 1fr; }
+  }
+
+  /* timetable */
+  .timetable { margin: 0; padding: 0; list-style: none; }
+  .slot {
+    display: grid;
+    grid-template-columns: 6.5rem 1fr auto;
+    gap: 0.25rem 1.25rem;
+    align-items: baseline;
+    padding: 1rem 0;
+    border-top: 1px solid var(--line);
+  }
+  .slot:last-child { border-bottom: 1px solid var(--line); }
+  .slot-date { font-weight: 600; }
+  .slot-artist { font-size: 1.15rem; }
+  .slot-title { display: block; color: var(--muted); font-size: 0.95rem; }
+  .slot-time { text-align: right; white-space: nowrap; }
+  .slot-kyiv { display: block; font-weight: 500; }
+  .slot-local {
+    display: block;
+    font-family: "Ubuntu Sans Mono", ui-monospace, monospace;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .slot-flag {
+    display: inline-block;
+    margin-left: 0.5rem;
+    padding: 0.05rem 0.5rem;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-size: 0.75rem;
+    font-weight: 600;
+    vertical-align: 0.15em;
+  }
+  .slot.is-past { color: var(--muted); }
+  .slot.is-past .slot-kyiv { font-weight: 400; }
+  .tz-note { margin: 1rem 0 0; color: var(--muted); font-size: 0.9rem; }
+  @media (max-width: 30rem) {
+    .slot { grid-template-columns: 1fr auto; }
+    .slot-date { grid-column: 1 / -1; }
+  }
+
+  .artists {
+    margin: 0 0 1rem;
+    padding: 0;
+    list-style: none;
+    font-weight: 300;
+    font-size: clamp(1.4rem, 4.6vw, 1.85rem);
+    line-height: 1.35;
+  }
+  .note { color: var(--muted); }
+
+  .team + .team { margin-top: 1.25rem; }
+  .team h3 { margin: 0 0 0.25rem; font-weight: 600; font-size: 1rem; }
+  .team p { margin: 0; }
+
+  footer {
+    margin-top: 6rem;
+    position: relative;
+  }
+  footer p {
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: 0 1.5rem 1.5rem;
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+  .foot-waves { display: block; width: 100%; height: 110px; }
+</style>
+</head>
+<body>
+<main>
+  <p class="wordmark"><a href="https://v2in.stream/">VÄIN</a></p>
+
+  <h1>Kyiv Contemporary Music Days at Väin radio</h1>
+  <p class="sub">A joint project of KCMD and Radio Tallinn 1965 on Väin radio</p>
+
+  <div class="player" id="player">
+    <button class="play" id="play" type="button" aria-label="Play KCMD channel">
+      <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>
+      <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor"/></svg>
+    </button>
+    <div class="info">
+      <p class="channel">KCMD channel</p>
+      <p class="status" id="status" aria-live="polite">Press play to listen</p>
+    </div>
+    <input class="volume" id="volume" type="range" min="0" max="1" step="0.01" value="0.9" aria-label="Volume">
+    <canvas class="wave" id="wave" aria-hidden="true"></canvas>
+    <audio id="audio" preload="none"></audio>
+  </div>
+
+  <ul class="links">
+    <li><a href="https://v2in.stream/">Listen at v2in.stream</a></li>
+    <!-- TODO: add the link to the form -->
+    <li><a href="#take-part">Propose your material</a></li>
+    <!-- TODO: add the Radio Tallinn 1965 linktree URL -->
+    <li><a href="#">Radio Tallinn 1965 linktree</a></li>
+  </ul>
+
+  <section aria-labelledby="timetable-title">
+    <h2 id="timetable-title">Timetable</h2>
+    <ol class="timetable" id="timetable"></ol>
+    <p class="tz-note" id="tz-note">Times are in Kyiv and Tallinn time.</p>
+  </section>
+
+  <!-- ===== TIMETABLE: edit here =====
+       One line per broadcast:
+       date   — YYYY-MM-DD
+       time   — HH:MM, Kyiv / Tallinn time
+       artist — name as shown
+       title  — optional, leave '' if none
+       length — optional, minutes on air (used for "On air now"; default 60)
+  -->
+  <script>
+    window.KCMD_TIMETABLE = [
+      { date: '2026-11-20', time: '19:00', artist: 'Boris Loginov',        title: '' },
+      { date: '2026-11-21', time: '19:00', artist: 'Tetiana Khoroshun',    title: '' },
+      { date: '2026-11-22', time: '19:00', artist: 'Antonii Baryshevskyi', title: '' },
+      { date: '2026-11-23', time: '19:00', artist: 'Orest Smovzh',         title: '' },
+      { date: '2026-11-24', time: '19:00', artist: 'Albert Saprykin',      title: '' },
+    ];
+  </script>
+  <!-- ===== end of timetable ===== -->
+
+  <section aria-labelledby="about">
+    <h2 id="about">About the project</h2>
+    <p>Kyiv Contemporary Music Days (KCMD) and Radio Tallinn 1965 launch a joint project: a KCMD channel on Väin, the new media platform, launched at the Huddersfield Contemporary Music Festival in the UK, 20–29 November 2026.</p>
+    <p>The channel is a place where Ukrainian musicians and their friends, scattered across Ukraine and abroad, can always hear the voices of their own and join in. It brings together broadcasts curated by artists, recordings of KCMD concerts over the years, improvised sets, generative streams and conversations, and stays open to new formats as it evolves over time.</p>
+    <div class="tacet">
+      <p>KCMD also brings TACET to the whole platform: whenever there is an air raid alert in Kyiv, all channels on Väin fall silent, and when it ends, a 15-second signal by a Ukrainian artist breaks the silence.</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="practical">
+    <h2 id="practical">Practical information</h2>
+    <dl>
+      <div class="row"><dt>Listen</dt><dd><a href="https://v2in.stream/">v2in.stream</a>, on a phone or computer.</dd></div>
+      <div class="row"><dt>When</dt><dd>From 20 November 2026 onwards. Premieres are listed in the <a href="#timetable-title">timetable</a>.</dd></div>
+      <div class="row" id="take-part"><dt>Take part</dt><dd>Fill in the form. The project runs pro bono, with technical support from ECCM.</dd></div>
+    </dl>
+  </section>
+
+  <section aria-labelledby="artists">
+    <h2 id="artists">KCMD Radio artists</h2>
+    <ul class="artists">
+      <li>Boris Loginov</li>
+      <li>Tetiana Khoroshun</li>
+      <li>Antonii Baryshevskyi</li>
+      <li>Orest Smovzh</li>
+      <li>Albert Saprykin</li>
+    </ul>
+    <p class="note">More to come.</p>
+  </section>
+
+  <section aria-labelledby="teams">
+    <h2 id="teams">Teams</h2>
+    <div class="team">
+      <h3>Radio Tallinn 1965</h3>
+      <p>Maria Hansar, Asja Dolgaja, Kristjan Jansen, Tarmo Johannes, Andrus Laansalu and Mike Cole</p>
+    </div>
+    <div class="team">
+      <h3>KCMD</h3>
+      <p>Albert Saprykin; advisory group: Tetiana Khoroshun, Boris Loginov</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p>Kyiv Contemporary Music Days × Radio Tallinn 1965 on Väin</p>
+  <svg class="foot-waves" id="foot-waves" viewBox="0 0 1200 110" preserveAspectRatio="none" aria-hidden="true"></svg>
+</footer>
+
+<script>
+(function () {
+  var STREAM = 'https://v2in.stream/stream/kcmd';
+  var player = document.getElementById('player');
+  var btn = document.getElementById('play');
+  var audio = document.getElementById('audio');
+  var statusEl = document.getElementById('status');
+  var vol = document.getElementById('volume');
+  var wanted = false;      // the listener pressed play and has not paused
+  var retryTimer = null;
+
+  function setStatus(text) { statusEl.textContent = text; }
+  function setPlaying(on) {
+    player.classList.toggle('is-playing', on);
+    btn.setAttribute('aria-label', on ? 'Pause KCMD channel' : 'Play KCMD channel');
+  }
+
+  // a live stream: every start picks up the live edge, not an old buffer
+  function start() {
+    clearTimeout(retryTimer);
+    audio.src = STREAM + '?t=' + Date.now();
+    audio.volume = Number(vol.value);
+    setStatus('Connecting…');
+    var p = audio.play();
+    if (p && p.catch) p.catch(function () {
+      if (wanted) { setStatus('The stream could not start. Press play to try again.'); wanted = false; setPlaying(false); }
+    });
+  }
+  function stop() {
+    clearTimeout(retryTimer);
+    audio.pause();
+    audio.removeAttribute('src');
+    audio.load();
+    setPlaying(false);
+    setStatus('Paused');
+  }
+  function retry() {
+    if (!wanted) return;
+    setStatus('Reconnecting…');
+    clearTimeout(retryTimer);
+    retryTimer = setTimeout(start, 3000);
+  }
+
+  btn.addEventListener('click', function () {
+    wanted = !wanted;
+    if (wanted) start(); else stop();
+  });
+  vol.addEventListener('input', function () { audio.volume = Number(vol.value); });
+
+  audio.addEventListener('playing', function () { setPlaying(true); setStatus('On air'); });
+  audio.addEventListener('waiting', function () { if (wanted) setStatus('Buffering…'); });
+  audio.addEventListener('stalled', retry);
+  audio.addEventListener('error', function () { if (wanted) retry(); });
+  audio.addEventListener('ended', retry);
+
+  // phones can suspend a stream in the background; pick it up again on return
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden && wanted && (audio.paused || audio.readyState < 2)) start();
+  });
+
+  // the wave in the player: still when paused, moving gently while playing
+  var canvas = document.getElementById('wave');
+  var ctx = canvas.getContext('2d');
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var t = 0, amp = 0;
+  function cssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+  function size() {
+    var r = window.devicePixelRatio || 1;
+    canvas.width = canvas.clientWidth * r;
+    canvas.height = canvas.clientHeight * r;
+    ctx.setTransform(r, 0, 0, r, 0, 0);
+  }
+  function draw() {
+    var w = canvas.clientWidth, h = canvas.clientHeight;
+    var on = player.classList.contains('is-playing');
+    amp += ((on ? 1 : 0.12) - amp) * 0.05;
+    if (on && !reduce) t += 0.018;
+    ctx.clearRect(0, 0, w, h);
+    var lines = [[cssVar('--wave'), 1, 0], [cssVar('--accent'), 1.5, 1.7]];
+    lines.forEach(function (l) {
+      ctx.beginPath();
+      ctx.strokeStyle = l[0];
+      ctx.lineWidth = l[1];
+      for (var x = 0; x <= w; x += 2) {
+        var k = x / w;
+        var y = h / 2
+          + Math.sin(k * 9 + t * 2 + l[2]) * (h * 0.22) * amp * Math.sin(Math.PI * k)
+          + Math.sin(k * 23 - t * 3 + l[2]) * (h * 0.08) * amp;
+        if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    });
+    requestAnimationFrame(draw);
+  }
+  size();
+  window.addEventListener('resize', size);
+  requestAnimationFrame(draw);
+
+  // ---- timetable: Kyiv/Tallinn time from the list, plus the visitor's own time ----
+  var ZONE = 'Europe/Kyiv';   // Tallinn shares this time all year
+  function zoneOffset(ts, tz) {
+    var v = {};
+    new Intl.DateTimeFormat('en-US', { timeZone: tz, hourCycle: 'h23', year: 'numeric', month: '2-digit',
+      day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })
+      .formatToParts(new Date(ts)).forEach(function (p) { v[p.type] = p.value; });
+    return Date.UTC(+v.year, +v.month - 1, +v.day, +v.hour, +v.minute, +v.second) - ts;
+  }
+  function kyivToDate(date, time) {
+    var d = date.split('-').map(Number), t = time.split(':').map(Number);
+    var guess = Date.UTC(d[0], d[1] - 1, d[2], t[0], t[1]);
+    var ts = guess - zoneOffset(guess, ZONE);
+    var ts2 = guess - zoneOffset(ts, ZONE);
+    return new Date(ts2);
+  }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+  var localZone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+  var localPlace = localZone.split('/').pop().replace(/_/g, ' ');
+  var sameAsKyiv = function (d) { return zoneOffset(d.getTime(), ZONE) === -d.getTimezoneOffset() * 60000; };
+
+  function renderTimetable() {
+    var list = document.getElementById('timetable');
+    var items = (window.KCMD_TIMETABLE || []).map(function (s) {
+      var start = kyivToDate(s.date, s.time);
+      return { s: s, start: start, end: new Date(start.getTime() + (s.length || 60) * 60000) };
+    }).sort(function (a, b) { return a.start - b.start; });
+    var now = new Date();
+    var nextFound = false;
+    list.innerHTML = items.map(function (it) {
+      var s = it.s, cls = 'slot', flag = '';
+      if (now >= it.end) cls += ' is-past';
+      else if (now >= it.start) { cls += ' is-now'; flag = '<span class="slot-flag">On air now</span>'; nextFound = true; }
+      else if (!nextFound) { cls += ' is-next'; flag = '<span class="slot-flag">Next</span>'; nextFound = true; }
+      var day = it.start.toLocaleDateString('en-GB', { timeZone: ZONE, weekday: 'short', day: 'numeric', month: 'short' });
+      var local = it.start.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+      var localDay = it.start.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+      if (localDay !== day) local = localDay + ', ' + local;
+      var localLine = sameAsKyiv(it.start) ? '' :
+        '<span class="slot-local">' + esc(local) + (localPlace ? ' in ' + esc(localPlace) : ' your time') + '</span>';
+      return '<li class="' + cls + '">' +
+        '<span class="slot-date">' + esc(day) + '</span>' +
+        '<span class="slot-artist">' + esc(s.artist) + flag +
+          (s.title ? '<span class="slot-title">' + esc(s.title) + '</span>' : '') + '</span>' +
+        '<span class="slot-time"><span class="slot-kyiv">' + esc(s.time) + '</span>' + localLine + '</span>' +
+        '</li>';
+    }).join('');
+    var note = document.getElementById('tz-note');
+    note.textContent = 'Times are in Kyiv and Tallinn time' +
+      (items.length && !sameAsKyiv(items[0].start) ? ', with your local time below each.' : '.');
+  }
+  renderTimetable();
+  setInterval(renderTimetable, 60000);   // keeps "Next" and "On air now" current
+
+  // the waves along the foot of the page, as on v2in.stream
+  var foot = document.getElementById('foot-waves');
+  var paths = '';
+  for (var i = 0; i < 9; i++) {
+    var d = 'M0 ' + (20 + i * 10);
+    for (var x = 0; x <= 1200; x += 20) {
+      var y = 20 + i * 10 + Math.sin(x / (90 + i * 14) + i) * (4 + i * 0.8);
+      d += ' L' + x + ' ' + y.toFixed(1);
+    }
+    paths += '<path d="' + d + '" fill="none" stroke="var(--wave)" stroke-width="1" vector-effect="non-scaling-stroke"/>';
+  }
+  foot.innerHTML = paths;
+})();
+</script>
+</body>
+</html>
