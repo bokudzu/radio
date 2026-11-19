@@ -8,8 +8,8 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="theme-color" content="#0b0e14">
-<title>KCMD Radio on Väin</title>
-<meta name="description" content="A joint project of KCMD and Radio Tallinn 1965 on Väin radio: a place where Ukrainian musicians and their friends can always hear the voices of their own.">
+<title>KCMD Radio on V2in</title>
+<meta name="description" content="A joint KCMD and Radio Tallinn 1965 project on V2in radio: a place where Ukrainian musicians and their friends can always hear the voices of their own.">
 <!-- Umami analytics: replace YOUR-WEBSITE-ID with the Website ID from Umami (Settings → Websites → Edit).
      Self-hosted Umami: change src to https://<your-umami-domain>/script.js -->
 <script defer src="https://cloud.umami.is/script.js" data-website-id="b56cf6b6-550c-49b2-a369-431a49c24ed5"></script>
@@ -305,29 +305,50 @@
   .note { color: var(--muted); }
   .artists a, .slot-artist a.person, .team a { color: inherit; text-decoration-color: var(--line); }
   .artists a:hover, .slot-artist a.person:hover, .team a:hover { color: var(--accent); text-decoration-color: var(--accent); }
-  .subscribe {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.75rem 1.25rem;
-    margin: 1.25rem 0 0;
-  }
+  .subscribe { position: relative; display: inline-block; margin: 1.25rem 0 0; }
   .subscribe-btn {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 0.9rem 0.5rem 1rem;
     border: 1px solid var(--line);
     border-radius: 999px;
     background: var(--surface);
     color: var(--text);
     font-size: 0.95rem;
     font-weight: 500;
-    text-decoration: none;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
   }
-  .subscribe-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .subscribe-btn::-webkit-details-marker { display: none; }
+  .subscribe-btn:hover, .subscribe[open] .subscribe-btn { border-color: var(--accent); color: var(--accent); }
   .subscribe-btn svg { width: 1.1rem; height: 1.1rem; }
-  .subscribe-alt { color: var(--muted); font-size: 0.9rem; }
+  .subscribe-btn .chev { width: 0.9rem; height: 0.9rem; transition: transform 0.2s ease; }
+  .subscribe[open] .chev { transform: rotate(180deg); }
+  .subscribe-menu {
+    position: absolute;
+    top: calc(100% + 0.4rem);
+    left: 0;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    min-width: 100%;
+    padding: 0.35rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: 0 10px 28px rgba(11, 14, 20, 0.14);
+  }
+  .subscribe-menu a {
+    padding: 0.55rem 0.75rem;
+    border-radius: 8px;
+    color: var(--text);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .subscribe-menu a:hover, .subscribe-menu a:focus-visible { background: var(--bg); color: var(--accent); }
+  @media (prefers-reduced-motion: reduce) { .subscribe-btn .chev { transition: none; } }
 
   .team + .team { margin-top: 1.25rem; }
   .team h3 { margin: 0 0 0.25rem; font-weight: 600; font-size: 1rem; }
@@ -357,8 +378,8 @@
     </div>
   </div>
 
-  <h1 data-i18n="title">KCMD Radio on Väin</h1>
-  <p class="sub" data-i18n-html="sub">A joint project of KCMD and Radio Tallinn 1965 on Väin radio</p>
+  <h1 data-i18n="title">KCMD Radio on V2in</h1>
+  <p class="sub" data-i18n-html="sub">A joint KCMD and Radio Tallinn 1965 project on V2in radio</p>
 
   <div class="player" id="player">
     <button class="play" id="play" type="button" aria-label="Play KCMD Radio">
@@ -375,8 +396,8 @@
   </div>
 
   <ul class="links">
-    <li><a href="https://v2in.stream/" target="_blank" rel="noopener" data-i18n="linkListen">Listen to all Radio Väin stations</a></li>
-    <li><a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener" data-i18n="linkPropose">Propose your material</a></li>
+    <li><a href="https://v2in.stream/" target="_blank" rel="noopener" data-i18n="linkListen">Listen to all Radio V2in stations</a></li>
+    <li><a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener" data-i18n="linkPropose">Join in</a></li>
     <li><a href="https://linktr.ee/radiotallinn1965" target="_blank" rel="noopener" data-i18n="linkLinktree">Radio Tallinn 1965 linktree</a></li>
   </ul>
 
@@ -384,13 +405,17 @@
     <h2 id="timetable-title" data-i18n="timetable">Timetable</h2>
     <ol class="timetable" id="timetable"></ol>
     <p class="tz-note" id="tz-note"></p>
-    <p class="subscribe">
-      <a class="subscribe-btn" href="https://calendar.google.com/calendar/u/0?cid=Y18yNjQwZGViODE4YWJjODE5M2RlNTMwMzNhZWYyOWFlNWE4N2RiYWFkMzJhMDIyOTMzZTUzN2QwMzk5YzFiNDc4QGdyb3VwLmNhbGVuZGFyLmdvb2dsZS5jb20" target="_blank" rel="noopener">
+    <details class="subscribe" id="subscribe">
+      <summary class="subscribe-btn">
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M3.5 9.5h17M8 3v4M16 3v4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
         <span data-i18n="subscribe">Subscribe to the events calendar</span>
-      </a>
-      <a class="subscribe-alt" href="webcal://calendar.google.com/calendar/ical/c_2640deb818abc8193de53033aef29ae5a87dbaad32a022933e537d0399c1b478%40group.calendar.google.com/public/basic.ics" data-i18n="subscribeIcal">Apple / Outlook (iCal)</a>
-    </p>
+        <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </summary>
+      <div class="subscribe-menu">
+        <a href="https://calendar.google.com/calendar/u/0?cid=Y18yNjQwZGViODE4YWJjODE5M2RlNTMwMzNhZWYyOWFlNWE4N2RiYWFkMzJhMDIyOTMzZTUzN2QwMzk5YzFiNDc4QGdyb3VwLmNhbGVuZGFyLmdvb2dsZS5jb20" target="_blank" rel="noopener" data-i18n="subGoogle">Google Calendar</a>
+        <a href="webcal://calendar.google.com/calendar/ical/c_2640deb818abc8193de53033aef29ae5a87dbaad32a022933e537d0399c1b478%40group.calendar.google.com/public/basic.ics" data-i18n="subscribeIcal">Apple / Outlook (iCal)</a>
+      </div>
+    </details>
   </section>
 
   <!-- ===== TIMETABLE: edit here =====
@@ -414,10 +439,10 @@
 
   <section aria-labelledby="about">
     <h2 id="about" data-i18n="about">About the project</h2>
-    <p data-i18n="about1">Kyiv Contemporary Music Days (KCMD) and Radio Tallinn 1965 launch a joint project: a KCMD channel on Väin, the new media platform, launched at the Huddersfield Contemporary Music Festival in the UK, 20–29 November 2026.</p>
-    <p data-i18n="about2">The channel is a place where Ukrainian musicians and their friends, scattered across Ukraine and abroad, can always hear the voices of their own and join in. It brings together broadcasts curated by artists, recordings of KCMD concerts over the years, improvised sets, generative streams and conversations, and stays open to new formats as it evolves over time.</p>
+    <p data-i18n="about1">Kyiv Contemporary Music Days (KCMD) and Radio Tallinn 1965 are joining forces for a new collaborative project: a KCMD channel on V2in, the new media platform that will be launched at the Huddersfield Contemporary Music Festival in the UK on 20–29 November 2026.</p>
+    <p data-i18n="about2">The channel is a place where Ukrainian musicians and their friends, scattered across Ukraine and abroad, can always hear each other’s voices and join in themselves. It brings together broadcasts curated by artists, recordings of KCMD concerts over the years, improvised sets, generative streams and conversations, and will remain open to new formats as it evolves over time.</p>
     <div class="tacet">
-      <p data-i18n="tacet">KCMD also brings TACET to the whole platform: whenever there is an air raid alert in Kyiv, all channels on Väin fall silent, and when it ends, a 15-second signal by a Ukrainian artist breaks the silence.</p>
+      <p data-i18n="tacet">KCMD also brings TACET to the entire V2in platform: TACET means that whenever there is an air raid alert in Kyiv, all channels on V2in fall silent, and when the air raid ends, a 15-second signal by a Ukrainian artist breaks the silence.</p>
     </div>
   </section>
 
@@ -444,13 +469,13 @@
     </div>
     <div class="team">
       <h3>KCMD</h3>
-      <p data-i18n-names="teamKCMD">Albert Saprykin; advisory group: Tetiana Khoroshun, Boris Loginov</p>
+      <p data-i18n-names="teamKCMD">Albert Saprykin, Tetiana Khoroshun, Boris Loginov</p>
     </div>
   </section>
 </main>
 
 <footer>
-  <p data-i18n-html="footer">Kyiv Contemporary Music Days × Radio Tallinn 1965 on Väin</p>
+  <p data-i18n-html="footer">Kyiv Contemporary Music Days × Radio Tallinn 1965 on V2in</p>
   <svg class="foot-waves" id="foot-waves" viewBox="0 0 1200 110" preserveAspectRatio="none" aria-hidden="true"></svg>
 </footer>
 
@@ -459,9 +484,9 @@
   // ---- two languages: English and Ukrainian, switched without reloading ----
   var I18N = {
     en: {
-      docTitle: 'KCMD Radio on Väin',
-      title: 'KCMD Radio on Väin',
-      sub: 'A joint project of KCMD and Radio Tallinn 1965 on Väin radio',
+      docTitle: 'KCMD Radio on V2in',
+      title: 'KCMD Radio on V2in',
+      sub: 'A joint KCMD and Radio Tallinn 1965 project on V2in radio',
       volume: 'Volume',
       play: 'Play KCMD Radio', pause: 'Pause KCMD Radio',
       st_idle: 'Press play to listen', st_connecting: 'Connecting…', st_onair: 'On air', st_buffering: 'Buffering…',
@@ -470,14 +495,14 @@
       silenceAt: 'Air-raid alert in Kyiv since {t} Kyiv time.',
       silence: 'Air-raid alert in Kyiv.',
       silenceRest: ' Every channel is silent until it ends, then plays a short piece of Ukrainian music and goes back to its programme.',
-      linkListen: 'Listen to all Radio Väin stations', linkPropose: 'Propose your material', linkLinktree: 'Radio Tallinn 1965 linktree',
-      timetable: 'Timetable', next: 'Next', onNow: 'Now', subscribe: 'Subscribe to the events calendar', subscribeIcal: 'Apple / Outlook (iCal)', descMore: 'Read more', descLess: 'Hide',
+      linkListen: 'Listen to all Radio V2in stations', linkPropose: 'Join in', linkLinktree: 'Radio Tallinn 1965 linktree',
+      timetable: 'Timetable', next: 'Next', onNow: 'Now', subscribe: 'Subscribe to the events calendar', subGoogle: 'Google Calendar', subscribeIcal: 'Apple / Outlook (iCal)', descMore: 'Read more', descLess: 'Hide',
       tzNote: 'Times are in Kyiv and Tallinn time.', tzNoteLocal: 'Times are in Kyiv and Tallinn time, with your local time below each.',
       localIn: '{t} in {place}', localYours: '{t} your time',
       about: 'About the project',
-      about1: 'Kyiv Contemporary Music Days (KCMD) and Radio Tallinn 1965 launch a joint project: a KCMD channel on Väin, the new media platform, launched at the Huddersfield Contemporary Music Festival in the UK, 20–29 November 2026.',
-      about2: 'The channel is a place where Ukrainian musicians and their friends, scattered across Ukraine and abroad, can always hear the voices of their own and join in. It brings together broadcasts curated by artists, recordings of KCMD concerts over the years, improvised sets, generative streams and conversations, and stays open to new formats as it evolves over time.',
-      tacet: 'KCMD also brings TACET to the whole platform: whenever there is an air raid alert in Kyiv, all channels on Väin fall silent, and when it ends, a 15-second signal by a Ukrainian artist breaks the silence.',
+      about1: 'Kyiv Contemporary Music Days (KCMD) and Radio Tallinn 1965 are joining forces for a new collaborative project: a KCMD channel on V2in, the new media platform that will be launched at the Huddersfield Contemporary Music Festival in the UK on 20–29 November 2026.',
+      about2: 'The channel is a place where Ukrainian musicians and their friends, scattered across Ukraine and abroad, can always hear each other’s voices and join in themselves. It brings together broadcasts curated by artists, recordings of KCMD concerts over the years, improvised sets, generative streams and conversations, and will remain open to new formats as it evolves over time.',
+      tacet: 'KCMD also brings TACET to the entire V2in platform: TACET means that whenever there is an air raid alert in Kyiv, all channels on V2in fall silent, and when the air raid ends, a 15-second signal by a Ukrainian artist breaks the silence.',
       practical: 'Practical information',
       listen: 'Listen', listenText: '<a href="https://v2in.stream/">v2in.stream</a>, on a phone or computer.',
       when: 'When', whenText: 'From 20 November 2026 onwards. Premieres are listed in the <a href="#timetable-title">timetable</a>.',
@@ -486,14 +511,14 @@
       more: 'More to come.',
       teams: 'Teams',
       teamRT: 'Maria Hansar, Asja Dolgaja, Kristjan Jansen, Tarmo Johannes, Andrus Laansalu and Mike Cole',
-      teamKCMD: 'Albert Saprykin; advisory group: Tetiana Khoroshun, Boris Loginov',
+      teamKCMD: 'Albert Saprykin, Tetiana Khoroshun, Boris Loginov',
       kcmdUrl: 'https://en.kcmd.eu',
-      footer: '<a href="https://en.kcmd.eu" target="_blank" rel="noopener">Kyiv Contemporary Music Days</a> × Radio Tallinn 1965 on Väin'
+      footer: '<a href="https://en.kcmd.eu" target="_blank" rel="noopener">Kyiv Contemporary Music Days</a> × <a href="https://linktr.ee/radiotallinn1965" target="_blank" rel="noopener">Radio Tallinn 1965</a> on V2in'
     },
     uk: {
-      docTitle: 'KCMD Radio на Väin',
-      title: 'KCMD Radio на Väin',
-      sub: 'Спільний проєкт KCMD і Radio Tallinn 1965 на <a href="https://v2in.stream/" target="_blank" rel="noopener">радіо Väin</a>',
+      docTitle: 'KCMD Radio на V2in',
+      title: 'KCMD Radio на V2in',
+      sub: 'Спільний проєкт KCMD і Radio Tallinn 1965 на <a href="https://v2in.stream/" target="_blank" rel="noopener">радіо V2in</a>',
       volume: 'Гучність',
       play: 'Слухати KCMD Radio', pause: 'Пауза KCMD Radio',
       st_idle: 'Натисніть, щоб слухати', st_connecting: 'Підключення…', st_onair: 'В ефірі', st_buffering: 'Буферизація…',
@@ -502,14 +527,14 @@
       silenceAt: 'Повітряна тривога в Києві з {t} за київським часом.',
       silence: 'Повітряна тривога в Києві.',
       silenceRest: ' Усі канали мовчать до відбою. Після відбою тишу на всіх каналах порушує 15-секундний сигнал, створений українськими артист_ками, а потім кожен канал повертається до своєї програми.',
-      linkListen: 'Слухати всі станції Radio Väin', linkPropose: 'Запропонувати свій матеріал', linkLinktree: 'Linktree Radio Tallinn 1965',
-      timetable: 'Розклад', next: 'наступн_а', onNow: 'зараз', subscribe: 'Підписатися на календар подій', subscribeIcal: 'Apple / Outlook (iCal)', descMore: 'Детальніше', descLess: 'Згорнути',
+      linkListen: 'Слухати всі станції Radio V2in', linkPropose: 'Приєднатися', linkLinktree: 'Linktree Radio Tallinn 1965',
+      timetable: 'Розклад', next: 'наступн_а', onNow: 'зараз', subscribe: 'Підписатися на календар подій', subGoogle: 'Google Calendar', subscribeIcal: 'Apple / Outlook (iCal)', descMore: 'Детальніше', descLess: 'Згорнути',
       tzNote: 'Час указано за Києвом і Таллінном.', tzNoteLocal: 'Час указано за Києвом і Таллінном, під ним — ваш місцевий час.',
       localIn: '{t} за вашим часом ({place})', localYours: '{t} за вашим часом',
       about: 'Про проєкт',
-      about1: 'Kyiv Contemporary Music Days (KCMD) і Radio Tallinn 1965 запускають спільний проєкт: канал KCMD Radio на Väin, новій медіаплатформі, яку презентують на Huddersfield Contemporary Music Festival у Великій Британії 20–29 листопада 2026 року.',
+      about1: 'Kyiv Contemporary Music Days (KCMD) і Radio Tallinn 1965 запускають спільний проєкт: канал KCMD Radio на V2in, новій медіаплатформі, яку презентують на Huddersfield Contemporary Music Festival у Великій Британії 20–29 листопада 2026 року.',
       about2: 'KCMD Radio — це місце, де українські музикант_ки та їхні друзі завжди можуть почути голоси одне одного й долучитися самі. Тут звучать ефіри, які курують артист_ки, записи з концертів KCMD, імпровізаційні сети, генеративні потоки й розмови. Сам канал лишається відкритим до нових форматів і змінюватиметься з часом.',
-      tacet: 'KCMD також приносить на всю платформу TACET: щойно в Києві лунає повітряна тривога, усі канали Väin замовкають, а коли вона закінчується, тишу порушує 15-секундний сигнал, створений українськими артист_ками, після чого кожен канал повертається до своєї програми.',
+      tacet: 'KCMD також приносить на всю платформу TACET: щойно в Києві лунає повітряна тривога, усі канали V2in замовкають, а коли вона закінчується, тишу порушує 15-секундний сигнал, створений українськими артист_ками, після чого кожен канал повертається до своєї програми.',
       practical: 'Практична інформація',
       listen: 'Слухати', listenText: '<a href="https://v2in.stream/">v2in.stream</a>, на телефоні чи компʼютері.',
       when: 'Коли', whenText: 'З 20 листопада 2026 року. Премʼєри — у <a href="#timetable-title">розкладі</a>.',
@@ -520,7 +545,7 @@
       teamRT: 'Maria Hansar, Asja Dolgaja, Kristjan Jansen, Tarmo Johannes, Andrus Laansalu і Mike Cole',
       teamKCMD: 'Альберт Саприкін, Тетяна Хорошун, Борис Логінов',
       kcmdUrl: 'https://www.kcmd.eu',
-      footer: '<a href="https://www.kcmd.eu" target="_blank" rel="noopener">Kyiv Contemporary Music Days</a> × Radio Tallinn 1965 на Väin'
+      footer: '<a href="https://www.kcmd.eu" target="_blank" rel="noopener">Kyiv Contemporary Music Days</a> × <a href="https://linktr.ee/radiotallinn1965" target="_blank" rel="noopener">Radio Tallinn 1965</a> на V2in'
     }
   };
   // ---- analytics (Umami): quiet no-op until the Umami script has loaded with a real Website ID ----
@@ -745,7 +770,7 @@
     var line = nowState && nowState.kind === 'line' ? nowState.text : '';
     navigator.mediaSession.metadata = new MediaMetadata({
       title: line || 'KCMD Radio',
-      artist: line ? 'KCMD Radio · Väin' : 'Väin',
+      artist: line ? 'KCMD Radio · V2in' : 'V2in',
       artwork: [192, 512].map(function (n) {
         return { src: new URL('icon-' + n + '.png', location.href).href, sizes: n + 'x' + n, type: 'image/png' };
       })
@@ -1070,6 +1095,11 @@
   document.addEventListener('visibilitychange', function () { if (!document.hidden) loadCalendar(); });
   onLangChange.push(renderTimetable);
   setInterval(renderTimetable, 60000);   // keeps "Next" and "On air now" current
+
+  var sub = document.getElementById('subscribe');
+  document.addEventListener('click', function (e) { if (sub.open && !sub.contains(e.target)) sub.open = false; });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && sub.open) { sub.open = false; sub.querySelector('summary').focus(); } });
+  sub.querySelectorAll('.subscribe-menu a').forEach(function (a) { a.addEventListener('click', function () { sub.open = false; }); });
 
   applyLang();
   pollNow();
