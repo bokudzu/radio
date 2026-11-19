@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Kyiv Contemporary Music Days at Väin radio</title>
 <meta name="description" content="A joint project of KCMD and Radio Tallinn 1965 on Väin radio: a place where Ukrainian musicians and their friends can always hear the voices of their own.">
+<!-- Umami analytics: replace YOUR-WEBSITE-ID with the Website ID from Umami (Settings → Websites → Edit).
+     Self-hosted Umami: change src to https://<your-umami-domain>/script.js -->
+<script defer src="https://cloud.umami.is/script.js" data-website-id="b56cf6b6-550c-49b2-a369-431a49c24ed5"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@300;400;500;600&family=Ubuntu+Sans+Mono:wght@400;500&display=swap">
@@ -463,6 +466,11 @@
       footer: 'Kyiv Contemporary Music Days × Radio Tallinn 1965 на Väin'
     }
   };
+  // ---- analytics (Umami): quiet no-op until the Umami script has loaded with a real Website ID ----
+  function track(name, data) {
+    try { if (window.umami && typeof window.umami.track === 'function') window.umami.track(name, data); } catch (e) {}
+  }
+
   var LANG_KEY = 'kcmd-radio-lang';
   function pickLang() {
     try { var saved = localStorage.getItem(LANG_KEY); if (saved && I18N[saved]) return saved; } catch (e) {}
@@ -494,6 +502,7 @@
     b.addEventListener('click', function () {
       lang = b.getAttribute('data-lang');
       try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}
+      track('lang_switch', { to: lang });
       applyLang();
     });
   });
@@ -583,9 +592,31 @@
     retryTimer = setTimeout(start, 3000);
   }
 
+  // listening time counts only the seconds the sound actually plays (not connecting, not paused)
+  var PING_MIN = 5;          // one 'listening' event per 5 minutes of playback (keeps the event count low)
+  var heard = 0, pinged = 0, session = false;
+  setInterval(function () {
+    if (!session || !player.classList.contains('is-playing') || !cur || cur.audio.paused) return;
+    heard += 1;
+    if (heard - pinged >= PING_MIN * 60) { pinged = heard; track('listening', { minutes: PING_MIN, lang: lang }); }
+  }, 1000);
+  function endSession() {
+    if (!session) return;
+    session = false;
+    track('play_stop', { seconds: heard, minutes: Math.round(heard / 60), lang: lang });
+  }
+  window.addEventListener('pagehide', endSession);
+
   btn.addEventListener('click', function () {
     wanted = !wanted;
-    if (wanted) start(); else stop();
+    if (wanted) {
+      heard = 0; pinged = 0; session = true;
+      track('play_start', { lang: lang });
+      start();
+    } else {
+      stop();
+      endSession();
+    }
   });
   vol.addEventListener('input', function () {
     if (!cur) return;
