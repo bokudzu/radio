@@ -708,13 +708,21 @@
 
   var strip = { canvas: document.getElementById('wave') };
   var stillMq = window.matchMedia('(prefers-reduced-motion: reduce)');
-  var lastFrame = 0, zeroTime = 0;
+  var lastFrame = 0, zeroTime = 0, lastSound = -1e9;
   function cssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
   function draw(now) {
     var dt = lastFrame ? Math.min(0.1, (now - lastFrame) / 1000) : 0;
     lastFrame = now;
     var on = !!(cur && cur.analyser && player.classList.contains('is-playing'));
-    player.classList.toggle('wave-open', on || (strip.amp || 0) > 0);
+    // open the strip only while there is sound to picture: during an alert the stream is silent,
+    // so the strip stays closed instead of leaving an empty band under the player
+    if (on) {
+      cur.analyser.getFloatTimeDomainData(cur.buf);
+      var level = 0;
+      for (var li = 0; li < cur.buf.length; li++) { var lv = Math.abs(cur.buf[li]); if (lv > level) level = lv; }
+      if (level > 0.001) lastSound = now;
+    }
+    player.classList.toggle('wave-open', on && now - lastSound < 1500);
     drawSpectre(strip, {
       on: on, analyser: cur && cur.analyser, buf: cur && cur.buf, dt: dt,
       still: stillMq.matches, color: cssVar('--accent'), sr: ctx ? ctx.sampleRate : 48000
