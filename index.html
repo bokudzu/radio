@@ -107,6 +107,14 @@
   .player.is-playing .play .i-pause { display: block; }
   .info { grid-area: info; min-width: 0; }
   .channel { margin: 0; font-weight: 600; font-size: 1.05rem; }
+  .now-line {
+    margin: 0.1rem 0 0;
+    color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .now-line.is-silent { color: var(--text); }
   .status {
     margin: 0.1rem 0 0;
     font-family: "Ubuntu Sans Mono", ui-monospace, monospace;
@@ -266,11 +274,11 @@
     </button>
     <div class="info">
       <p class="channel">KCMD channel</p>
+      <p class="now-line" id="now-line" hidden></p>
       <p class="status" id="status" aria-live="polite">Press play to listen</p>
     </div>
     <input class="volume" id="volume" type="range" min="0" max="1" step="0.01" value="0.9" aria-label="Volume">
     <canvas class="wave" id="wave" aria-hidden="true"></canvas>
-    <audio id="audio" preload="none"></audio>
   </div>
 
   <ul class="links">
@@ -359,34 +367,76 @@
   var STREAM = 'https://v2in.stream/stream/kcmd';
   var player = document.getElementById('player');
   var btn = document.getElementById('play');
-  var audio = document.getElementById('audio');
   var statusEl = document.getElementById('status');
   var vol = document.getElementById('volume');
-  var wanted = false;      // the listener pressed play and has not paused
+  var wanted = false;       // the listener pressed play and has not paused
   var retryTimer = null;
+  var ctx = null;           // Web Audio, for the real waveform (as on v2in.stream)
+  var plain = false;        // true when the stream can't be read by Web Audio: plain playback, decorative wave
+  var cur = null;           // { audio, src, gain, analyser, buf }
 
   function setStatus(text) { statusEl.textContent = text; }
   function setPlaying(on) {
     player.classList.toggle('is-playing', on);
     btn.setAttribute('aria-label', on ? 'Pause KCMD channel' : 'Play KCMD channel');
   }
+  function release() {
+    if (!cur) return;
+    var a = cur.audio;
+    a.onplaying = a.onwaiting = a.onstalled = a.onerror = a.onended = null;
+    a.pause();
+    a.removeAttribute('src');
+    a.load();
+    if (cur.src) cur.src.disconnect();
+    cur = null;
+  }
 
   // a live stream: every start picks up the live edge, not an old buffer
   function start() {
     clearTimeout(retryTimer);
-    audio.src = STREAM + '?t=' + Date.now();
-    audio.volume = Number(vol.value);
+    release();
+    var a = new Audio();
+    var c = { audio: a, src: null, gain: null, analyser: null, buf: null };
+    if (!plain) {
+      try {
+        ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+        ctx.resume();
+        a.crossOrigin = 'anonymous';
+        c.src = ctx.createMediaElementSource(a);
+        c.analyser = ctx.createAnalyser();
+        c.analyser.fftSize = 2048;
+        c.gain = ctx.createGain();
+        c.gain.gain.value = Number(vol.value);
+        c.src.connect(c.analyser);
+        c.analyser.connect(c.gain).connect(ctx.destination);
+        c.buf = new Float32Array(c.analyser.fftSize);
+      } catch (e) { plain = true; c = { audio: a, src: null, gain: null, analyser: null, buf: null }; a.removeAttribute('crossorigin'); }
+    }
+    if (plain) a.volume = Number(vol.value);
+    cur = c;
+    zeroTime = 0;
+    a.onplaying = function () { setPlaying(true); setStatus('On air'); };
+    a.onwaiting = function () { if (wanted) setStatus('Buffering…'); };
+    a.onstalled = retry;
+    a.onended = retry;
+    a.onerror = function () {
+      if (!wanted || cur !== c) return;
+      // the stream refused Web Audio (no cross-origin access): play it plainly instead
+      if (!plain) { plain = true; start(); return; }
+      retry();
+    };
+    a.src = STREAM + '?t=' + Date.now();
     setStatus('Connecting…');
-    var p = audio.play();
-    if (p && p.catch) p.catch(function () {
+    var p = a.play();
+    if (p && p.catch) p.catch(function (e) {
+      if (cur !== c || e.name === 'AbortError') return;
+      if (!plain) { plain = true; start(); return; }
       if (wanted) { setStatus('The stream could not start. Press play to try again.'); wanted = false; setPlaying(false); }
     });
   }
   function stop() {
     clearTimeout(retryTimer);
-    audio.pause();
-    audio.removeAttribute('src');
-    audio.load();
+    release();
     setPlaying(false);
     setStatus('Paused');
   }
@@ -401,56 +451,134 @@
     wanted = !wanted;
     if (wanted) start(); else stop();
   });
-  vol.addEventListener('input', function () { audio.volume = Number(vol.value); });
-
-  audio.addEventListener('playing', function () { setPlaying(true); setStatus('On air'); });
-  audio.addEventListener('waiting', function () { if (wanted) setStatus('Buffering…'); });
-  audio.addEventListener('stalled', retry);
-  audio.addEventListener('error', function () { if (wanted) retry(); });
-  audio.addEventListener('ended', retry);
+  vol.addEventListener('input', function () {
+    if (!cur) return;
+    if (cur.gain) cur.gain.gain.value = Number(vol.value); else cur.audio.volume = Number(vol.value);
+  });
 
   // phones can suspend a stream in the background; pick it up again on return
   document.addEventListener('visibilitychange', function () {
-    if (!document.hidden && wanted && (audio.paused || audio.readyState < 2)) start();
+    if (!document.hidden && wanted && (!cur || cur.audio.paused || cur.audio.readyState < 2)) start();
   });
 
-  // the wave in the player: still when paused, moving gently while playing
-  var canvas = document.getElementById('wave');
-  var ctx = canvas.getContext('2d');
-  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var t = 0, amp = 0;
-  function cssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
-  function size() {
-    var r = window.devicePixelRatio || 1;
-    canvas.width = canvas.clientWidth * r;
-    canvas.height = canvas.clientHeight * r;
-    ctx.setTransform(r, 0, 0, r, 0, 0);
-  }
-  function draw() {
-    var w = canvas.clientWidth, h = canvas.clientHeight;
-    var on = player.classList.contains('is-playing');
-    amp += ((on ? 1 : 0.12) - amp) * 0.05;
-    if (on && !reduce) t += 0.018;
-    ctx.clearRect(0, 0, w, h);
-    var lines = [[cssVar('--wave'), 1, 0], [cssVar('--accent'), 1.5, 1.7]];
-    lines.forEach(function (l) {
-      ctx.beginPath();
-      ctx.strokeStyle = l[0];
-      ctx.lineWidth = l[1];
-      for (var x = 0; x <= w; x += 2) {
-        var k = x / w;
-        var y = h / 2
-          + Math.sin(k * 9 + t * 2 + l[2]) * (h * 0.22) * amp * Math.sin(Math.PI * k)
-          + Math.sin(k * 23 - t * 3 + l[2]) * (h * 0.08) * amp;
-        if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  // ---- the signal picture: v2in.stream's own spectrogram (web/wave.mjs, drawSpectre), carried over as is ----
+  // A scrolling spectrogram from the analyser's time-domain samples: rows log-spaced 60 Hz to 12 kHz, ink in the
+  // accent colour, alpha over the 60 dB under the recent loudest bin. It comes up when sound starts, fades when it stops.
+  // As on v2in.stream, plain playback (no Web Audio) draws nothing.
+  var FADE_S = 0.25;
+  var FFT_N = 1024, LO_HZ = 60, HI_HZ = 12000, RANGE = 60, FALL = 3, CEIL_DB = -20;
+  var hann = Float32Array.from({ length: FFT_N }, function (_, i) { return 0.5 - 0.5 * Math.cos(2 * Math.PI * i / FFT_N); });
+  function fft(re, im) {
+    var n = re.length;
+    for (var i = 1, j = 0; i < n; i++) {
+      var bit = n >> 1;
+      for (; j & bit; bit >>= 1) j ^= bit;
+      j ^= bit;
+      if (i < j) { var tr = re[i]; re[i] = re[j]; re[j] = tr; var ti = im[i]; im[i] = im[j]; im[j] = ti; }
+    }
+    for (var len = 2; len <= n; len <<= 1) {
+      var ang = -2 * Math.PI / len, wr = Math.cos(ang), wi = Math.sin(ang);
+      for (var i2 = 0; i2 < n; i2 += len) {
+        var cr = 1, ci = 0;
+        for (var j2 = 0; j2 < len / 2; j2++) {
+          var pp = i2 + j2, q = pp + len / 2, vr = re[q] * cr - im[q] * ci, vi = re[q] * ci + im[q] * cr;
+          re[q] = re[pp] - vr; im[q] = im[pp] - vi; re[pp] += vr; im[pp] += vi;
+          var tt = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = tt;
+        }
       }
-      ctx.stroke();
+    }
+  }
+  function rgb(c) {
+    var m = /^#?([0-9a-f]{6})$/i.exec(String(c).trim());
+    var n = m ? parseInt(m[1], 16) : 0x42b649;
+    return [n >> 16, (n >> 8) & 255, n & 255];
+  }
+  function drawSpectre(w, o) {
+    var on = o.on, analyser = o.analyser, buf = o.buf, dt = o.dt, still = o.still, sr = o.sr || 48000;
+    w.amp = still ? +on : Math.min(1, Math.max(0, (w.amp || 0) + (on ? dt : -dt) / FADE_S));
+    var cv = w.canvas;
+    if (!on && !w.amp) { if (w.drawn) cv.getContext('2d').clearRect(0, 0, cv.width, cv.height); w.drawn = false; return false; }
+    var dpr = window.devicePixelRatio || 1;
+    var cw = Math.round(cv.clientWidth * dpr), h = Math.round(cv.clientHeight * dpr);
+    if (!cw || !h) return false;
+    if (cv.width !== cw || cv.height !== h) { cv.width = cw; cv.height = h; w.col = null; }
+    var g = cv.getContext('2d'), step = Math.max(1, Math.round(dpr));
+    if (!w.col) w.col = g.createImageData(step, h);
+    var p = w.col.data, c = rgb(o.color), r0 = c[0], g0 = c[1], b0 = c[2];
+    if (on) {
+      analyser.getFloatTimeDomainData(buf);
+      var peak = 0;
+      for (var k0 = 0; k0 < buf.length; k0++) { var av = Math.abs(buf[k0]); if (av > peak) peak = av; }
+      w.peak = peak;
+      // exact digital silence is a feed that has not arrived: nothing drawn, nothing scrolled
+      if (w.peak === 0) return w.drawn;
+      if (!w.re) w.re = new Float32Array(FFT_N);
+      if (!w.im) w.im = new Float32Array(FFT_N);
+      var off = Math.max(0, buf.length - FFT_N);
+      for (var i = 0; i < FFT_N; i++) { w.re[i] = (buf[off + i] || 0) * hann[i]; w.im[i] = 0; }
+      fft(w.re, w.im);
+      var hi = Math.min(HI_HZ, sr / 2), dbs = new Float32Array(h), top = -Infinity;
+      for (var y = 0; y < h; y++) {
+        var f = LO_HZ * Math.pow(hi / LO_HZ, 1 - y / h);
+        var k = Math.min(FFT_N / 2 - 1, Math.max(1, Math.round(f / sr * FFT_N)));
+        dbs[y] = 20 * Math.log10(Math.hypot(w.re[k], w.im[k]) / (FFT_N / 4) + 1e-9);   // a bin's amplitude in dBFS (Hann)
+        if (dbs[y] > top) top = dbs[y];
+      }
+      w.top = Math.max(top, Math.min(CEIL_DB, (w.top == null ? top : w.top) - (RANGE / FALL) * dt));
+      for (var y2 = 0; y2 < h; y2++) {
+        var a = Math.round(255 * w.amp * Math.pow(Math.max(0, Math.min(1, (dbs[y2] - (w.top - RANGE)) / RANGE)), 1.5));
+        for (var x = 0; x < step; x++) { var oo = (y2 * step + x) * 4; p[oo] = r0; p[oo + 1] = g0; p[oo + 2] = b0; p[oo + 3] = a; }
+      }
+    } else { w.peak = 0; for (var i3 = 3; i3 < p.length; i3 += 4) p[i3] = 0; }
+    if (!still) { g.globalCompositeOperation = 'copy'; g.drawImage(cv, -step, 0); g.globalCompositeOperation = 'source-over'; }
+    g.putImageData(w.col, cw - step, 0);
+    w.drawn = true;
+    return true;
+  }
+
+  var strip = { canvas: document.getElementById('wave') };
+  var stillMq = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var lastFrame = 0, zeroTime = 0;
+  function cssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+  function draw(now) {
+    var dt = lastFrame ? Math.min(0.1, (now - lastFrame) / 1000) : 0;
+    lastFrame = now;
+    var on = !!(cur && cur.analyser && player.classList.contains('is-playing'));
+    drawSpectre(strip, {
+      on: on, analyser: cur && cur.analyser, buf: cur && cur.buf, dt: dt,
+      still: stillMq.matches, color: cssVar('--accent'), sr: ctx ? ctx.sampleRate : 48000
     });
     requestAnimationFrame(draw);
   }
-  size();
-  window.addEventListener('resize', size);
   requestAnimationFrame(draw);
+
+  // ---- what is on air now: the same source v2in.stream uses (GET /api/now), checked every 5 seconds ----
+  var NOW_API = 'https://v2in.stream/api/now';
+  var CHANNEL_ID = 'kcmd';
+  var nowEl = document.getElementById('now-line');
+  function showNow(text, silent) {
+    nowEl.textContent = text || '';
+    nowEl.hidden = !text;
+    nowEl.classList.toggle('is-silent', !!silent);
+  }
+  function pollNow() {
+    if (document.hidden) return;
+    fetch(NOW_API, { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (data) {
+      var ch = (data.channels || []).filter(function (x) { return x && x.id === CHANNEL_ID; })[0];
+      if (!ch) return showNow('');
+      if (ch.status === 'silent') return showNow(ch.title || 'Silent: air raid alert in Kyiv', true);
+      if (ch.status === 'offline') return showNow('Offline');
+      var line = [ch.by, ch.title].filter(Boolean).join(' - ');
+      if (Array.isArray(ch.live) && ch.live.length) {
+        line = ch.live.map(function (l) { return [l.artist, l.title].filter(Boolean).join(' - '); })
+          .filter(Boolean).join(', ') || 'Live';
+      }
+      showNow(line);
+    }).catch(function () { showNow(''); });   // the radio cannot be reached: keep the line empty
+  }
+  pollNow();
+  setInterval(pollNow, 5000);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) pollNow(); });
 
   // ---- timetable: Kyiv/Tallinn time from the list, plus the visitor's own time ----
   var ZONE = 'Europe/Kyiv';   // Tallinn shares this time all year
