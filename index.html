@@ -116,7 +116,7 @@
     letter-spacing: -0.02em;
   }
   .sub {
-    margin: 1rem 0 2.25rem;
+    margin: 1rem 0 1.75rem;
     color: var(--muted);
     font-size: 1.0625rem;
   }
@@ -174,6 +174,35 @@
     vertical-align: 0.05em;
   }
   .player.is-playing .status::before { background: var(--accent); }
+  /* the "Next" card: the next broadcast from the calendar, or the one on air now */
+  .next-card {
+    margin: 0 0 1rem; padding: 1rem 1.25rem;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  }
+  .next-card[hidden] { display: none; }
+  .next-card p { margin: 0; }
+  .next-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.75rem; font-size: 0.85rem; }
+  .next-label {
+    font-family: "Ubuntu Sans Mono", ui-monospace, monospace; font-weight: 500;
+    letter-spacing: 0.04em; text-transform: uppercase; color: var(--accent);
+  }
+  .next-card.is-live .next-label::before {
+    content: ""; display: inline-block; width: 0.5rem; height: 0.5rem; margin-right: 0.45rem;
+    border-radius: 50%; background: var(--accent); vertical-align: 0.05em;
+    animation: next-pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes next-pulse { 50% { opacity: 0.3; } }
+  @media (prefers-reduced-motion: reduce) { .next-card.is-live .next-label::before { animation: none; } }
+  .next-when { color: var(--muted); }
+  .next-what { margin-top: 0.3rem !important; font-size: 1.2rem; line-height: 1.35; }
+  .next-what em { font-style: normal; color: var(--muted); }
+  .next-what a { color: inherit; text-decoration-color: var(--line); }
+  .next-what a:hover { color: var(--accent); text-decoration-color: var(--accent); }
+  .next-bar { height: 3px; margin-top: 0.75rem; border-radius: 3px; background: var(--line); overflow: hidden; }
+  .next-bar span { display: block; height: 100%; width: 0; background: var(--accent); transition: width 0.6s ease; }
+  .next-foot { display: flex; justify-content: space-between; gap: 1rem; margin-top: 0.6rem !important; font-size: 0.875rem; color: var(--muted); }
+  .next-more { padding: 0; border: 0; background: none; color: var(--accent); font: inherit; cursor: pointer; white-space: nowrap; }
+  .next-more:hover { text-decoration: underline; text-underline-offset: 0.2em; }
   .listeners { margin: 0.1rem 0 0; font-size: 0.85rem; color: var(--muted); }
   /* the signal strip opens only while there is a picture to show, as on v2in.stream */
   .wave {
@@ -459,6 +488,13 @@
   <h1 data-i18n="title">KCMD Radio on V2in</h1>
   <p class="sub" data-i18n-html="sub">A radio channel of new Ukrainian music by Kyiv Contemporary Music Days, on V2in, the new platform by Radio Tallinn 1965</p>
 
+  <div class="next-card" id="next-card" hidden>
+    <p class="next-top"><span class="next-label" id="next-label"></span><span class="next-when" id="next-when"></span></p>
+    <p class="next-what" id="next-what"></p>
+    <div class="next-bar" id="next-bar" hidden><span id="next-fill"></span></div>
+    <p class="next-foot"><span id="next-rel"></span><button type="button" class="next-more" id="next-more"></button></p>
+  </div>
+
   <div class="player" id="player">
     <button class="play" id="play" type="button" aria-label="Play KCMD Radio">
       <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>
@@ -575,6 +611,9 @@
       st_reconnecting: 'Reconnecting…', st_paused: 'Paused', st_failed: 'The stream could not start. Press play to try again.',
       offline: 'Offline',
       unreachable: 'The radio cannot be reached right now. Trying again.',
+      nxNext: 'Next', nxLive: 'On air now', nxToday: 'today', nxTomorrow: 'tomorrow',
+      nxIn: 'in {t}', nxLeft: '{t} left', nxDays: '{d} days', nxH: '{h} h', nxHM: '{h} h {m} min', nxM: '{m} min',
+      nxMore: 'Details ↓',
       lnNow: '{n} listening now', lnNowOne: '1 person listening now',
       lnWith: 'You and {n} others are listening', lnWithOne: 'You and 1 other person are listening', lnAlone: 'Right now it’s just you listening',
       silenceAt: 'Air raid alert in Kyiv since {t} Kyiv time.',
@@ -613,6 +652,9 @@
       st_reconnecting: 'Перепідключення…', st_paused: 'Пауза', st_failed: 'Не вдалося запустити стрім. Натисніть ще раз.',
       offline: 'Не в етері',
       unreachable: 'Радіо зараз недоступне. Пробуємо ще раз.',
+      nxNext: 'Далі', nxLive: 'Зараз в етері', nxToday: 'сьогодні', nxTomorrow: 'завтра',
+      nxIn: 'через {t}', nxLeft: 'ще {t}', nxDays: '{d} дн.', nxH: '{h} год', nxHM: '{h} год {m} хв', nxM: '{m} хв',
+      nxMore: 'Детальніше ↓',
       lnNow: 'Зараз слухають: {n}', lnNowOne: 'Зараз слухають: 1',
       lnWith: 'Разом із вами слухають ще {n}', lnWithOne: 'Разом із вами слухає ще 1', lnAlone: 'Зараз слухаєте лише ви',
       silenceAt: 'Повітряна тривога в Києві з {t} за київським часом.',
@@ -1254,7 +1296,7 @@
           '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
         '</button>' : '';
       var panel = desc ? '<div class="slot-desc" id="' + descId + '"' + (open ? '' : ' hidden') + '>' + paragraphs(desc) + '</div>' : '';
-      return '<li class="' + cls + '">' +
+      return '<li class="' + cls + '" id="slot-' + String(key).replace(/[^a-z0-9_-]/gi, '') + '">' +
         '<span class="slot-date">' + esc(day) + '</span>' +
         '<span class="slot-artist">' + personLink(who, 'person') + flag +
           (what ? '<span class="slot-title">' + esc(what) + '</span>' : '') + more + '</span>' +
@@ -1262,10 +1304,61 @@
         panel +
         '</li>';
     }).join('');
+    lastItems = items;
+    renderNext();
     var note = document.getElementById('tz-note');
     note.textContent = localPlace ? t('tzNoteZone', { place: localPlace }) : t('tzNote');
     note.hidden = !items.length;
   }
+  // ---- the "Next" card ----
+  var lastItems = [];
+  var nextCard = document.getElementById('next-card');
+  function span(ms) {
+    var min = Math.max(1, Math.round(ms / 60000));
+    if (min >= 48 * 60) return t('nxDays', { d: Math.round(min / 1440) });
+    var h = Math.floor(min / 60), m = min % 60;
+    return h ? (m ? t('nxHM', { h: h, m: m }) : t('nxH', { h: h })) : t('nxM', { m: m });
+  }
+  function dayWord(d) {
+    var a = new Date(); a.setHours(0, 0, 0, 0);
+    var b = new Date(d); b.setHours(0, 0, 0, 0);
+    var diff = Math.round((b - a) / 86400000);
+    if (diff === 0) return t('nxToday');
+    if (diff === 1) return t('nxTomorrow');
+    return d.toLocaleDateString(lang === 'uk' ? 'uk-UA' : 'en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+  }
+  function hhmm(d) { return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }); }
+  function itemKey(it) { return it.id || (it.start.toISOString() + it.artist); }
+  function renderNext() {
+    var now = new Date();
+    var it = lastItems.filter(function (x) { return now < x.end; })[0];   // on air now, or the next one
+    if (!it) { nextCard.hidden = true; return; }
+    var live = now >= it.start;
+    nextCard.hidden = false;
+    nextCard.classList.toggle('is-live', live);
+    nextCard.setAttribute('data-key', itemKey(it));
+    document.getElementById('next-label').textContent = t(live ? 'nxLive' : 'nxNext');
+    document.getElementById('next-when').textContent = dayWord(it.start) + ', ' + hhmm(it.start) + '–' + hhmm(it.end);
+    var who = (lang === 'uk' && it.artist_uk) || it.artist;
+    var what = (lang === 'uk' && it.title_uk) || it.title;
+    document.getElementById('next-what').innerHTML = personLink(who) + (what ? ' — <em>' + esc(what) + '</em>' : '');
+    document.getElementById('next-rel').textContent = live ? t('nxLeft', { t: span(it.end - now) }) : t('nxIn', { t: span(it.start - now) });
+    var bar = document.getElementById('next-bar');
+    bar.hidden = !live;
+    if (live) document.getElementById('next-fill').style.width = Math.min(100, 100 * (now - it.start) / (it.end - it.start)).toFixed(1) + '%';
+    document.getElementById('next-more').textContent = t('nxMore');
+  }
+  setInterval(renderNext, 30000);   // "in 2 h 15 min" and the bar stay current
+  document.getElementById('next-more').addEventListener('click', function () {
+    var key = nextCard.getAttribute('data-key');
+    if (!key) return;
+    openDesc.add(key);   // the description opens in the timetable
+    renderTimetable();
+    var row = document.getElementById('slot-' + key.replace(/[^a-z0-9_-]/gi, ''));
+    (row || document.getElementById('timetable-title')).scrollIntoView({ behavior: stillMq.matches ? 'auto' : 'smooth', block: 'start' });
+    track('next_details');
+  });
+
   loadCalendar();
   setInterval(loadCalendar, 5 * 60000);   // calendar changes reach the page within five minutes
   document.addEventListener('visibilitychange', function () { if (!document.hidden) loadCalendar(); });
