@@ -12,14 +12,14 @@
 <title>KCMD Radio on V2in</title>
 <meta name="description" content="A joint KCMD and Radio Tallinn 1965 project on V2in radio: a place where Ukrainian musicians and their friends can always hear the voices of their own.">
 <!-- Open Graph: the preview card in Telegram, Facebook, Slack, etc.
-     og:url and og:image must be full addresses: replace https://YOUR-DOMAIN/ with the page's real address.
-     The best image is 1200×630 px (PNG or JPG); icon-512.png works as a square fallback. -->
+     og:url and og:image must be full addresses. The best image is 1200×630 px (PNG or JPG);
+     icon-512.png works as a square fallback. -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Kyiv Contemporary Music Days">
 <meta property="og:title" content="KCMD Radio on V2in">
 <meta property="og:description" content="A joint KCMD and Radio Tallinn 1965 project on V2in radio: a place where Ukrainian musicians and their friends can always hear the voices of their own.">
-<meta property="og:url" content="https://YOUR-DOMAIN/">
-<meta property="og:image" content="https://YOUR-DOMAIN/icon-512.png">
+<meta property="og:url" content="https://radio.kcmd.eu/">
+<meta property="og:image" content="https://radio.kcmd.eu/icon-512.png">
 <meta property="og:image:alt" content="KCMD Radio on V2in">
 <meta property="og:locale" content="en_GB">
 <meta property="og:locale:alternate" content="uk_UA">
@@ -1045,7 +1045,9 @@
   // ---- the timetable's source: the public Google Calendar of KCMD Radio ----
   // Event title: "English name / Ukrainian name" (the part after " / " is optional).
   // Event description (optional): the piece or programme, the same way: "English / Ukrainian".
-  // If the calendar can't be read or has no events, the list written in KCMD_TIMETABLE above is shown.
+  // If the calendar can't be read or has no events, the timetable stays empty.
+  // Set USE_FALLBACK to true to show the list written in KCMD_TIMETABLE above in that case.
+  var USE_FALLBACK = false;
   var CAL_ID = 'c_2640deb818abc8193de53033aef29ae5a87dbaad32a022933e537d0399c1b478@group.calendar.google.com';
   var CAL_KEY = 'AIzaSyAm5BWlW4kiZ3885wEo7nzhLd9oil7mMas';
   var calItems = null;   // null until the calendar has answered with events
@@ -1123,7 +1125,7 @@
  
   function renderTimetable() {
     var list = document.getElementById('timetable');
-    var items = (calItems || (window.KCMD_TIMETABLE || []).map(function (s) {
+    var items = (calItems || (USE_FALLBACK ? window.KCMD_TIMETABLE || [] : []).map(function (s) {
       var start = kyivToDate(s.date, s.time);
       return {
         start: start, end: new Date(start.getTime() + (s.length || 60) * 60000), time: s.time,
@@ -1140,7 +1142,8 @@
       var loc = lang === 'uk' ? 'uk-UA' : 'en-GB';
       // date and time in the device's own time zone
       var day = it.start.toLocaleDateString(loc, { weekday: 'short', day: 'numeric', month: 'short' });
-      var time = it.start.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+      var hhmm = function (d) { return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }); };
+      var time = hhmm(it.start) + '–' + hhmm(it.end);   // start–end
       var who = (lang === 'uk' && it.artist_uk) || it.artist;
       var what = (lang === 'uk' && it.title_uk) || it.title;
       var desc = (lang === 'uk' && it.desc_uk) || it.desc || '';
@@ -1161,6 +1164,7 @@
     }).join('');
     var note = document.getElementById('tz-note');
     note.textContent = localPlace ? t('tzNoteZone', { place: localPlace }) : t('tzNote');
+    note.hidden = !items.length;
   }
   loadCalendar();
   setInterval(loadCalendar, 5 * 60000);   // calendar changes reach the page within five minutes
