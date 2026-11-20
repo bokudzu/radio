@@ -174,6 +174,7 @@
     vertical-align: 0.05em;
   }
   .player.is-playing .status::before { background: var(--accent); }
+  .listeners { margin: 0.1rem 0 0; font-size: 0.85rem; color: var(--muted); }
   /* the signal strip opens only while there is a picture to show, as on v2in.stream */
   .wave {
     grid-area: wave;
@@ -467,6 +468,7 @@
       <p class="channel">KCMD Radio</p>
       <p class="now-line" id="now-line" hidden></p>
       <p class="status" id="status" aria-live="polite">Press play to listen</p>
+      <p class="listeners" id="listeners" hidden></p>
     </div>
     <input class="volume" id="volume" type="range" min="0" max="1" step="0.01" value="0.9" aria-label="Volume" data-i18n-aria="volume">
     <canvas class="wave" id="wave" aria-hidden="true"></canvas>
@@ -573,6 +575,8 @@
       st_reconnecting: 'Reconnecting…', st_paused: 'Paused', st_failed: 'The stream could not start. Press play to try again.',
       offline: 'Offline',
       unreachable: 'The radio cannot be reached right now. Trying again.',
+      lnNow: '{n} listening now', lnNowOne: '1 person listening now',
+      lnWith: 'You and {n} others are listening', lnWithOne: 'You and 1 other person are listening',
       silenceAt: 'Air raid alert in Kyiv since {t} Kyiv time.',
       silence: 'Air raid alert in Kyiv.',
       silenceRest: ' Every channel is silent until it ends, then a 30-second signal by a Ukrainian artist breaks the silence and each channel returns to its programme.',
@@ -609,6 +613,8 @@
       st_reconnecting: 'Перепідключення…', st_paused: 'Пауза', st_failed: 'Не вдалося запустити стрім. Натисніть ще раз.',
       offline: 'Не в етері',
       unreachable: 'Радіо зараз недоступне. Пробуємо ще раз.',
+      lnNow: 'Зараз слухають: {n}', lnNowOne: 'Зараз слухають: 1',
+      lnWith: 'Разом із вами слухають ще {n}', lnWithOne: 'Разом із вами слухає ще 1',
       silenceAt: 'Повітряна тривога в Києві з {t} за київським часом.',
       silence: 'Повітряна тривога в Києві.',
       silenceRest: ' Усі канали мовчать до відбою. Після відбою тишу на всіх каналах порушує 30-секундний сигнал, створений українськими артист_ками, а потім кожен канал повертається до своєї програми.',
@@ -746,6 +752,7 @@
     player.classList.toggle('is-playing', on);
     btn.setAttribute('aria-label', t(on ? 'pause' : 'play'));
     if (typeof updateMediaSession === 'function') updateMediaSession();
+    if (typeof renderListeners === 'function' && lnEl) renderListeners();
   }
   function release() {
     if (!cur) return;
@@ -1052,6 +1059,25 @@
     nowEl.classList.toggle('is-silent', silent);
   }
   onLangChange.push(renderNow);
+
+  // ---- how many are listening: the radio's own count for the KCMD channel (listeners in /api/now) ----
+  // While you play, you are one of them, so the line says how many others listen with you.
+  var listeners = null;
+  var lnEl = document.getElementById('listeners');
+  function renderListeners() {
+    var n = listeners, text = '';
+    if (typeof n === 'number' && nowState.kind !== 'unreachable') {
+      if (player.classList.contains('is-playing')) {
+        var others = Math.max(0, n - 1);
+        if (others === 1) text = t('lnWithOne');
+        else if (others > 1) text = t('lnWith', { n: others });
+      } else if (n === 1) text = t('lnNowOne');
+      else if (n > 1) text = t('lnNow', { n: n });
+    }
+    lnEl.textContent = text;
+    lnEl.hidden = !text;
+  }
+  onLangChange.push(renderListeners);
   function setNow(st) {
     var changed = JSON.stringify(st) !== JSON.stringify(nowState);
     nowState = st; renderNow();
@@ -1070,6 +1096,8 @@
       clearTimeout(timer);
       nowFails = 0;
       var ch = (data.channels || []).filter(function (x) { return x && x.id === CHANNEL_ID; })[0];
+      listeners = ch && typeof ch.listeners === 'number' ? ch.listeners : null;
+      renderListeners();
       if (!ch) return setNow({ kind: 'none' });
       if (ch.status === 'silent') {
         // the alert's start, as the radio's own title gives it ("Air raid alert in Kyiv since 12:14")
@@ -1086,7 +1114,7 @@
     }).catch(function () {
       clearTimeout(timer);
       nowFails += 1;
-      if (nowFails >= 2) setNow({ kind: 'unreachable' });
+      if (nowFails >= 2) { setNow({ kind: 'unreachable' }); renderListeners(); }
     });
   }
   setInterval(pollNow, 5000);
