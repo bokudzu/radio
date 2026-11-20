@@ -198,35 +198,56 @@
     .player .info { padding-right: 0; }
   }
 
-  /* chat */
-  .chat-note { color: var(--muted); font-size: 0.95rem; margin: -0.25rem 0 1rem; }
-  .chat-list {
-    margin: 0; padding: 0.35rem 1.25rem; list-style: none;
-    max-height: 22rem; overflow-y: auto; overscroll-behavior: contain;
-    background: var(--surface); border: 1px solid var(--line); border-radius: 14px 14px 0 0; border-bottom: 0;
+  /* chat: a slim bar under the player that opens into the conversation */
+  .chat { margin-top: 1.25rem; }
+  .chat-bar {
+    display: flex; align-items: center; gap: 0.6rem; width: 100%;
+    padding: 0.55rem 0.9rem 0.55rem 1rem;
+    background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 999px;
+    font: inherit; font-size: 0.95rem; text-align: left; cursor: pointer;
   }
-  .chat-list li { padding: 0.7rem 0; border-top: 1px solid var(--line); }
-  .chat-list li:first-child { border-top: 0; }
-  .chat-who { font-weight: 600; }
-  .chat-time { margin-left: 0.4rem; font-family: "Ubuntu Sans Mono", ui-monospace, monospace; font-size: 0.8rem; color: var(--muted); }
-  .chat-body { margin: 0.1rem 0 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+  .chat-bar:hover { border-color: var(--accent); }
+  .chat.is-open .chat-bar { border-radius: 14px 14px 0 0; border-bottom-color: transparent; }
+  .chat-label { font-weight: 600; flex: none; position: relative; }
+  .chat.has-new .chat-label::after {
+    content: ""; position: absolute; top: 0.1rem; right: -0.55rem;
+    width: 0.4rem; height: 0.4rem; border-radius: 50%; background: var(--accent);
+  }
+  .chat-last { flex: 1; min-width: 0; margin-left: 0.4rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chat.is-open .chat-last { visibility: hidden; }
+  .chat-count { flex: none; font-family: "Ubuntu Sans Mono", ui-monospace, monospace; font-size: 0.8rem; color: var(--muted); }
+  .chat-bar svg { flex: none; width: 0.9rem; height: 0.9rem; color: var(--muted); transition: transform 0.2s ease; }
+  .chat.is-open .chat-bar svg { transform: rotate(180deg); }
+  @media (prefers-reduced-motion: reduce) { .chat-bar svg { transition: none; } }
+  .chat-panel { background: var(--surface); border: 1px solid var(--line); border-top: 0; border-radius: 0 0 14px 14px; }
+  .chat-panel[hidden] { display: none; }
+  .chat-list {
+    margin: 0; padding: 0.25rem 1rem; list-style: none;
+    max-height: 14rem; overflow-y: auto; overscroll-behavior: contain;
+    font-size: 0.95rem; line-height: 1.45;
+  }
+  .chat-list li { padding: 0.35rem 0; overflow-wrap: anywhere; }
+  .chat-who { font-weight: 600; margin-right: 0.35rem; }
+  .chat-body { white-space: pre-wrap; }
+  .chat-time { margin-left: 0.4rem; font-family: "Ubuntu Sans Mono", ui-monospace, monospace; font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
   .chat-empty { color: var(--muted); }
-  .chat-hide { margin-left: 0.5rem; padding: 0; border: 0; background: none; color: var(--accent); font: inherit; font-size: 0.8rem; cursor: pointer; }
+  .chat-hide { margin-left: 0.4rem; padding: 0; border: 0; background: none; color: var(--accent); font: inherit; font-size: 0.75rem; cursor: pointer; }
   .chat-form {
-    display: grid; grid-template-columns: 9rem 1fr auto; gap: 0.5rem;
-    padding: 0.75rem; background: var(--surface); border: 1px solid var(--line); border-radius: 0 0 14px 14px;
+    display: grid; grid-template-columns: 7.5rem 1fr auto; gap: 0.4rem;
+    padding: 0.6rem; border-top: 1px solid var(--line);
   }
   .chat-form input {
-    min-width: 0; padding: 0.55rem 0.75rem; border: 1px solid var(--line); border-radius: 999px;
-    background: var(--bg); color: var(--text); font: inherit; font-size: 0.95rem;
+    min-width: 0; padding: 0.4rem 0.7rem; border: 1px solid var(--line); border-radius: 999px;
+    background: var(--bg); color: var(--text); font: inherit; font-size: 0.9rem;
   }
   .chat-form input:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
   .chat-send {
-    padding: 0.55rem 1.1rem; border: 0; border-radius: 999px; background: var(--accent); color: var(--accent-ink);
-    font: inherit; font-size: 0.95rem; font-weight: 500; cursor: pointer;
+    padding: 0.4rem 0.95rem; border: 0; border-radius: 999px; background: var(--accent); color: var(--accent-ink);
+    font: inherit; font-size: 0.9rem; font-weight: 500; cursor: pointer;
   }
   .chat-send:disabled { opacity: 0.6; cursor: default; }
-  .chat-err { grid-column: 1 / -1; margin: 0; color: var(--muted); font-size: 0.85rem; }
+  .chat-err, .chat-note { grid-column: 1 / -1; margin: 0.1rem 0.3rem 0; font-size: 0.8rem; color: var(--muted); }
+  .chat-err { color: var(--text); }
   .chat-err:empty { display: none; }
   @media (max-width: 30rem) {
     .chat-form { grid-template-columns: 1fr auto; }
@@ -501,16 +522,23 @@
     <li><a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener" data-i18n="linkPropose">Take part</a></li>
   </ul>
 
-  <section class="chat" id="chat" aria-labelledby="chat-title" hidden>
-    <h2 id="chat-title" data-i18n="chat">Chat</h2>
-    <p class="chat-note" data-i18n="chatNote"></p>
-    <ol class="chat-list" id="chat-list" aria-live="polite"></ol>
-    <form class="chat-form" id="chat-form" autocomplete="off" novalidate>
-      <input class="chat-name" id="chat-name" type="text" maxlength="40" data-i18n-ph="chatName">
-      <input class="chat-msg" id="chat-msg" type="text" maxlength="500" data-i18n-ph="chatMsg" enterkeyhint="send">
-      <button class="chat-send" id="chat-send" type="submit">Send</button>
-      <p class="chat-err" id="chat-err" role="status"></p>
-    </form>
+  <section class="chat" id="chat" aria-label="Chat" hidden>
+    <button type="button" class="chat-bar" id="chat-bar" aria-expanded="false" aria-controls="chat-panel">
+      <span class="chat-label" id="chat-label">Chat</span>
+      <span class="chat-last" id="chat-last"></span>
+      <span class="chat-count" id="chat-count"></span>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <div class="chat-panel" id="chat-panel" hidden>
+      <ol class="chat-list" id="chat-list" aria-live="polite"></ol>
+      <form class="chat-form" id="chat-form" autocomplete="off" novalidate>
+        <input class="chat-name" id="chat-name" type="text" maxlength="40" data-i18n-ph="chatName">
+        <input class="chat-msg" id="chat-msg" type="text" maxlength="500" data-i18n-ph="chatMsg" enterkeyhint="send">
+        <button class="chat-send" id="chat-send" type="submit">Send</button>
+        <p class="chat-err" id="chat-err" role="status"></p>
+        <p class="chat-note" data-i18n="chatNote"></p>
+      </form>
+    </div>
   </section>
 
   <section aria-labelledby="timetable-title">
@@ -1319,7 +1347,22 @@
     var form = document.getElementById('chat-form'), nameIn = document.getElementById('chat-name');
     var msgIn = document.getElementById('chat-msg'), sendBtn = document.getElementById('chat-send');
     var errEl = document.getElementById('chat-err');
+    var bar = document.getElementById('chat-bar'), panel = document.getElementById('chat-panel');
+    var labelEl = document.getElementById('chat-label'), lastEl = document.getElementById('chat-last');
+    var countEl = document.getElementById('chat-count');
+    var OPEN_KEY = 'kcmd-radio-chat-open';
     var msgs = new Map(), sb = null, errKey = '';
+
+    // closed by default: a slim bar with the latest message; opening it is remembered in this browser
+    function setOpen(open, focus) {
+      section.classList.toggle('is-open', open);
+      section.classList.remove('has-new');
+      bar.setAttribute('aria-expanded', String(open));
+      panel.hidden = !open;
+      try { localStorage.setItem(OPEN_KEY, open ? '1' : '0'); } catch (x) {}
+      if (open) { list.scrollTop = list.scrollHeight; if (focus) (nameIn.value ? msgIn : nameIn).focus(); }
+    }
+    bar.addEventListener('click', function () { setOpen(panel.hidden, true); track('chat_toggle', { open: !panel.hidden }); });
     try { nameIn.value = localStorage.getItem(NAME_KEY) || ''; } catch (e) {}
 
     function setErr(k) { errKey = k; errEl.textContent = k ? t(k) : ''; }
@@ -1333,13 +1376,21 @@
       var arr = Array.from(msgs.values()).sort(function (a, b) { return a.id - b.id; }).slice(-150);
       list.innerHTML = arr.length ? arr.map(function (m) {
         return '<li><span class="chat-who">' + esc(m.name) + '</span>' +
+          '<span class="chat-body">' + esc(m.body) + '</span>' +
           '<time class="chat-time" datetime="' + esc(m.created_at) + '">' + esc(when(new Date(m.created_at))) + '</time>' +
           (EDIT ? '<button type="button" class="chat-hide" data-id="' + m.id + '">' + esc(t('chatHide')) + '</button>' : '') +
-          '<p class="chat-body">' + esc(m.body) + '</p></li>';
+          '</li>';
       }).join('') : '<li class="chat-empty">' + esc(t('chatEmpty')) + '</li>';
       if (toBottom || atBottom) list.scrollTop = list.scrollHeight;
+      var last = arr[arr.length - 1];
+      lastEl.textContent = last ? last.name + ': ' + last.body : t('chatEmpty');
+      countEl.textContent = arr.length ? String(arr.length) : '';
     }
-    onLangChange.push(function () { sendBtn.textContent = t('chatSend'); if (errKey) errEl.textContent = t(errKey); render(); });
+    onLangChange.push(function () {
+      sendBtn.textContent = t('chatSend'); labelEl.textContent = t('chat'); section.setAttribute('aria-label', t('chat'));
+      if (errKey) errEl.textContent = t(errKey);
+      render();
+    });
     function keep(m) { if (m && m.id) { if (m.hidden) msgs.delete(m.id); else msgs.set(m.id, m); } }
 
     function start() {
@@ -1350,8 +1401,15 @@
           res.data.forEach(keep);
           section.hidden = false;
           render(true);
+          var wasOpen = false;
+          try { wasOpen = localStorage.getItem(OPEN_KEY) === '1'; } catch (x) {}
+          setOpen(wasOpen, false);
           sb.channel('kcmd-chat')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, function (p) { keep(p.new); render(); })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, function (p) {
+              var isNew = p.new && p.new.id && !msgs.has(p.new.id) && !p.new.hidden;
+              keep(p.new); render();
+              if (isNew && panel.hidden) section.classList.add('has-new');
+            })
             .subscribe();
         })
         .catch(function (e) { console.warn('[chat] not shown: ' + (e && e.message)); });
