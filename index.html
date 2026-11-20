@@ -576,7 +576,7 @@
       offline: 'Offline',
       unreachable: 'The radio cannot be reached right now. Trying again.',
       lnNow: '{n} listening now', lnNowOne: '1 person listening now',
-      lnWith: 'You and {n} others are listening', lnWithOne: 'You and 1 other person are listening',
+      lnWith: 'You and {n} others are listening', lnWithOne: 'You and 1 other person are listening', lnAlone: 'Right now it’s just you listening',
       silenceAt: 'Air raid alert in Kyiv since {t} Kyiv time.',
       silence: 'Air raid alert in Kyiv.',
       silenceRest: ' Every channel is silent until it ends, then a 30-second signal by a Ukrainian artist breaks the silence and each channel returns to its programme.',
@@ -614,7 +614,7 @@
       offline: 'Не в етері',
       unreachable: 'Радіо зараз недоступне. Пробуємо ще раз.',
       lnNow: 'Зараз слухають: {n}', lnNowOne: 'Зараз слухають: 1',
-      lnWith: 'Разом із вами слухають ще {n}', lnWithOne: 'Разом із вами слухає ще 1',
+      lnWith: 'Разом із вами слухають ще {n}', lnWithOne: 'Разом із вами слухає ще 1', lnAlone: 'Зараз слухаєте лише ви',
       silenceAt: 'Повітряна тривога в Києві з {t} за київським часом.',
       silence: 'Повітряна тривога в Києві.',
       silenceRest: ' Усі канали мовчать до відбою. Після відбою тишу на всіх каналах порушує 30-секундний сигнал, створений українськими артист_ками, а потім кожен канал повертається до своєї програми.',
@@ -1071,6 +1071,7 @@
         var others = Math.max(0, n - 1);
         if (others === 1) text = t('lnWithOne');
         else if (others > 1) text = t('lnWith', { n: others });
+        else text = t('lnAlone');
       } else if (n === 1) text = t('lnNowOne');
       else if (n > 1) text = t('lnNow', { n: n });
     }
