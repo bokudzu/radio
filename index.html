@@ -198,6 +198,40 @@
     .player .info { padding-right: 0; }
   }
 
+  /* chat */
+  .chat-note { color: var(--muted); font-size: 0.95rem; margin: -0.25rem 0 1rem; }
+  .chat-list {
+    margin: 0; padding: 0.35rem 1.25rem; list-style: none;
+    max-height: 22rem; overflow-y: auto; overscroll-behavior: contain;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px 14px 0 0; border-bottom: 0;
+  }
+  .chat-list li { padding: 0.7rem 0; border-top: 1px solid var(--line); }
+  .chat-list li:first-child { border-top: 0; }
+  .chat-who { font-weight: 600; }
+  .chat-time { margin-left: 0.4rem; font-family: "Ubuntu Sans Mono", ui-monospace, monospace; font-size: 0.8rem; color: var(--muted); }
+  .chat-body { margin: 0.1rem 0 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+  .chat-empty { color: var(--muted); }
+  .chat-hide { margin-left: 0.5rem; padding: 0; border: 0; background: none; color: var(--accent); font: inherit; font-size: 0.8rem; cursor: pointer; }
+  .chat-form {
+    display: grid; grid-template-columns: 9rem 1fr auto; gap: 0.5rem;
+    padding: 0.75rem; background: var(--surface); border: 1px solid var(--line); border-radius: 0 0 14px 14px;
+  }
+  .chat-form input {
+    min-width: 0; padding: 0.55rem 0.75rem; border: 1px solid var(--line); border-radius: 999px;
+    background: var(--bg); color: var(--text); font: inherit; font-size: 0.95rem;
+  }
+  .chat-form input:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+  .chat-send {
+    padding: 0.55rem 1.1rem; border: 0; border-radius: 999px; background: var(--accent); color: var(--accent-ink);
+    font: inherit; font-size: 0.95rem; font-weight: 500; cursor: pointer;
+  }
+  .chat-send:disabled { opacity: 0.6; cursor: default; }
+  .chat-err { grid-column: 1 / -1; margin: 0; color: var(--muted); font-size: 0.85rem; }
+  .chat-err:empty { display: none; }
+  @media (max-width: 30rem) {
+    .chat-form { grid-template-columns: 1fr auto; }
+    .chat-name { grid-column: 1 / -1; }
+  }
   .tacet-note { margin: 1rem 0 0; color: var(--muted); font-size: 0.95rem; }
   .links {
     display: flex;
@@ -467,6 +501,18 @@
     <li><a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener" data-i18n="linkPropose">Take part</a></li>
   </ul>
 
+  <section class="chat" id="chat" aria-labelledby="chat-title" hidden>
+    <h2 id="chat-title" data-i18n="chat">Chat</h2>
+    <p class="chat-note" data-i18n="chatNote"></p>
+    <ol class="chat-list" id="chat-list" aria-live="polite"></ol>
+    <form class="chat-form" id="chat-form" autocomplete="off" novalidate>
+      <input class="chat-name" id="chat-name" type="text" maxlength="40" data-i18n-ph="chatName">
+      <input class="chat-msg" id="chat-msg" type="text" maxlength="500" data-i18n-ph="chatMsg" enterkeyhint="send">
+      <button class="chat-send" id="chat-send" type="submit">Send</button>
+      <p class="chat-err" id="chat-err" role="status"></p>
+    </form>
+  </section>
+
   <section aria-labelledby="timetable-title">
     <h2 id="timetable-title" data-i18n="timetable">Timetable</h2>
     <p class="tt-intro" data-i18n-html="ttIntro"></p>
@@ -555,113 +601,83 @@
   // ---- two languages: English and Ukrainian, switched without reloading ----
   // ==== PAGE TEXTS START ==== (the editor at ?edit rewrites everything between these two lines)
   var I18N = {
-    "en": {
-      "docTitle": "KCMD Radio on V2in",
-      "title": "KCMD Radio on V2in",
-      "sub": "An online radio channel for new music from Kyiv Contemporary Music Days, on V2in, the new platform by Radio Tallinn 1965",
-      "tacetNote": "Whenever there is an air raid alert in Kyiv, all V2in channels fall silent.",
-      "volume": "Volume",
-      "play": "Play KCMD Radio",
-      "pause": "Pause KCMD Radio",
-      "st_idle": "Press play to listen",
-      "st_connecting": "Connecting…",
-      "st_onair": "On air",
-      "st_buffering": "Buffering…",
-      "st_reconnecting": "Reconnecting…",
-      "st_paused": "Paused",
-      "st_failed": "The stream could not start. Press play to try again.",
-      "offline": "Offline",
-      "unreachable": "The radio cannot be reached right now. Trying again.",
-      "silenceAt": "Air raid alert in Kyiv since {t} Kyiv time.",
-      "silence": "Air raid alert in Kyiv.",
-      "silenceRest": " Every channel is silent until it ends, then a 30-second signal by a Ukrainian artist breaks the silence and each channel returns to its programme.",
-      "linkListen": "Listen to all V2in channels",
-      "linkPropose": "Take part",
-      "linkLinktree": "Radio Tallinn 1965",
-      "timetable": "Timetable",
-      "next": "Next",
-      "onNow": "Now",
-      "subscribe": "Subscribe to the events calendar",
-      "subGoogle": "Google Calendar",
-      "subscribeIcal": "Apple / Outlook (iCal)",
-      "descMore": "Read more",
-      "descLess": "Hide",
-      "tzNote": "Times are shown in your time zone.",
-      "tzNoteZone": "Times are shown in your time zone ({place}).",
-      "ttIntro": "The timetable lists special broadcasts: premieres of new works and programmes made for the radio. The rest of the time, the channel plays recordings from the KCMD archive, recordings sent in by artists, generative music and more. New broadcasts will be added over the coming days, so <a href=\"#subscribe\">subscribe to the calendar<\/a> to stay up to date.",
-      "about": "About the project",
-      "about1": "Kyiv Contemporary Music Days (KCMD), a platform for new music from Kyiv, and Radio Tallinn 1965, with technical support from POSITRON.STUDIO, have joined forces on a new project: a KCMD channel on V2in, the new radio platform presented at the Huddersfield Contemporary Music Festival (hcmf//) in the UK, 20–29 November 2026.",
-      "about2": "The channel is a place where Ukrainian musicians and their friends, scattered across Ukraine and abroad, can always hear each other’s voices and join in themselves. It brings together broadcasts curated by artists, recordings of KCMD concerts over the years, improvised sets, generative streams and conversations, and will remain open to new formats as it evolves over time.",
-      "tacet": "KCMD also brings TACET to the entire V2in platform: TACET means that whenever there is an air raid alert in Kyiv, all channels on V2in fall silent, and when the air raid ends, a 30-second signal by a Ukrainian artist breaks the silence, and then each channel returns to its programme.",
-      "practical": "Practical information",
-      "listen": "Listen",
-      "listenText": "Right here on this page, or together with all channels on <a href=\"https://v2in.stream/\" target=\"_blank\" rel=\"noopener\">v2in.stream<\/a>, on a phone or computer.",
-      "when": "When",
-      "whenText": "From 20 November 2026 onwards. Broadcasts are listed in the <a href=\"#timetable-title\">timetable<\/a>.",
-      "takePart": "Take part",
-      "takePartText": "Ukrainian artists can send a 30-second signal for TACET or propose a broadcast for the channel: fill in the <a href=\"https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform\" target=\"_blank\" rel=\"noopener\">form<\/a>.",
-      "artists": "KCMD Radio artists",
-      "more": "<a href=\"https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform\" target=\"_blank\" rel=\"noopener\">Take part<\/a>",
-      "teams": "Teams",
-      "teamRT": "Maria Hansar, Asja Dolgaja, Kristjan Jansen, Tarmo Johannes, Andrus Laansalu and Mike Cole",
-      "teamKCMD": "Albert Saprykin, Tetiana Khoroshun, Boris Loginov",
-      "techSupport": "Technical support",
-      "kcmdUrl": "https://en.kcmd.eu",
-      "footer": "<a href=\"https://en.kcmd.eu\" target=\"_blank\" rel=\"noopener\">Kyiv Contemporary Music Days<\/a> × <a href=\"https://linktr.ee/radiotallinn1965\" target=\"_blank\" rel=\"noopener\">Radio Tallinn 1965<\/a> on V2in<br>Technical support: <a href=\"https://positron.studio\" target=\"_blank\" rel=\"noopener\">POSITRON.STUDIO<\/a>"
+    en: {
+      docTitle: 'KCMD Radio on V2in',
+      title: 'KCMD Radio on V2in',
+      sub: 'A radio channel of new Ukrainian music by Kyiv Contemporary Music Days, on V2in, the new platform by Radio Tallinn 1965',
+      tacetNote: 'Whenever there is an air raid alert in Kyiv, all V2in channels fall silent.',
+      volume: 'Volume',
+      play: 'Play KCMD Radio', pause: 'Pause KCMD Radio',
+      st_idle: 'Press play to listen', st_connecting: 'Connecting…', st_onair: 'On air', st_buffering: 'Buffering…',
+      st_reconnecting: 'Reconnecting…', st_paused: 'Paused', st_failed: 'The stream could not start. Press play to try again.',
+      offline: 'Offline',
+      unreachable: 'The radio cannot be reached right now. Trying again.',
+      silenceAt: 'Air raid alert in Kyiv since {t} Kyiv time.',
+      silence: 'Air raid alert in Kyiv.',
+      silenceRest: ' Every channel is silent until it ends, then a 30-second signal by a Ukrainian artist breaks the silence and each channel returns to its programme.',
+      linkListen: 'Listen to all V2in channels', linkPropose: 'Take part', linkLinktree: 'Radio Tallinn 1965',
+      timetable: 'Timetable', next: 'Next', onNow: 'Now', subscribe: 'Subscribe to the events calendar', subGoogle: 'Google Calendar', subscribeIcal: 'Apple / Outlook (iCal)', descMore: 'Read more', descLess: 'Hide',
+      tzNote: 'Times are shown in your time zone.', tzNoteZone: 'Times are shown in your time zone ({place}).',
+      ttIntro: 'The timetable lists special broadcasts: premieres of new works and programmes made for the radio. The rest of the time, the channel plays recordings from the KCMD archive, recordings sent in by artists, generative music and more. New broadcasts will be added over the coming days, so <a href="#subscribe">subscribe to the calendar</a> to stay up to date.',
+      about: 'About the project',
+      about1: 'Kyiv Contemporary Music Days (KCMD), a platform for new music from Kyiv, and Radio Tallinn 1965, with technical support from POSITRON.STUDIO, have joined forces on a new project: a KCMD channel on V2in, the new radio platform presented at the Huddersfield Contemporary Music Festival (hcmf//) in the UK, 20–29 November 2026.',
+      about2: 'The channel is a place where Ukrainian musicians and their friends, scattered across Ukraine and abroad, can always hear each other’s voices and join in themselves. It brings together broadcasts curated by artists, recordings of KCMD concerts over the years, improvised sets, generative streams and conversations, and will remain open to new formats as it evolves over time.',
+      tacet: 'KCMD also brings TACET to the entire V2in platform: TACET means that whenever there is an air raid alert in Kyiv, all channels on V2in fall silent, and when the air raid ends, a 30-second signal by a Ukrainian artist breaks the silence, and then each channel returns to its programme.',
+      practical: 'Practical information',
+      listen: 'Listen', listenText: 'Right here on this page, or together with all channels on <a href="https://v2in.stream/" target="_blank" rel="noopener">v2in.stream</a>, on a phone or computer.',
+      when: 'When', whenText: 'From 20 November 2026 onwards. Broadcasts are listed in the <a href="#timetable-title">timetable</a>.',
+      takePart: 'Take part', takePartText: 'Ukrainian artists can send a 30-second signal for TACET or propose a broadcast for the channel: fill in the <a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener">form</a>.',
+      artists: 'KCMD Radio artists',
+      more: '<a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener">Take part</a>',
+      chat: 'Chat', chatNote: 'Write to other listeners. Be kind to each other. Links are not posted in the chat.',
+      chatName: 'Your name', chatMsg: 'Message', chatSend: 'Send', chatEmpty: 'Quiet so far. Write the first message.',
+      chatNeedName: 'Write your name first.', chatSlow: 'Wait a few seconds and try again.', chatLinks: 'Links are not posted in the chat.',
+      chatErr: 'The message could not be sent. Try again.', chatHide: 'Hide', chatSecret: 'Moderator password:',
+      teams: 'Teams',
+      teamRT: 'Maria Hansar, Asja Dolgaja, Kristjan Jansen, Tarmo Johannes, Andrus Laansalu and Mike Cole',
+      teamKCMD: 'Albert Saprykin, Tetiana Khoroshun, Boris Loginov',
+      techSupport: 'Technical support',
+      kcmdUrl: 'https://en.kcmd.eu',
+      footer: '<a href="https://en.kcmd.eu" target="_blank" rel="noopener">Kyiv Contemporary Music Days</a> × <a href="https://linktr.ee/radiotallinn1965" target="_blank" rel="noopener">Radio Tallinn 1965</a> on V2in<br>Technical support: <a href="https://positron.studio" target="_blank" rel="noopener">POSITRON.STUDIO</a>'
     },
-    "uk": {
-      "docTitle": "KCMD Radio на V2in",
-      "title": "KCMD Radio на V2in",
-      "sub": "Онлайн-радіо нової музики від Kyiv Contemporary Music Days на V2in, новій платформі Radio Tallinn 1965",
-      "tacetNote": "Коли в Києві повітряна тривога, усі канали V2in замовкають.",
-      "volume": "Гучність",
-      "play": "Слухати KCMD Radio",
-      "pause": "Пауза KCMD Radio",
-      "st_idle": "Натисніть, щоб слухати",
-      "st_connecting": "Підключення…",
-      "st_onair": "В етері",
-      "st_buffering": "Буферизація…",
-      "st_reconnecting": "Перепідключення…",
-      "st_paused": "Пауза",
-      "st_failed": "Не вдалося запустити стрім. Натисніть ще раз.",
-      "offline": "Не в етері",
-      "unreachable": "Радіо зараз недоступне. Пробуємо ще раз.",
-      "silenceAt": "Повітряна тривога в Києві з {t} за київським часом.",
-      "silence": "Повітряна тривога в Києві.",
-      "silenceRest": " Усі канали мовчать до відбою. Після відбою тишу на всіх каналах порушує 30-секундний сигнал, створений українськими артист_ками, а потім кожен канал повертається до своєї програми.",
-      "linkListen": "Слухати всі канали V2in",
-      "linkPropose": "Долучитися",
-      "linkLinktree": "Radio Tallinn 1965",
-      "timetable": "Розклад",
-      "next": "Наступний етер",
-      "onNow": "зараз",
-      "subscribe": "Підписатися на календар подій",
-      "subGoogle": "Google Calendar",
-      "subscribeIcal": "Apple / Outlook (iCal)",
-      "descMore": "Детальніше",
-      "descLess": "Згорнути",
-      "tzNote": "Час показано у вашому часовому поясі.",
-      "tzNoteZone": "Час показано у вашому часовому поясі ({place}).",
-      "ttIntro": "У розкладі — спеціальні етери: премʼєри нових творів і програми, створені для радіо. Решту часу на каналі звучать архівні записи KCMD, записи, надіслані артист_ками, генеративна музика тощо. Упродовж наступних днів розклад доповнюватиметься новими етерами, тож радимо <a href=\"#subscribe\">підписатися на календар<\/a>, щоб не пропустити оновлення.",
-      "about": "Про проєкт",
-      "about1": "Kyiv Contemporary Music Days (KCMD), платформа нової музики з Києва, і Radio Tallinn 1965, за технічної підтримки POSITRON.STUDIO, запустили спільний проєкт: канал KCMD Radio на V2in, новій радіоплатформі, яку презентували на Huddersfield Contemporary Music Festival (hcmf//) у Великій Британії 20–29 листопада 2026 року.",
-      "about2": "KCMD Radio — це місце, де українські музикант_ки та їхні друзі завжди можуть почути голоси одне одного й долучитися самі. Тут звучать етери, які курують артист_ки, записи з концертів KCMD, імпровізаційні сети, генеративні потоки й розмови. Сам канал лишається відкритим до нових форматів і змінюватиметься з часом.",
-      "tacet": "KCMD також приносить на всю платформу TACET: щойно в Києві лунає повітряна тривога, усі канали V2in замовкають, а коли вона закінчується, тишу порушує 30-секундний сигнал, створений українськими артист_ками, після чого кожен канал повертається до своєї програми.",
-      "practical": "Практична інформація",
-      "listen": "Слухати",
-      "listenText": "Тут, на цій сторінці, або разом з усіма каналами на <a href=\"https://v2in.stream/\" target=\"_blank\" rel=\"noopener\">v2in.stream<\/a>, з телефона чи компʼютера.",
-      "when": "Коли",
-      "whenText": "З 20 листопада 2026 року. Етери — у <a href=\"#timetable-title\">розкладі<\/a>.",
-      "takePart": "Долучитися",
-      "takePartText": "Українські артист_ки можуть надіслати 30-секундний сигнал для TACET або запропонувати етер для каналу: заповніть <a href=\"https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform\" target=\"_blank\" rel=\"noopener\">форму<\/a>.",
-      "artists": "Артист_ки KCMD Radio",
-      "more": "<a href=\"https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform\" target=\"_blank\" rel=\"noopener\">Долучитися<\/a>",
-      "teams": "Команди",
-      "teamRT": "Maria Hansar, Asja Dolgaja, Kristjan Jansen, Tarmo Johannes, Andrus Laansalu і Mike Cole",
-      "teamKCMD": "Альберт Саприкін, Тетяна Хорошун, Борис Логінов",
-      "techSupport": "Технічна підтримка",
-      "kcmdUrl": "https://www.kcmd.eu",
-      "footer": "<a href=\"https://www.kcmd.eu\" target=\"_blank\" rel=\"noopener\">Kyiv Contemporary Music Days<\/a> × <a href=\"https://linktr.ee/radiotallinn1965\" target=\"_blank\" rel=\"noopener\">Radio Tallinn 1965<\/a> на V2in<br>Технічна підтримка: <a href=\"https://positron.studio\" target=\"_blank\" rel=\"noopener\">POSITRON.STUDIO<\/a>"
+    uk: {
+      docTitle: 'KCMD Radio на V2in',
+      title: 'KCMD Radio на V2in',
+      sub: 'Радіоканал нової української музики від Kyiv Contemporary Music Days на V2in, новій платформі Radio Tallinn 1965',
+      tacetNote: 'Коли в Києві повітряна тривога, усі канали V2in замовкають.',
+      volume: 'Гучність',
+      play: 'Слухати KCMD Radio', pause: 'Пауза KCMD Radio',
+      st_idle: 'Натисніть, щоб слухати', st_connecting: 'Підключення…', st_onair: 'В етері', st_buffering: 'Буферизація…',
+      st_reconnecting: 'Перепідключення…', st_paused: 'Пауза', st_failed: 'Не вдалося запустити стрім. Натисніть ще раз.',
+      offline: 'Не в етері',
+      unreachable: 'Радіо зараз недоступне. Пробуємо ще раз.',
+      silenceAt: 'Повітряна тривога в Києві з {t} за київським часом.',
+      silence: 'Повітряна тривога в Києві.',
+      silenceRest: ' Усі канали мовчать до відбою. Після відбою тишу на всіх каналах порушує 30-секундний сигнал, створений українськими артист_ками, а потім кожен канал повертається до своєї програми.',
+      linkListen: 'Слухати всі канали V2in', linkPropose: 'Долучитися', linkLinktree: 'Radio Tallinn 1965',
+      timetable: 'Розклад', next: 'Наступний етер', onNow: 'зараз', subscribe: 'Підписатися на календар подій', subGoogle: 'Google Calendar', subscribeIcal: 'Apple / Outlook (iCal)', descMore: 'Детальніше', descLess: 'Згорнути',
+      tzNote: 'Час показано у вашому часовому поясі.', tzNoteZone: 'Час показано у вашому часовому поясі ({place}).',
+      ttIntro: 'У розкладі — спеціальні етери: премʼєри нових творів і програми, створені для радіо. Решту часу на каналі звучать архівні записи KCMD, записи, надіслані артист_ками, генеративна музика тощо. Упродовж наступних днів розклад доповнюватиметься новими етерами, тож радимо <a href="#subscribe">підписатися на календар</a>, щоб не пропустити оновлення.',
+      about: 'Про проєкт',
+      about1: 'Kyiv Contemporary Music Days (KCMD), платформа нової музики з Києва, і Radio Tallinn 1965, за технічної підтримки POSITRON.STUDIO, запустили спільний проєкт: канал KCMD Radio на V2in, новій радіоплатформі, яку презентували на Huddersfield Contemporary Music Festival (hcmf//) у Великій Британії 20–29 листопада 2026 року.',
+      about2: 'KCMD Radio — це місце, де українські музикант_ки та їхні друзі завжди можуть почути голоси одне одного й долучитися самі. Тут звучать етери, які курують артист_ки, записи з концертів KCMD, імпровізаційні сети, генеративні потоки й розмови. Сам канал лишається відкритим до нових форматів і змінюватиметься з часом.',
+      tacet: 'KCMD також приносить на всю платформу TACET: щойно в Києві лунає повітряна тривога, усі канали V2in замовкають, а коли вона закінчується, тишу порушує 30-секундний сигнал, створений українськими артист_ками, після чого кожен канал повертається до своєї програми.',
+      practical: 'Практична інформація',
+      listen: 'Слухати', listenText: 'Тут, на цій сторінці, або разом з усіма каналами на <a href="https://v2in.stream/" target="_blank" rel="noopener">v2in.stream</a>, з телефона чи компʼютера.',
+      when: 'Коли', whenText: 'З 20 листопада 2026 року. Етери — у <a href="#timetable-title">розкладі</a>.',
+      takePart: 'Долучитися', takePartText: 'Українські артист_ки можуть надіслати 30-секундний сигнал для TACET або запропонувати етер для каналу: заповніть <a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener">форму</a>.',
+      artists: 'Артист_ки KCMD Radio',
+      more: '<a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener">Долучитися</a>',
+      chat: 'Чат', chatNote: 'Напишіть іншим слухач_кам. Будьмо уважні одне до одного. Посилання в чаті не публікуються.',
+      chatName: 'Ваше імʼя', chatMsg: 'Повідомлення', chatSend: 'Надіслати', chatEmpty: 'Поки що тихо. Напишіть перше повідомлення.',
+      chatNeedName: 'Спершу напишіть своє імʼя.', chatSlow: 'Зачекайте кілька секунд і спробуйте ще раз.', chatLinks: 'Посилання в чаті не публікуються.',
+      chatErr: 'Не вдалося надіслати. Спробуйте ще раз.', chatHide: 'Приховати', chatSecret: 'Пароль модератор_ки:',
+      teams: 'Команди',
+      teamRT: 'Maria Hansar, Asja Dolgaja, Kristjan Jansen, Tarmo Johannes, Andrus Laansalu і Mike Cole',
+      teamKCMD: 'Альберт Саприкін, Тетяна Хорошун, Борис Логінов',
+      techSupport: 'Технічна підтримка',
+      kcmdUrl: 'https://www.kcmd.eu',
+      footer: '<a href="https://www.kcmd.eu" target="_blank" rel="noopener">Kyiv Contemporary Music Days</a> × <a href="https://linktr.ee/radiotallinn1965" target="_blank" rel="noopener">Radio Tallinn 1965</a> на V2in<br>Технічна підтримка: <a href="https://positron.studio" target="_blank" rel="noopener">POSITRON.STUDIO</a>'
     }
   };
   // ==== PAGE TEXTS END ====
@@ -744,6 +760,7 @@
     renderArtists();
     document.querySelectorAll('[data-i18n-href]').forEach(function (el) { el.setAttribute('href', t(el.getAttribute('data-i18n-href'))); });
     document.querySelectorAll('[data-i18n-aria]').forEach(function (el) { el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria'))); });
+    document.querySelectorAll('[data-i18n-ph]').forEach(function (el) { var v = t(el.getAttribute('data-i18n-ph')); el.placeholder = v; el.setAttribute('aria-label', v); });
     document.querySelectorAll('.lang button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-lang') === lang)); });
     onLangChange.forEach(function (fn) { fn(); });
   }
@@ -1287,6 +1304,103 @@
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && sub.open) { sub.open = false; sub.querySelector('summary').focus(); } });
   sub.querySelectorAll('.subscribe-menu a').forEach(function (a) { a.addEventListener('click', function () { sub.open = false; }); });
+
+  // ---- chat (Supabase) ----
+  // To switch it on: fill in the project's address and its public key (Supabase → Project Settings → API).
+  // The key is public by design: what it may do is limited by the rules in supabase-chat.sql.
+  // Until both are filled in, or while the project can't be reached (e.g. paused), the chat stays hidden.
+  var CHAT_URL = 'https://nmrhqfkqcnqkxkumnafw.supabase.co';   // e.g. 'https://abcdefgh.supabase.co'
+  var CHAT_KEY = 'sb_publishable_wS5fkJpF3jyESJOwxFgyaA_3tm4IONC';   // the "anon" / "publishable" key
+  (function chat() {
+    if (!CHAT_URL || !CHAT_KEY) return;
+    var EDIT = /[?&]edit(\b|=|&|$)/.test(location.search);   // in edit mode each message gets a "Hide" button
+    var NAME_KEY = 'kcmd-radio-chat-name', MOD_KEY = 'kcmd-radio-chat-mod';
+    var section = document.getElementById('chat'), list = document.getElementById('chat-list');
+    var form = document.getElementById('chat-form'), nameIn = document.getElementById('chat-name');
+    var msgIn = document.getElementById('chat-msg'), sendBtn = document.getElementById('chat-send');
+    var errEl = document.getElementById('chat-err');
+    var msgs = new Map(), sb = null, errKey = '';
+    try { nameIn.value = localStorage.getItem(NAME_KEY) || ''; } catch (e) {}
+
+    function setErr(k) { errKey = k; errEl.textContent = k ? t(k) : ''; }
+    function when(d) {
+      var hm = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+      if (d.toDateString() === new Date().toDateString()) return hm;
+      return d.toLocaleDateString(lang === 'uk' ? 'uk-UA' : 'en-GB', { day: 'numeric', month: 'short' }) + ', ' + hm;
+    }
+    function render(toBottom) {
+      var atBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 40;
+      var arr = Array.from(msgs.values()).sort(function (a, b) { return a.id - b.id; }).slice(-150);
+      list.innerHTML = arr.length ? arr.map(function (m) {
+        return '<li><span class="chat-who">' + esc(m.name) + '</span>' +
+          '<time class="chat-time" datetime="' + esc(m.created_at) + '">' + esc(when(new Date(m.created_at))) + '</time>' +
+          (EDIT ? '<button type="button" class="chat-hide" data-id="' + m.id + '">' + esc(t('chatHide')) + '</button>' : '') +
+          '<p class="chat-body">' + esc(m.body) + '</p></li>';
+      }).join('') : '<li class="chat-empty">' + esc(t('chatEmpty')) + '</li>';
+      if (toBottom || atBottom) list.scrollTop = list.scrollHeight;
+    }
+    onLangChange.push(function () { sendBtn.textContent = t('chatSend'); if (errKey) errEl.textContent = t(errKey); render(); });
+    function keep(m) { if (m && m.id) { if (m.hidden) msgs.delete(m.id); else msgs.set(m.id, m); } }
+
+    function start() {
+      try { sb = window.supabase.createClient(CHAT_URL, CHAT_KEY, { auth: { persistSession: false } }); } catch (e) { return; }
+      Promise.resolve(sb.from('messages').select('id,created_at,name,body,hidden').order('id', { ascending: false }).limit(150))
+        .then(function (res) {
+          if (res.error) throw res.error;
+          res.data.forEach(keep);
+          section.hidden = false;
+          render(true);
+          sb.channel('kcmd-chat')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, function (p) { keep(p.new); render(); })
+            .subscribe();
+        })
+        .catch(function (e) { console.warn('[chat] not shown: ' + (e && e.message)); });
+    }
+    var lib = document.createElement('script');
+    lib.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js';
+    lib.onload = start;
+    document.head.appendChild(lib);
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var name = nameIn.value.trim(), body = msgIn.value.trim();
+      if (!name) { setErr('chatNeedName'); nameIn.focus(); return; }
+      if (!body || !sb) return;
+      if (/(https?:\/\/|www\.)/i.test(body)) { setErr('chatLinks'); return; }
+      setErr('');
+      sendBtn.disabled = true;
+      try { localStorage.setItem(NAME_KEY, name); } catch (x) {}
+      Promise.resolve(sb.from('messages').insert({ name: name, body: body }).select()).then(function (res) {
+        sendBtn.disabled = false;
+        if (res.error) {
+          var m = String(res.error.message || '');
+          setErr(m.indexOf('chat:slow') >= 0 ? 'chatSlow' : m.indexOf('chat:links') >= 0 ? 'chatLinks' : 'chatErr');
+          return;
+        }
+        msgIn.value = '';
+        (res.data || []).forEach(keep);
+        render(true);
+        track('chat_send');
+      }, function () { sendBtn.disabled = false; setErr('chatErr'); });
+    });
+
+    // moderation, in edit mode only: the password is asked once and kept in this browser
+    list.addEventListener('click', function (e) {
+      var b = e.target.closest('.chat-hide');
+      if (!b || !sb) return;
+      var secret = '';
+      try { secret = localStorage.getItem(MOD_KEY) || ''; } catch (x) {}
+      if (!secret) secret = prompt(t('chatSecret')) || '';
+      if (!secret) return;
+      var id = Number(b.getAttribute('data-id'));
+      Promise.resolve(sb.rpc('hide_message', { msg_id: id, secret: secret })).then(function (res) {
+        if (res.error) { try { localStorage.removeItem(MOD_KEY); } catch (x) {} alert(res.error.message); return; }
+        try { localStorage.setItem(MOD_KEY, secret); } catch (x) {}
+        msgs.delete(id);
+        render();
+      });
+    });
+  })();
 
   applyLang();
   pollNow();
