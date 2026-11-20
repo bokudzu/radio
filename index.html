@@ -198,61 +198,6 @@
     .player .info { padding-right: 0; }
   }
 
-  /* chat: a slim bar under the player that opens into the conversation */
-  .chat { margin-top: 1.25rem; }
-  .chat-bar {
-    display: flex; align-items: center; gap: 0.6rem; width: 100%;
-    padding: 0.55rem 0.9rem 0.55rem 1rem;
-    background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 999px;
-    font: inherit; font-size: 0.95rem; text-align: left; cursor: pointer;
-  }
-  .chat-bar:hover { border-color: var(--accent); }
-  .chat.is-open .chat-bar { border-radius: 14px 14px 0 0; border-bottom-color: transparent; }
-  .chat-label { font-weight: 600; flex: none; position: relative; }
-  .chat.has-new .chat-label::after {
-    content: ""; position: absolute; top: 0.1rem; right: -0.55rem;
-    width: 0.4rem; height: 0.4rem; border-radius: 50%; background: var(--accent);
-  }
-  .chat-last { flex: 1; min-width: 0; margin-left: 0.4rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .chat.is-open .chat-last { visibility: hidden; }
-  .chat-count { flex: none; font-family: "Ubuntu Sans Mono", ui-monospace, monospace; font-size: 0.8rem; color: var(--muted); }
-  .chat-bar svg { flex: none; width: 0.9rem; height: 0.9rem; color: var(--muted); transition: transform 0.2s ease; }
-  .chat.is-open .chat-bar svg { transform: rotate(180deg); }
-  @media (prefers-reduced-motion: reduce) { .chat-bar svg { transition: none; } }
-  .chat-panel { background: var(--surface); border: 1px solid var(--line); border-top: 0; border-radius: 0 0 14px 14px; }
-  .chat-panel[hidden] { display: none; }
-  .chat-list {
-    margin: 0; padding: 0.25rem 1rem; list-style: none;
-    max-height: 14rem; overflow-y: auto; overscroll-behavior: contain;
-    font-size: 0.95rem; line-height: 1.45;
-  }
-  .chat-list li { padding: 0.35rem 0; overflow-wrap: anywhere; }
-  .chat-who { font-weight: 600; margin-right: 0.35rem; }
-  .chat-body { white-space: pre-wrap; }
-  .chat-time { margin-left: 0.4rem; font-family: "Ubuntu Sans Mono", ui-monospace, monospace; font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
-  .chat-empty { color: var(--muted); }
-  .chat-hide { margin-left: 0.4rem; padding: 0; border: 0; background: none; color: var(--accent); font: inherit; font-size: 0.75rem; cursor: pointer; }
-  .chat-form {
-    display: grid; grid-template-columns: 7.5rem 1fr auto; gap: 0.4rem;
-    padding: 0.6rem; border-top: 1px solid var(--line);
-  }
-  .chat-form input {
-    min-width: 0; padding: 0.4rem 0.7rem; border: 1px solid var(--line); border-radius: 999px;
-    background: var(--bg); color: var(--text); font: inherit; font-size: 0.9rem;
-  }
-  .chat-form input:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
-  .chat-send {
-    padding: 0.4rem 0.95rem; border: 0; border-radius: 999px; background: var(--accent); color: var(--accent-ink);
-    font: inherit; font-size: 0.9rem; font-weight: 500; cursor: pointer;
-  }
-  .chat-send:disabled { opacity: 0.6; cursor: default; }
-  .chat-err, .chat-note { grid-column: 1 / -1; margin: 0.1rem 0.3rem 0; font-size: 0.8rem; color: var(--muted); }
-  .chat-err { color: var(--text); }
-  .chat-err:empty { display: none; }
-  @media (max-width: 30rem) {
-    .chat-form { grid-template-columns: 1fr auto; }
-    .chat-name { grid-column: 1 / -1; }
-  }
   .tacet-note { margin: 1rem 0 0; color: var(--muted); font-size: 0.95rem; }
   .links {
     display: flex;
@@ -522,25 +467,6 @@
     <li><a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener" data-i18n="linkPropose">Take part</a></li>
   </ul>
 
-  <section class="chat" id="chat" aria-label="Chat" hidden>
-    <button type="button" class="chat-bar" id="chat-bar" aria-expanded="false" aria-controls="chat-panel">
-      <span class="chat-label" id="chat-label">Chat</span>
-      <span class="chat-last" id="chat-last"></span>
-      <span class="chat-count" id="chat-count"></span>
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </button>
-    <div class="chat-panel" id="chat-panel" hidden>
-      <ol class="chat-list" id="chat-list" aria-live="polite"></ol>
-      <form class="chat-form" id="chat-form" autocomplete="off" novalidate>
-        <input class="chat-name" id="chat-name" type="text" maxlength="40" data-i18n-ph="chatName">
-        <input class="chat-msg" id="chat-msg" type="text" maxlength="500" data-i18n-ph="chatMsg" enterkeyhint="send">
-        <button class="chat-send" id="chat-send" type="submit">Send</button>
-        <p class="chat-err" id="chat-err" role="status"></p>
-        <p class="chat-note" data-i18n="chatNote"></p>
-      </form>
-    </div>
-  </section>
-
   <section aria-labelledby="timetable-title">
     <h2 id="timetable-title" data-i18n="timetable">Timetable</h2>
     <p class="tt-intro" data-i18n-html="ttIntro"></p>
@@ -657,10 +583,6 @@
       takePart: 'Take part', takePartText: 'Ukrainian artists can send a 30-second signal for TACET or propose a broadcast for the channel: fill in the <a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener">form</a>.',
       artists: 'KCMD Radio artists',
       more: '<a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener">Take part</a>',
-      chat: 'Chat', chatNote: 'Write to other listeners. Be kind to each other. Links are not posted in the chat.',
-      chatName: 'Your name', chatMsg: 'Message', chatSend: 'Send', chatEmpty: 'Quiet so far. Write the first message.',
-      chatNeedName: 'Write your name first.', chatSlow: 'Wait a few seconds and try again.', chatLinks: 'Links are not posted in the chat.',
-      chatErr: 'The message could not be sent. Try again.', chatHide: 'Hide', chatSecret: 'Moderator password:',
       teams: 'Teams',
       teamRT: 'Maria Hansar, Asja Dolgaja, Kristjan Jansen, Tarmo Johannes, Andrus Laansalu and Mike Cole',
       teamKCMD: 'Albert Saprykin, Tetiana Khoroshun, Boris Loginov',
@@ -696,10 +618,6 @@
       takePart: 'Долучитися', takePartText: 'Українські артист_ки можуть надіслати 30-секундний сигнал для TACET або запропонувати етер для каналу: заповніть <a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener">форму</a>.',
       artists: 'Артист_ки KCMD Radio',
       more: '<a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener">Долучитися</a>',
-      chat: 'Чат', chatNote: 'Напишіть іншим слухач_кам. Будьмо уважні одне до одного. Посилання в чаті не публікуються.',
-      chatName: 'Ваше імʼя', chatMsg: 'Повідомлення', chatSend: 'Надіслати', chatEmpty: 'Поки що тихо. Напишіть перше повідомлення.',
-      chatNeedName: 'Спершу напишіть своє імʼя.', chatSlow: 'Зачекайте кілька секунд і спробуйте ще раз.', chatLinks: 'Посилання в чаті не публікуються.',
-      chatErr: 'Не вдалося надіслати. Спробуйте ще раз.', chatHide: 'Приховати', chatSecret: 'Пароль модератор_ки:',
       teams: 'Команди',
       teamRT: 'Maria Hansar, Asja Dolgaja, Kristjan Jansen, Tarmo Johannes, Andrus Laansalu і Mike Cole',
       teamKCMD: 'Альберт Саприкін, Тетяна Хорошун, Борис Логінов',
@@ -1332,133 +1250,6 @@
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && sub.open) { sub.open = false; sub.querySelector('summary').focus(); } });
   sub.querySelectorAll('.subscribe-menu a').forEach(function (a) { a.addEventListener('click', function () { sub.open = false; }); });
-
-  // ---- chat (Supabase) ----
-  // To switch it on: fill in the project's address and its public key (Supabase → Project Settings → API).
-  // The key is public by design: what it may do is limited by the rules in supabase-chat.sql.
-  // Until both are filled in, or while the project can't be reached (e.g. paused), the chat stays hidden.
-  var CHAT_URL = 'https://nmrhqfkqcnqkxkumnafw.supabase.co';   // e.g. 'https://abcdefgh.supabase.co'
-  var CHAT_KEY = 'sb_publishable_wS5fkJpF3jyESJOwxFgyaA_3tm4IONC';   // the "anon" / "publishable" key
-  (function chat() {
-    if (!CHAT_URL || !CHAT_KEY) return;
-    var EDIT = /[?&]edit(\b|=|&|$)/.test(location.search);   // in edit mode each message gets a "Hide" button
-    var NAME_KEY = 'kcmd-radio-chat-name', MOD_KEY = 'kcmd-radio-chat-mod';
-    var section = document.getElementById('chat'), list = document.getElementById('chat-list');
-    var form = document.getElementById('chat-form'), nameIn = document.getElementById('chat-name');
-    var msgIn = document.getElementById('chat-msg'), sendBtn = document.getElementById('chat-send');
-    var errEl = document.getElementById('chat-err');
-    var bar = document.getElementById('chat-bar'), panel = document.getElementById('chat-panel');
-    var labelEl = document.getElementById('chat-label'), lastEl = document.getElementById('chat-last');
-    var countEl = document.getElementById('chat-count');
-    var OPEN_KEY = 'kcmd-radio-chat-open';
-    var msgs = new Map(), sb = null, errKey = '';
-
-    // closed by default: a slim bar with the latest message; opening it is remembered in this browser
-    function setOpen(open, focus) {
-      section.classList.toggle('is-open', open);
-      section.classList.remove('has-new');
-      bar.setAttribute('aria-expanded', String(open));
-      panel.hidden = !open;
-      try { localStorage.setItem(OPEN_KEY, open ? '1' : '0'); } catch (x) {}
-      if (open) { list.scrollTop = list.scrollHeight; if (focus) (nameIn.value ? msgIn : nameIn).focus(); }
-    }
-    bar.addEventListener('click', function () { setOpen(panel.hidden, true); track('chat_toggle', { open: !panel.hidden }); });
-    try { nameIn.value = localStorage.getItem(NAME_KEY) || ''; } catch (e) {}
-
-    function setErr(k) { errKey = k; errEl.textContent = k ? t(k) : ''; }
-    function when(d) {
-      var hm = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
-      if (d.toDateString() === new Date().toDateString()) return hm;
-      return d.toLocaleDateString(lang === 'uk' ? 'uk-UA' : 'en-GB', { day: 'numeric', month: 'short' }) + ', ' + hm;
-    }
-    function render(toBottom) {
-      var atBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 40;
-      var arr = Array.from(msgs.values()).sort(function (a, b) { return a.id - b.id; }).slice(-150);
-      list.innerHTML = arr.length ? arr.map(function (m) {
-        return '<li><span class="chat-who">' + esc(m.name) + '</span>' +
-          '<span class="chat-body">' + esc(m.body) + '</span>' +
-          '<time class="chat-time" datetime="' + esc(m.created_at) + '">' + esc(when(new Date(m.created_at))) + '</time>' +
-          (EDIT ? '<button type="button" class="chat-hide" data-id="' + m.id + '">' + esc(t('chatHide')) + '</button>' : '') +
-          '</li>';
-      }).join('') : '<li class="chat-empty">' + esc(t('chatEmpty')) + '</li>';
-      if (toBottom || atBottom) list.scrollTop = list.scrollHeight;
-      var last = arr[arr.length - 1];
-      lastEl.textContent = last ? last.name + ': ' + last.body : t('chatEmpty');
-      countEl.textContent = arr.length ? String(arr.length) : '';
-    }
-    onLangChange.push(function () {
-      sendBtn.textContent = t('chatSend'); labelEl.textContent = t('chat'); section.setAttribute('aria-label', t('chat'));
-      if (errKey) errEl.textContent = t(errKey);
-      render();
-    });
-    function keep(m) { if (m && m.id) { if (m.hidden) msgs.delete(m.id); else msgs.set(m.id, m); } }
-
-    function start() {
-      try { sb = window.supabase.createClient(CHAT_URL, CHAT_KEY, { auth: { persistSession: false } }); } catch (e) { return; }
-      Promise.resolve(sb.from('messages').select('id,created_at,name,body,hidden').order('id', { ascending: false }).limit(150))
-        .then(function (res) {
-          if (res.error) throw res.error;
-          res.data.forEach(keep);
-          section.hidden = false;
-          render(true);
-          var wasOpen = false;
-          try { wasOpen = localStorage.getItem(OPEN_KEY) === '1'; } catch (x) {}
-          setOpen(wasOpen, false);
-          sb.channel('kcmd-chat')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, function (p) {
-              var isNew = p.new && p.new.id && !msgs.has(p.new.id) && !p.new.hidden;
-              keep(p.new); render();
-              if (isNew && panel.hidden) section.classList.add('has-new');
-            })
-            .subscribe();
-        })
-        .catch(function (e) { console.warn('[chat] not shown: ' + (e && e.message)); });
-    }
-    var lib = document.createElement('script');
-    lib.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js';
-    lib.onload = start;
-    document.head.appendChild(lib);
-
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      var name = nameIn.value.trim(), body = msgIn.value.trim();
-      if (!name) { setErr('chatNeedName'); nameIn.focus(); return; }
-      if (!body || !sb) return;
-      if (/(https?:\/\/|www\.)/i.test(body)) { setErr('chatLinks'); return; }
-      setErr('');
-      sendBtn.disabled = true;
-      try { localStorage.setItem(NAME_KEY, name); } catch (x) {}
-      Promise.resolve(sb.from('messages').insert({ name: name, body: body }).select()).then(function (res) {
-        sendBtn.disabled = false;
-        if (res.error) {
-          var m = String(res.error.message || '');
-          setErr(m.indexOf('chat:slow') >= 0 ? 'chatSlow' : m.indexOf('chat:links') >= 0 ? 'chatLinks' : 'chatErr');
-          return;
-        }
-        msgIn.value = '';
-        (res.data || []).forEach(keep);
-        render(true);
-        track('chat_send');
-      }, function () { sendBtn.disabled = false; setErr('chatErr'); });
-    });
-
-    // moderation, in edit mode only: the password is asked once and kept in this browser
-    list.addEventListener('click', function (e) {
-      var b = e.target.closest('.chat-hide');
-      if (!b || !sb) return;
-      var secret = '';
-      try { secret = localStorage.getItem(MOD_KEY) || ''; } catch (x) {}
-      if (!secret) secret = prompt(t('chatSecret')) || '';
-      if (!secret) return;
-      var id = Number(b.getAttribute('data-id'));
-      Promise.resolve(sb.rpc('hide_message', { msg_id: id, secret: secret })).then(function (res) {
-        if (res.error) { try { localStorage.removeItem(MOD_KEY); } catch (x) {} alert(res.error.message); return; }
-        try { localStorage.setItem(MOD_KEY, secret); } catch (x) {}
-        msgs.delete(id);
-        render();
-      });
-    });
-  })();
 
   applyLang();
   pollNow();
