@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -10,6 +11,19 @@
 <meta name="theme-color" content="#0b0e14">
 <title>KCMD Radio on V2in</title>
 <meta name="description" content="A joint KCMD and Radio Tallinn 1965 project on V2in radio: a place where Ukrainian musicians and their friends can always hear the voices of their own.">
+<!-- Open Graph: the preview card in Telegram, Facebook, Slack, etc.
+     og:url and og:image must be full addresses: replace https://YOUR-DOMAIN/ with the page's real address.
+     The best image is 1200×630 px (PNG or JPG); icon-512.png works as a square fallback. -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Kyiv Contemporary Music Days">
+<meta property="og:title" content="KCMD Radio on V2in">
+<meta property="og:description" content="A joint KCMD and Radio Tallinn 1965 project on V2in radio: a place where Ukrainian musicians and their friends can always hear the voices of their own.">
+<meta property="og:url" content="https://YOUR-DOMAIN/">
+<meta property="og:image" content="https://YOUR-DOMAIN/icon-512.png">
+<meta property="og:image:alt" content="KCMD Radio on V2in">
+<meta property="og:locale" content="en_GB">
+<meta property="og:locale:alternate" content="uk_UA">
+<meta name="twitter:card" content="summary_large_image">
 <!-- Umami analytics: replace YOUR-WEBSITE-ID with the Website ID from Umami (Settings → Websites → Edit).
      Self-hosted Umami: change src to https://<your-umami-domain>/script.js -->
 <script defer src="https://cloud.umami.is/script.js" data-website-id="b56cf6b6-550c-49b2-a369-431a49c24ed5"></script>
@@ -64,7 +78,7 @@
   a { color: inherit; text-decoration-color: var(--accent); text-underline-offset: 0.2em; text-decoration-thickness: 1px; }
   a:hover { color: var(--accent); }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
-
+ 
   /* masthead */
   .topbar {
     display: flex;
@@ -107,7 +121,7 @@
     color: var(--muted);
     font-size: 1.0625rem;
   }
-
+ 
   /* player */
   .player {
     display: grid;
@@ -184,7 +198,7 @@
     .volume { grid-area: vol; justify-self: stretch; width: 100%; margin-top: 1rem; }
     .player .info { padding-right: 0; }
   }
-
+ 
   .links {
     display: flex;
     flex-wrap: wrap;
@@ -194,7 +208,7 @@
     list-style: none;
     font-size: 0.95rem;
   }
-
+ 
   /* content */
   section { margin-top: 4.5rem; }
   h2 {
@@ -210,7 +224,7 @@
     border-left: 2px solid var(--accent);
   }
   .tacet p { margin: 0; }
-
+ 
   dl { margin: 0; }
   .row {
     display: grid;
@@ -225,7 +239,7 @@
   @media (max-width: 30rem) {
     .row { grid-template-columns: 1fr; }
   }
-
+ 
   /* timetable */
   .timetable { margin: 0; padding: 0; list-style: none; }
   .slot {
@@ -261,6 +275,7 @@
   }
   .slot.is-past { color: var(--muted); }
   .slot.is-past .slot-kyiv { font-weight: 400; }
+  .tt-intro { margin: -0.25rem 0 1.5rem; }
   .tz-note { margin: 1rem 0 0; color: var(--muted); font-size: 0.9rem; }
   .slot-more {
     display: inline-flex;
@@ -293,7 +308,7 @@
     .slot-date { grid-column: 1 / -1; }
     .slot-desc { grid-column: 1 / -1; }
   }
-
+ 
   .artists {
     margin: 0 0 1rem;
     padding: 0;
@@ -349,11 +364,11 @@
   }
   .subscribe-menu a:hover, .subscribe-menu a:focus-visible { background: var(--bg); color: var(--accent); }
   @media (prefers-reduced-motion: reduce) { .subscribe-btn .chev { transition: none; } }
-
+ 
   .team + .team { margin-top: 1.25rem; }
   .team h3 { margin: 0 0 0.25rem; font-weight: 600; font-size: 1rem; }
   .team p { margin: 0; }
-
+ 
   footer {
     margin-top: 6rem;
     position: relative;
@@ -377,10 +392,10 @@
       <button type="button" data-lang="uk" lang="uk">УКР</button>
     </div>
   </div>
-
+ 
   <h1 data-i18n="title">KCMD Radio on V2in</h1>
   <p class="sub" data-i18n-html="sub">A joint KCMD and Radio Tallinn 1965 project on V2in radio</p>
-
+ 
   <div class="player" id="player">
     <button class="play" id="play" type="button" aria-label="Play KCMD Radio">
       <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>
@@ -394,15 +409,16 @@
     <input class="volume" id="volume" type="range" min="0" max="1" step="0.01" value="0.9" aria-label="Volume" data-i18n-aria="volume">
     <canvas class="wave" id="wave" aria-hidden="true"></canvas>
   </div>
-
+ 
   <ul class="links">
     <li><a href="https://v2in.stream/" target="_blank" rel="noopener" data-i18n="linkListen">Listen to all V2in stations</a></li>
-    <li><a href="https://linktr.ee/radiotallinn1965" target="_blank" rel="noopener" data-i18n="linkLinktree">Tallinn 1965</a></li>
+    <li><a href="https://linktr.ee/radiotallinn1965" target="_blank" rel="noopener" data-i18n="linkLinktree">Radio Tallinn 1965</a></li>
     <li><a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener" data-i18n="linkPropose">Join in</a></li>
   </ul>
-
+ 
   <section aria-labelledby="timetable-title">
     <h2 id="timetable-title" data-i18n="timetable">Timetable</h2>
+    <p class="tt-intro" data-i18n-html="ttIntro"></p>
     <ol class="timetable" id="timetable"></ol>
     <p class="tz-note" id="tz-note"></p>
     <details class="subscribe" id="subscribe">
@@ -417,7 +433,7 @@
       </div>
     </details>
   </section>
-
+ 
   <!-- ===== TIMETABLE: edit here =====
        One line per broadcast:
        date      — YYYY-MM-DD
@@ -436,31 +452,31 @@
     ];
   </script>
   <!-- ===== end of timetable ===== -->
-
+ 
   <section aria-labelledby="about">
     <h2 id="about" data-i18n="about">About the project</h2>
-    <p data-i18n="about1">Kyiv Contemporary Music Days (KCMD) and Radio Tallinn 1965 are joining forces for a new collaborative project: a KCMD channel on V2in, the new media platform that will be launched at the Huddersfield Contemporary Music Festival in the UK on 20–29 November 2026.</p>
+    <p data-i18n="about1">Kyiv Contemporary Music Days (KCMD) and Radio Tallinn 1965 are joining forces for a new collaborative project: a KCMD channel on V2in, the new media platform launched at the Huddersfield Contemporary Music Festival in the UK on 20–29 November 2026.</p>
     <p data-i18n="about2">The channel is a place where Ukrainian musicians and their friends, scattered across Ukraine and abroad, can always hear each other’s voices and join in themselves. It brings together broadcasts curated by artists, recordings of KCMD concerts over the years, improvised sets, generative streams and conversations, and will remain open to new formats as it evolves over time.</p>
     <div class="tacet">
-      <p data-i18n="tacet">KCMD also brings TACET to the entire V2in platform: TACET means that whenever there is an air raid alert in Kyiv, all channels on V2in fall silent, and when the air raid ends, a 15-second signal by a Ukrainian artist breaks the silence.</p>
+      <p data-i18n="tacet">KCMD also brings TACET to the entire V2in platform: TACET means that whenever there is an air raid alert in Kyiv, all channels on V2in fall silent, and when the air raid ends, a 30-second signal by a Ukrainian artist breaks the silence, and then each channel returns to its programme.</p>
     </div>
   </section>
-
+ 
   <section aria-labelledby="practical">
     <h2 id="practical" data-i18n="practical">Practical information</h2>
     <dl>
       <div class="row"><dt data-i18n="listen">Listen</dt><dd data-i18n-html="listenText"><a href="https://v2in.stream/">v2in.stream</a>, on a phone or computer.</dd></div>
-      <div class="row"><dt data-i18n="when">When</dt><dd data-i18n-html="whenText">From 20 November 2026 onwards. Premieres are listed in the <a href="#timetable-title">timetable</a>.</dd></div>
+      <div class="row"><dt data-i18n="when">When</dt><dd data-i18n-html="whenText">From 20 November 2026 onwards. Broadcasts are listed in the <a href="#timetable-title">timetable</a>.</dd></div>
       <div class="row" id="take-part"><dt data-i18n="takePart">Take part</dt><dd data-i18n-html="takePartText">Fill in the <a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener">form</a>. The project runs pro bono, with technical support from Radio Tallinn 1965.</dd></div>
     </dl>
   </section>
-
+ 
   <section aria-labelledby="artists">
     <h2 id="artists" data-i18n="artists">KCMD Radio artists</h2>
     <ul class="artists" id="artists-list"></ul>
-    <p class="note" data-i18n-html="more">More to come.</p>
+    <p class="note" data-i18n-html="more"><a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener">Join</a></p>
   </section>
-
+ 
   <section aria-labelledby="teams">
     <h2 id="teams" data-i18n="teams">Teams</h2>
     <div class="team">
@@ -473,12 +489,12 @@
     </div>
   </section>
 </main>
-
+ 
 <footer>
   <p data-i18n-html="footer">Kyiv Contemporary Music Days × Radio Tallinn 1965 on V2in</p>
   <svg class="foot-waves" id="foot-waves" viewBox="0 0 1200 110" preserveAspectRatio="none" aria-hidden="true"></svg>
 </footer>
-
+ 
 <script>
 (function () {
   // ---- two languages: English and Ukrainian, switched without reloading ----
@@ -495,21 +511,21 @@
       unreachable: 'The radio cannot be reached right now. Trying again.',
       silenceAt: 'Air-raid alert in Kyiv since {t} Kyiv time.',
       silence: 'Air-raid alert in Kyiv.',
-      silenceRest: ' Every channel is silent until it ends, then plays a short piece of Ukrainian music and goes back to its programme.',
-      linkListen: 'Listen to all V2in stations', linkPropose: 'Join in', linkLinktree: 'Tallinn 1965',
+      silenceRest: ' Every channel is silent until it ends, then a 30-second signal by a Ukrainian artist breaks the silence and each channel returns to its programme.',
+      linkListen: 'Listen to all V2in stations', linkPropose: 'Join in', linkLinktree: 'Radio Tallinn 1965',
       timetable: 'Timetable', next: 'Next', onNow: 'Now', subscribe: 'Subscribe to the events calendar', subGoogle: 'Google Calendar', subscribeIcal: 'Apple / Outlook (iCal)', descMore: 'Read more', descLess: 'Hide',
-      tzNote: 'Times are in Kyiv and Tallinn time.', tzNoteLocal: 'Times are in Kyiv and Tallinn time, with your local time below each.',
-      localIn: '{t} in {place}', localYours: '{t} your time',
+      tzNote: 'Times are shown in your time zone.', tzNoteZone: 'Times are shown in your time zone ({place}).',
+      ttIntro: 'The timetable lists special broadcasts: premieres of new works and programmes made for the radio. The rest of the time, the channel plays recordings from the KCMD archive, recordings sent in by artists, generative music and more. New broadcasts will be added over the coming days, so <a href="#subscribe">subscribe to the calendar</a> to stay up to date.',
       about: 'About the project',
-      about1: 'Kyiv Contemporary Music Days (KCMD) and Radio Tallinn 1965 are joining forces for a new collaborative project: a KCMD channel on V2in, the new media platform that will be launched at the Huddersfield Contemporary Music Festival in the UK on 20–29 November 2026.',
+      about1: 'Kyiv Contemporary Music Days (KCMD) and Radio Tallinn 1965 are joining forces for a new collaborative project: a KCMD channel on V2in, the new media platform launched at the Huddersfield Contemporary Music Festival in the UK on 20–29 November 2026.',
       about2: 'The channel is a place where Ukrainian musicians and their friends, scattered across Ukraine and abroad, can always hear each other’s voices and join in themselves. It brings together broadcasts curated by artists, recordings of KCMD concerts over the years, improvised sets, generative streams and conversations, and will remain open to new formats as it evolves over time.',
-      tacet: 'KCMD also brings TACET to the entire V2in platform: TACET means that whenever there is an air raid alert in Kyiv, all channels on V2in fall silent, and when the air raid ends, a 15-second signal by a Ukrainian artist breaks the silence.',
+      tacet: 'KCMD also brings TACET to the entire V2in platform: TACET means that whenever there is an air raid alert in Kyiv, all channels on V2in fall silent, and when the air raid ends, a 30-second signal by a Ukrainian artist breaks the silence, and then each channel returns to its programme.',
       practical: 'Practical information',
       listen: 'Listen', listenText: '<a href="https://v2in.stream/">v2in.stream</a>, on a phone or computer.',
-      when: 'When', whenText: 'From 20 November 2026 onwards. Premieres are listed in the <a href="#timetable-title">timetable</a>.',
+      when: 'When', whenText: 'From 20 November 2026 onwards. Broadcasts are listed in the <a href="#timetable-title">timetable</a>.',
       takePart: 'Take part', takePartText: 'Fill in the <a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener">form</a>. The project runs pro bono, with technical support from Radio Tallinn 1965.',
       artists: 'KCMD Radio artists',
-      more: 'More to come.',
+      more: '<a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener">Join</a>',
       teams: 'Teams',
       teamRT: 'Maria Hansar, Asja Dolgaja, Kristjan Jansen, Tarmo Johannes, Andrus Laansalu and Mike Cole',
       teamKCMD: 'Albert Saprykin, Tetiana Khoroshun, Boris Loginov',
@@ -519,27 +535,27 @@
     uk: {
       docTitle: 'KCMD Radio на V2in',
       title: 'KCMD Radio на V2in',
-      sub: 'Спільний проєкт KCMD і Radio Tallinn 1965 на <a href="https://v2in.stream/" target="_blank" rel="noopener">радіо V2in</a>',
+      sub: 'Спільний проєкт KCMD і Radio Tallinn 1965 на радіо V2in',
       volume: 'Гучність',
       play: 'Слухати KCMD Radio', pause: 'Пауза KCMD Radio',
-      st_idle: 'Натисніть, щоб слухати', st_connecting: 'Підключення…', st_onair: 'В ефірі', st_buffering: 'Буферизація…',
+      st_idle: 'Натисніть, щоб слухати', st_connecting: 'Підключення…', st_onair: 'В етері', st_buffering: 'Буферизація…',
       st_reconnecting: 'Перепідключення…', st_paused: 'Пауза', st_failed: 'Не вдалося запустити стрім. Натисніть ще раз.',
-      offline: 'Не в ефірі',
+      offline: 'Не в етері',
       unreachable: 'Радіо зараз недоступне. Пробуємо ще раз.',
       silenceAt: 'Повітряна тривога в Києві з {t} за київським часом.',
       silence: 'Повітряна тривога в Києві.',
-      silenceRest: ' Усі канали мовчать до відбою. Після відбою тишу на всіх каналах порушує 15-секундний сигнал, створений українськими артист_ками, а потім кожен канал повертається до своєї програми.',
-      linkListen: 'Слухати всі станції V2in', linkPropose: 'Приєднатися', linkLinktree: 'Tallinn 1965',
-      timetable: 'Розклад', next: 'наступн_а', onNow: 'зараз', subscribe: 'Підписатися на календар подій', subGoogle: 'Google Calendar', subscribeIcal: 'Apple / Outlook (iCal)', descMore: 'Детальніше', descLess: 'Згорнути',
-      tzNote: 'Час указано за Києвом і Таллінном.', tzNoteLocal: 'Час указано за Києвом і Таллінном, під ним — ваш місцевий час.',
-      localIn: '{t} за вашим часом ({place})', localYours: '{t} за вашим часом',
+      silenceRest: ' Усі канали мовчать до відбою. Після відбою тишу на всіх каналах порушує 30-секундний сигнал, створений українськими артист_ками, а потім кожен канал повертається до своєї програми.',
+      linkListen: 'Слухати всі станції V2in', linkPropose: 'Приєднатися', linkLinktree: 'Radio Tallinn 1965',
+      timetable: 'Розклад', next: 'Наступний етер', onNow: 'зараз', subscribe: 'Підписатися на календар подій', subGoogle: 'Google Calendar', subscribeIcal: 'Apple / Outlook (iCal)', descMore: 'Детальніше', descLess: 'Згорнути',
+      tzNote: 'Час показано у вашому часовому поясі.', tzNoteZone: 'Час показано у вашому часовому поясі ({place}).',
+      ttIntro: 'У розкладі — спеціальні етери: премʼєри нових творів і програми, створені для радіо. Решту часу на каналі звучать архівні записи KCMD, записи, надіслані артист_ками, генеративна музика тощо. Упродовж наступних днів розклад доповнюватиметься новими етерами, тож радимо <a href="#subscribe">підписатися на календар</a>, щоб не пропустити оновлення.',
       about: 'Про проєкт',
-      about1: 'Kyiv Contemporary Music Days (KCMD) і Radio Tallinn 1965 запускають спільний проєкт: канал KCMD Radio на V2in, новій медіаплатформі, яку презентують на Huddersfield Contemporary Music Festival у Великій Британії 20–29 листопада 2026 року.',
-      about2: 'KCMD Radio — це місце, де українські музикант_ки та їхні друзі завжди можуть почути голоси одне одного й долучитися самі. Тут звучать ефіри, які курують артист_ки, записи з концертів KCMD, імпровізаційні сети, генеративні потоки й розмови. Сам канал лишається відкритим до нових форматів і змінюватиметься з часом.',
-      tacet: 'KCMD також приносить на всю платформу TACET: щойно в Києві лунає повітряна тривога, усі канали V2in замовкають, а коли вона закінчується, тишу порушує 15-секундний сигнал, створений українськими артист_ками, після чого кожен канал повертається до своєї програми.',
+      about1: 'Kyiv Contemporary Music Days (KCMD) і Radio Tallinn 1965 запускають спільний проєкт: канал KCMD Radio на V2in, новій медіаплатформі, яку презентували на Huddersfield Contemporary Music Festival у Великій Британії 20–29 листопада 2026 року.',
+      about2: 'KCMD Radio — це місце, де українські музикант_ки та їхні друзі завжди можуть почути голоси одне одного й долучитися самі. Тут звучать етери, які курують артист_ки, записи з концертів KCMD, імпровізаційні сети, генеративні потоки й розмови. Сам канал лишається відкритим до нових форматів і змінюватиметься з часом.',
+      tacet: 'KCMD також приносить на всю платформу TACET: щойно в Києві лунає повітряна тривога, усі канали V2in замовкають, а коли вона закінчується, тишу порушує 30-секундний сигнал, створений українськими артист_ками, після чого кожен канал повертається до своєї програми.',
       practical: 'Практична інформація',
       listen: 'Слухати', listenText: '<a href="https://v2in.stream/">v2in.stream</a>, на телефоні чи компʼютері.',
-      when: 'Коли', whenText: 'З 20 листопада 2026 року. Премʼєри — у <a href="#timetable-title">розкладі</a>.',
+      when: 'Коли', whenText: 'З 20 листопада 2026 року. Етери — у <a href="#timetable-title">розкладі</a>.',
       takePart: 'Долучитися', takePartText: 'Заповніть <a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener">форму</a>. Проєкт працює pro bono, технічну підтримку надає Radio Tallinn 1965.',
       artists: 'Артист_ки KCMD Radio',
       more: '<a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener">Долучитися</a>',
@@ -554,7 +570,7 @@
   function track(name, data) {
     try { if (window.umami && typeof window.umami.track === 'function') window.umami.track(name, data); } catch (e) {}
   }
-
+ 
   // ---- KCMD Radio artists: names in both languages, profiles in the KCMD Portfolio ----
   // Edit here. "list: true" shows the person in the artists list (sorted by surname, the one with "last: true" at the end);
   // every person here is linked wherever their name appears (list, timetable, team).
@@ -601,7 +617,7 @@
     });
     return html;
   }
-
+ 
   var LANG_KEY = 'kcmd-radio-lang';
   function pickLang() {
     try { var saved = localStorage.getItem(LANG_KEY); if (saved && I18N[saved]) return saved; } catch (e) {}
@@ -640,7 +656,7 @@
       applyLang();
     });
   });
-
+ 
   var STREAM = 'https://v2in.stream/stream/kcmd';
   var player = document.getElementById('player');
   var btn = document.getElementById('play');
@@ -651,7 +667,7 @@
   var ctx = null;           // Web Audio, for the real waveform (as on v2in.stream)
   var plain = false;        // true when the stream can't be read by Web Audio: plain playback, decorative wave
   var cur = null;           // { audio, src, gain, analyser, buf }
-
+ 
   var statusKey = 'st_idle';
   function setStatus(key) { statusKey = key; statusEl.textContent = t(key); }
   onLangChange.push(function () { statusEl.textContent = t(statusKey); btn.setAttribute('aria-label', t(player.classList.contains('is-playing') ? 'pause' : 'play')); });
@@ -670,7 +686,7 @@
     if (cur.src) cur.src.disconnect();
     cur = null;
   }
-
+ 
   // a live stream: every start picks up the live edge, not an old buffer
   function start() {
     clearTimeout(retryTimer);
@@ -738,7 +754,7 @@
     clearTimeout(retryTimer);
     retryTimer = setTimeout(start, 3000);
   }
-
+ 
   // ---- keeping a long listen alive on phones ----
   // Reconnect on the SAME audio element (not a new one): in the background a phone may refuse to start a
   // new player, but lets the one already playing load its source again. The lock-screen controls stay.
@@ -769,7 +785,7 @@
   }, 2000);
   // a phone back on the network (Wi-Fi to mobile data and back) gets the stream again at once
   window.addEventListener('online', function () { if (wanted) reconnect(); });
-
+ 
   // listening time counts only the seconds the sound actually plays (not connecting, not paused)
   var PING_MIN = 5;          // one 'listening' event per 5 minutes of playback (keeps the event count low)
   var heard = 0, pinged = 0, session = false;
@@ -784,7 +800,7 @@
     track('play_stop', { seconds: heard, minutes: Math.round(heard / 60), lang: lang });
   }
   window.addEventListener('pagehide', endSession);
-
+ 
   btn.addEventListener('click', function () {
     wanted = !wanted;
     if (wanted) {
@@ -800,14 +816,14 @@
     if (!cur) return;
     if (cur.gain) cur.gain.gain.value = Number(vol.value); else cur.audio.volume = Number(vol.value);
   });
-
+ 
   // phones can suspend a stream in the background; pick it up again on return
   document.addEventListener('visibilitychange', function () {
     if (document.hidden || !wanted) return;
     if (!cur) start();
     else if (cur.audio.error || cur.audio.ended || cur.audio.paused || Date.now() - lastProgress > STALL_FIRST) reconnect();
   });
-
+ 
   // ---- Media Session: the phone's lock screen / notification controls, as on v2in.stream ----
   // With it Android treats the page as a media player and keeps it playing in the background.
   var hasMS = 'mediaSession' in navigator && typeof MediaMetadata !== 'undefined';
@@ -830,7 +846,7 @@
       navigator.mediaSession.setActionHandler('stop', function () { if (wanted) btn.click(); });
     } catch (e) {}
   }
-
+ 
   // ---- the signal picture: v2in.stream's own spectrogram (web/wave.mjs, drawSpectre), carried over as is ----
   // A scrolling spectrogram from the analyser's time-domain samples: rows log-spaced 60 Hz to 12 kHz, ink in the
   // accent colour, alpha over the 60 dB under the recent loudest bin. It comes up when sound starts, fades when it stops.
@@ -905,7 +921,7 @@
     w.drawn = true;
     return true;
   }
-
+ 
   function drawSilence(w, color) {
     var cv = w.canvas, dpr = window.devicePixelRatio || 1;
     var cw = Math.round(cv.clientWidth * dpr), h = Math.round(cv.clientHeight * dpr);
@@ -946,7 +962,7 @@
     requestAnimationFrame(draw);
   }
   requestAnimationFrame(draw);
-
+ 
   // ---- what is on air now: the same source v2in.stream uses (GET /api/now), checked every 5 seconds ----
   var NOW_API = 'https://v2in.stream/api/now';
   var CHANNEL_ID = 'kcmd';
@@ -1004,7 +1020,7 @@
   }
   setInterval(pollNow, 5000);
   document.addEventListener('visibilitychange', function () { if (!document.hidden) pollNow(); });
-
+ 
   // ---- timetable: Kyiv/Tallinn time from the list, plus the visitor's own time ----
   var ZONE = 'Europe/Kyiv';   // Tallinn shares this time all year
   function zoneOffset(ts, tz) {
@@ -1022,11 +1038,10 @@
     return new Date(ts2);
   }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
-
+ 
   var localZone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
-  var localPlace = localZone.split('/').pop().replace(/_/g, ' ');
-  var sameAsKyiv = function (d) { return zoneOffset(d.getTime(), ZONE) === -d.getTimezoneOffset() * 60000; };
-
+  var localPlace = localZone.indexOf('/') > 0 ? localZone.split('/').pop().replace(/_/g, ' ').replace(/^Kiev$/, 'Kyiv') : '';
+ 
   // ---- the timetable's source: the public Google Calendar of KCMD Radio ----
   // Event title: "English name / Ukrainian name" (the part after " / " is optional).
   // Event description (optional): the piece or programme, the same way: "English / Ukrainian".
@@ -1085,7 +1100,7 @@
       console.warn('[timetable] Google Calendar could not be read, showing the list in the page. ' + err.message);
     });
   }
-
+ 
   var openDesc = new Set();   // which descriptions are open, kept across the minute's redraw
   // plain text to paragraphs: blank lines split paragraphs, single line breaks stay, links become clickable
   function paragraphs(text) {
@@ -1105,7 +1120,7 @@
     b.querySelector('span').textContent = t(open ? 'descLess' : 'descMore');
     if (panel) panel.hidden = !open;
   });
-
+ 
   function renderTimetable() {
     var list = document.getElementById('timetable');
     var items = (calItems || (window.KCMD_TIMETABLE || []).map(function (s) {
@@ -1123,12 +1138,9 @@
       else if (now >= it.start) { cls += ' is-now'; flag = '<span class="slot-flag">' + esc(t('onNow')) + '</span>'; nextFound = true; }
       else if (!nextFound) { cls += ' is-next'; flag = '<span class="slot-flag">' + esc(t('next')) + '</span>'; nextFound = true; }
       var loc = lang === 'uk' ? 'uk-UA' : 'en-GB';
-      var day = it.start.toLocaleDateString(loc, { timeZone: ZONE, weekday: 'short', day: 'numeric', month: 'short' });
-      var local = it.start.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
-      var localDay = it.start.toLocaleDateString(loc, { weekday: 'short', day: 'numeric', month: 'short' });
-      if (localDay !== day) local = localDay + ', ' + local;
-      var localLine = sameAsKyiv(it.start) ? '' :
-        '<span class="slot-local">' + esc(localPlace ? t('localIn', { t: local, place: localPlace }) : t('localYours', { t: local })) + '</span>';
+      // date and time in the device's own time zone
+      var day = it.start.toLocaleDateString(loc, { weekday: 'short', day: 'numeric', month: 'short' });
+      var time = it.start.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
       var who = (lang === 'uk' && it.artist_uk) || it.artist;
       var what = (lang === 'uk' && it.title_uk) || it.title;
       var desc = (lang === 'uk' && it.desc_uk) || it.desc || '';
@@ -1143,27 +1155,39 @@
         '<span class="slot-date">' + esc(day) + '</span>' +
         '<span class="slot-artist">' + personLink(who, 'person') + flag +
           (what ? '<span class="slot-title">' + esc(what) + '</span>' : '') + more + '</span>' +
-        '<span class="slot-time"><span class="slot-kyiv">' + esc(it.time) + '</span>' + localLine + '</span>' +
+        '<span class="slot-time"><span class="slot-kyiv">' + esc(time) + '</span></span>' +
         panel +
         '</li>';
     }).join('');
     var note = document.getElementById('tz-note');
-    note.textContent = items.length && !sameAsKyiv(items[0].start) ? t('tzNoteLocal') : t('tzNote');
+    note.textContent = localPlace ? t('tzNoteZone', { place: localPlace }) : t('tzNote');
   }
   loadCalendar();
   setInterval(loadCalendar, 5 * 60000);   // calendar changes reach the page within five minutes
   document.addEventListener('visibilitychange', function () { if (!document.hidden) loadCalendar(); });
   onLangChange.push(renderTimetable);
   setInterval(renderTimetable, 60000);   // keeps "Next" and "On air now" current
-
+ 
   var sub = document.getElementById('subscribe');
-  document.addEventListener('click', function (e) { if (sub.open && !sub.contains(e.target)) sub.open = false; });
+  document.addEventListener('click', function (e) {
+    // a "subscribe to the calendar" link in the text: scroll to the button and open its menu
+    var link = e.target.closest && e.target.closest('a[href="#subscribe"]');
+    if (link) {
+      e.preventDefault();
+      sub.open = true;
+      sub.scrollIntoView({ behavior: stillMq.matches ? 'auto' : 'smooth', block: 'center' });
+      sub.querySelector('summary').focus({ preventScroll: true });
+      track('subscribe_link');
+      return;
+    }
+    if (sub.open && !sub.contains(e.target)) sub.open = false;
+  });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && sub.open) { sub.open = false; sub.querySelector('summary').focus(); } });
   sub.querySelectorAll('.subscribe-menu a').forEach(function (a) { a.addEventListener('click', function () { sub.open = false; }); });
-
+ 
   applyLang();
   pollNow();
-
+ 
   // the waves along the foot of the page, as on v2in.stream
   var foot = document.getElementById('foot-waves');
   var paths = '';
@@ -1180,3 +1204,4 @@
 </script>
 </body>
 </html>
+ 
