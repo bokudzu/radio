@@ -199,6 +199,74 @@
     .player .info { padding-right: 0; }
   }
 
+  /* chat: a slim bar under the player that opens into the conversation */
+  .chat { margin-top: 1.25rem; }
+  .chat-bar {
+    display: flex; align-items: center; gap: 0.6rem; width: 100%;
+    padding: 0.55rem 0.9rem 0.55rem 1rem;
+    background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 999px;
+    font: inherit; font-size: 0.95rem; text-align: left; cursor: pointer;
+  }
+  .chat-bar:hover { border-color: var(--accent); }
+  .chat.is-open .chat-bar { border-radius: 14px 14px 0 0; border-bottom-color: transparent; }
+  .chat-label { font-weight: 600; flex: none; position: relative; }
+  .chat.has-new .chat-label::after {
+    content: ""; position: absolute; top: 0.1rem; right: -0.55rem;
+    width: 0.4rem; height: 0.4rem; border-radius: 50%; background: var(--accent);
+  }
+  .chat-last { flex: 1; min-width: 0; margin-left: 0.4rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chat.is-open .chat-last { visibility: hidden; }
+  .chat-count { flex: none; font-family: "Ubuntu Sans Mono", ui-monospace, monospace; font-size: 0.8rem; color: var(--muted); }
+  .chat-bar svg { flex: none; width: 0.9rem; height: 0.9rem; color: var(--muted); transition: transform 0.2s ease; }
+  .chat.is-open .chat-bar svg { transform: rotate(180deg); }
+  @media (prefers-reduced-motion: reduce) { .chat-bar svg { transition: none; } }
+  .chat-panel { background: var(--surface); border: 1px solid var(--line); border-top: 0; border-radius: 0 0 14px 14px; }
+  .chat-panel[hidden] { display: none; }
+  .chat-list {
+    margin: 0; padding: 0.25rem 1rem; list-style: none;
+    max-height: 14rem; overflow-y: auto; overscroll-behavior: contain;
+    font-size: 0.95rem; line-height: 1.45;
+  }
+  .chat-list li { padding: 0.35rem 0; overflow-wrap: anywhere; }
+  .chat-who { font-weight: 600; margin-right: 0.35rem; }
+  .chat-body { white-space: pre-wrap; }
+  .chat-time { margin-left: 0.4rem; font-family: "Ubuntu Sans Mono", ui-monospace, monospace; font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
+  .chat-empty { color: var(--muted); }
+  .chat-hide { margin-left: 0.4rem; padding: 0; border: 0; background: none; color: var(--accent); font: inherit; font-size: 0.75rem; cursor: pointer; }
+  .chat-foot { display: grid; gap: 0.4rem; padding: 0.6rem; border-top: 1px solid var(--line); }
+  .chat-foot [hidden] { display: none !important; }
+  .chat-form { display: grid; grid-template-columns: 1fr auto; gap: 0.4rem; }
+  .chat-profile { display: grid; grid-template-columns: 9rem 1fr auto auto; gap: 0.4rem; align-items: center; }
+  .chat-signin {
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.55rem;
+    padding: 0.45rem 1rem; border: 1px solid var(--line); border-radius: 999px;
+    background: var(--bg); color: var(--text); font: inherit; font-size: 0.9rem; font-weight: 500; cursor: pointer;
+  }
+  .chat-signin:hover { border-color: var(--accent); }
+  .chat-signin svg { width: 1rem; height: 1rem; }
+  .chat-me { margin: 0 0.3rem; font-size: 0.8rem; color: var(--muted); }
+  .chat-me img { width: 1rem; height: 1rem; border-radius: 50%; vertical-align: -0.2em; margin-right: 0.3rem; }
+  .chat-textbtn { padding: 0; border: 0; background: none; color: var(--accent); font: inherit; font-size: inherit; cursor: pointer; }
+  .chat-av { width: 1.1rem; height: 1.1rem; border-radius: 50%; vertical-align: -0.22em; margin-right: 0.35rem; object-fit: cover; }
+  a.chat-who { color: inherit; text-decoration-color: var(--line); }
+  a.chat-who:hover { color: var(--accent); text-decoration-color: var(--accent); }
+  .chat-foot input {
+    min-width: 0; padding: 0.4rem 0.7rem; border: 1px solid var(--line); border-radius: 999px;
+    background: var(--bg); color: var(--text); font: inherit; font-size: 0.9rem;
+  }
+  .chat-foot input:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+  .chat-send {
+    padding: 0.4rem 0.95rem; border: 0; border-radius: 999px; background: var(--accent); color: var(--accent-ink);
+    font: inherit; font-size: 0.9rem; font-weight: 500; cursor: pointer;
+  }
+  .chat-send:disabled { opacity: 0.6; cursor: default; }
+  .chat-err, .chat-note { margin: 0 0.3rem; font-size: 0.8rem; color: var(--muted); }
+  .chat-err { color: var(--text); }
+  .chat-err:empty { display: none; }
+  @media (max-width: 30rem) {
+    .chat-profile { grid-template-columns: 1fr auto auto; }
+    #chat-pname, #chat-plink { grid-column: 1 / -1; }
+  }
   .tacet-note { margin: 1rem 0 0; color: var(--muted); font-size: 0.95rem; }
   .sec-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin: 0 0 1.25rem; }
   .sec-head h2 { margin: 0; }
@@ -217,10 +285,19 @@
   .artists li a { white-space: nowrap; }
   .credits .team h3 { font-size: 0.8125rem; color: var(--text); }
   @media (max-width: 34rem) { .credits { grid-template-columns: 1fr; } }
+  .links-tg a {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    margin: -0.3rem 0; padding: 0.3rem 0.8rem 0.3rem 0.65rem;
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); border-radius: 999px;
+    color: var(--accent); text-decoration: none; font-weight: 500;
+  }
+  .links-tg a:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+  .links-tg svg { width: 1rem; height: 1rem; flex: none; }
   .links {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem 1.5rem;
+    gap: 0.75rem 1.5rem;
+    align-items: center;
     margin: 1.25rem 0 0;
     padding: 0;
     list-style: none;
@@ -474,6 +551,10 @@
   .adm button.adm-btn { padding: 0.45rem 1rem; border: 0; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font: inherit; font-size: 0.9rem; cursor: pointer; }
   .adm .adm-link { padding: 0; border: 0; background: none; color: var(--accent); font: inherit; font-size: 0.85rem; cursor: pointer; }
   .adm-note { font-size: 0.875rem; color: var(--muted); }
+  .adm-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.9rem 0 0.75rem; }
+  .adm button.adm-btn:disabled { opacity: 0.5; cursor: default; }
+  .adm button.adm-danger { background: none; color: var(--text); border: 1px solid var(--line); }
+  .adm button.adm-danger:hover:not(:disabled) { border-color: #c0392b; color: #c0392b; }
   .adm-err { font-size: 0.875rem; color: var(--text); }
   .foot-waves { display: block; width: 100%; height: 110px; }
 </style>
@@ -501,6 +582,15 @@
   <div class="adm-card">
     <h2>Канали V2in</h2>
     <table><thead><tr><th>Канал</th><th>Стан</th><th>Зараз грає</th><th class="num">Слухачі</th></tr></thead><tbody id="adm-channels"></tbody></table>
+  </div>
+
+  <div class="adm-card" id="adm-chat">
+    <h2>Чат</h2>
+    <div class="adm-big" id="adm-chat-state">–</div>
+    <p class="adm-sub" id="adm-chat-count"></p>
+    <p class="adm-actions"><button type="button" class="adm-btn" id="adm-chat-toggle" disabled>…</button><button type="button" class="adm-btn adm-danger" id="adm-chat-clear" disabled>Видалити всі повідомлення</button></p>
+    <p class="adm-err" id="adm-chat-err" hidden></p>
+    <p class="adm-note">Кнопки один раз питають пароль модератор_ки й пам'ятають його в цьому браузері. Окремі повідомлення можна приховати або заблокувати автора на сторінці з <code>?edit</code>. <button type="button" class="adm-link" id="adm-chat-forget">Забути пароль</button></p>
   </div>
 
   <div class="adm-card" id="adm-umami">
@@ -562,8 +652,40 @@
     <li><a href="https://v2in.stream/" target="_blank" rel="noopener" data-i18n="linkListen">Listen to all V2in channels</a></li>
     <li><a href="https://linktr.ee/radiotallinn1965" target="_blank" rel="noopener" data-i18n="linkLinktree">Radio Tallinn 1965</a></li>
     <li><a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener" data-i18n="linkPropose">Take part</a></li>
+    <li class="links-tg"><a href="https://t.me/kcmdradio" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.5 4.2 2.9 11.4c-.9.4-.9 1.5.1 1.8l4.6 1.4 1.8 5.5c.2.7 1.1.9 1.6.4l2.6-2.5 4.8 3.5c.7.5 1.6.1 1.8-.7l3.1-14.7c.2-.9-.7-1.6-1.6-1.2zM9.6 14.2l-.5 3.9-1.3-4.1 9.6-6.1-7.8 6.3z" fill="currentColor"/></svg><span data-i18n="linkTelegram">Join the chat on Telegram</span></a></li>
   </ul>
 
+
+  <section class="chat" id="chat" aria-label="Chat" hidden>
+    <button type="button" class="chat-bar" id="chat-bar" aria-expanded="false" aria-controls="chat-panel">
+      <span class="chat-label" id="chat-label">Chat</span>
+      <span class="chat-last" id="chat-last"></span>
+      <span class="chat-count" id="chat-count"></span>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <div class="chat-panel" id="chat-panel" hidden>
+      <ol class="chat-list" id="chat-list" aria-live="polite"></ol>
+      <div class="chat-foot">
+        <button type="button" class="chat-signin" id="chat-signin" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.4h6.5a5.6 5.6 0 0 1-2.4 3.6v3h3.9c2.2-2.1 3.5-5.1 3.5-8.7z"/><path fill="#34A853" d="M12 24c3.2 0 6-1.1 7.9-2.9l-3.9-3c-1.1.7-2.4 1.2-4 1.2-3.1 0-5.7-2.1-6.6-4.9H1.4v3.1A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.4 14.4a7.2 7.2 0 0 1 0-4.7V6.6h-4a12 12 0 0 0 0 10.8l4-3z"/><path fill="#EA4335" d="M12 4.8c1.7 0 3.3.6 4.5 1.8l3.4-3.4A12 12 0 0 0 1.4 6.6l4 3.1C6.3 6.9 8.9 4.8 12 4.8z"/></svg>
+          <span id="chat-signin-label">Sign in with Google to write</span>
+        </button>
+        <form class="chat-form" id="chat-form" autocomplete="off" novalidate hidden>
+          <input class="chat-msg" id="chat-msg" type="text" maxlength="500" data-i18n-ph="chatMsg" enterkeyhint="send">
+          <button class="chat-send" id="chat-send" type="submit">Send</button>
+        </form>
+        <form class="chat-profile" id="chat-profile" autocomplete="off" novalidate hidden>
+          <input id="chat-pname" type="text" maxlength="40" data-i18n-ph="chatName">
+          <input id="chat-plink" type="url" maxlength="200" data-i18n-ph="chatLinkPh" inputmode="url">
+          <button class="chat-send" id="chat-psave" type="submit">Save</button>
+          <button class="chat-textbtn" id="chat-pcancel" type="button">Cancel</button>
+        </form>
+        <p class="chat-me" id="chat-me" hidden></p>
+        <p class="chat-err" id="chat-err" role="status"></p>
+        <p class="chat-note" data-i18n="chatNote"></p>
+      </div>
+    </div>
+  </section>
 
   <section aria-labelledby="timetable-title">
     <div class="sec-head">
@@ -662,7 +784,7 @@
       silenceAt: 'Air raid alert in Kyiv since {t} Kyiv time.',
       silence: 'Air raid alert in Kyiv.',
       silenceRest: ' Every channel is silent until it ends, then a 30-second signal by a Ukrainian artist breaks the silence and each channel returns to its programme.',
-      linkListen: 'Listen to all V2in channels', linkPropose: 'Take part', linkLinktree: 'Radio Tallinn 1965',
+      linkTelegram: 'Join the chat on Telegram', linkListen: 'Listen to all V2in channels', linkPropose: 'Take part', linkLinktree: 'Radio Tallinn 1965',
       timetable: 'Timetable', next: 'Next', onNow: 'Now', subscribe: 'Subscribe', subGoogle: 'Google Calendar', subscribeIcal: 'Apple / Outlook (iCal)', descMore: 'Read more', descLess: 'Hide',
       tzNote: 'Times are shown in your time zone.', tzNoteZone: 'Times are shown in your time zone ({place}).',
       ttIntro: 'Premieres and programmes made for the radio. Between them, the channel plays the KCMD archive, recordings sent in by artists and generative music. New broadcasts will be added over the coming days.',
@@ -676,6 +798,15 @@
       takePart: 'Take part', takePartText: 'Ukrainian artists can send a 30-second signal for TACET or propose a broadcast for the channel: fill in the <a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener">form</a>.',
       artists: 'KCMD Radio artists',
       more: '<a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener">Take part</a>',
+      chat: 'Chat', chatNote: 'Be kind to each other. Links are not posted in messages: add yours to your profile.',
+      chatSignIn: 'Sign in with Google to write', chatYou: 'You', chatProfile: 'Profile', chatSignOut: 'Sign out',
+      chatLinkPh: 'Your link: Instagram, website…', chatSave: 'Save', chatCancel: 'Cancel',
+      chatBadLink: 'The link should look like https://…', chatBanned: 'You can’t write in this chat.',
+      chatBan: 'Block', chatBanAsk: 'Block this person and hide all their messages?',
+      chatName: 'Your name in the chat', chatMsg: 'Message', chatSend: 'Send', chatEmpty: 'Quiet so far. Write the first message.',
+      chatNeedName: 'Write your name first.', chatSlow: 'Wait a few seconds and try again.', chatLinks: 'Links are not posted in the chat.',
+      chatErr: 'The message could not be sent. Try again.', chatHide: 'Hide', chatSecret: 'Moderator password:',
+      chatOff: 'The chat is closed for now.',
       teams: 'Teams',
       teamRT: 'Maria Hansar, Asja Dolgaja, Kristjan Jansen, Tarmo Johannes, Andrus Laansalu and Mike Cole',
       teamKCMD: 'Albert Saprykin, Tetiana Khoroshun, Boris Loginov',
@@ -700,7 +831,7 @@
       silenceAt: 'Повітряна тривога в Києві з {t} за київським часом.',
       silence: 'Повітряна тривога в Києві.',
       silenceRest: ' Усі канали мовчать до відбою. Після відбою тишу на всіх каналах порушує 30-секундний сигнал, створений українськими артист_ками, а потім кожен канал повертається до своєї програми.',
-      linkListen: 'Слухати всі канали V2in', linkPropose: 'Долучитися', linkLinktree: 'Radio Tallinn 1965',
+      linkTelegram: 'Приєднатися до чату в Telegram', linkListen: 'Слухати всі канали V2in', linkPropose: 'Долучитися', linkLinktree: 'Radio Tallinn 1965',
       timetable: 'Розклад', next: 'Наступний етер', onNow: 'зараз', subscribe: 'Підписатися', subGoogle: 'Google Calendar', subscribeIcal: 'Apple / Outlook (iCal)', descMore: 'Детальніше', descLess: 'Згорнути',
       tzNote: 'Час показано у вашому часовому поясі.', tzNoteZone: 'Час показано у вашому часовому поясі ({place}).',
       ttIntro: 'Премʼєри й програми, створені для радіо. Між ними на каналі звучать архів KCMD, записи, надіслані артист_ками, і генеративна музика. Нові етери додаватимуться впродовж наступних днів.',
@@ -714,6 +845,15 @@
       takePart: 'Долучитися', takePartText: 'Українські артист_ки можуть надіслати 30-секундний сигнал для TACET або запропонувати етер для каналу: заповніть <a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener">форму</a>.',
       artists: 'Артист_ки KCMD Radio',
       more: '<a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener">Долучитися</a>',
+      chat: 'Чат', chatNote: 'Будьмо уважні одне до одного. Посилання в повідомленнях не публікуються: додайте своє в профіль.',
+      chatSignIn: 'Увійдіть через Google, щоб писати', chatYou: 'Ви', chatProfile: 'Профіль', chatSignOut: 'Вийти',
+      chatLinkPh: 'Ваше посилання: Instagram, сайт…', chatSave: 'Зберегти', chatCancel: 'Скасувати',
+      chatBadLink: 'Посилання має виглядати як https://…', chatBanned: 'Ви не можете писати в цьому чаті.',
+      chatBan: 'Заблокувати', chatBanAsk: 'Заблокувати цю людину й приховати всі її повідомлення?',
+      chatName: 'Ваше імʼя в чаті', chatMsg: 'Повідомлення', chatSend: 'Надіслати', chatEmpty: 'Поки що тихо. Напишіть перше повідомлення.',
+      chatNeedName: 'Спершу напишіть своє імʼя.', chatSlow: 'Зачекайте кілька секунд і спробуйте ще раз.', chatLinks: 'Посилання в чаті не публікуються.',
+      chatErr: 'Не вдалося надіслати. Спробуйте ще раз.', chatHide: 'Приховати', chatSecret: 'Пароль модератор_ки:',
+      chatOff: 'Чат зараз закритий.',
       teams: 'Команди',
       teamRT: 'Maria Hansar, Asja Dolgaja, Kristjan Jansen, Tarmo Johannes, Andrus Laansalu і Mike Cole',
       teamKCMD: 'Альберт Саприкін, Тетяна Хорошун, Борис Логінов',
@@ -885,7 +1025,7 @@
       if (a.currentTime !== lastTime) { lastTime = a.currentTime; lastProgress = Date.now(); stallLimit = STALL_FIRST; }
     };
     // a stream the server ends is dialled again, as a radio app does (as on v2in.stream)
-    a.onended = function () { if (cur === c) reconnect(); };
+    a.onended = function () { if (cur === c) reconnect(true); };
     a.onerror = function () {
       if (!wanted || cur !== c) return;
       // the stream refused Web Audio before it ever played (no cross-origin access): play it plainly instead
@@ -916,12 +1056,18 @@
   }
 
   // ---- keeping a long listen alive on phones ----
+  // While the page is in the background nothing is reloaded: Android's Chrome lets a stream that already plays go on,
+  // but won't start one anew from the background, so a reload there silenced the radio until the listener came back
+  // (as on v2in.stream, which reloads nothing). A reload that is due waits until the page is seen again.
+  var reconnectDue = false;
   // Reconnect on the SAME audio element (not a new one): in the background a phone may refuse to start a
   // new player, but lets the one already playing load its source again. The lock-screen controls stay.
   var STALL_FIRST = 12000, STALL_MAX = 30000;
   var lastProgress = 0, lastTime = -1, stallLimit = STALL_FIRST, lastReconnect = 0;
-  function reconnect() {
+  function reconnect(ended) {
     if (!wanted) return;
+    if (document.hidden && !ended) { reconnectDue = true; return; }   // a stream the server ended is dialled again, as on v2in.stream
+    reconnectDue = false;
     if (!cur) { start(); return; }
     var a = cur.audio;
     lastReconnect = Date.now();
@@ -936,7 +1082,7 @@
   // the watchdog: a stream stuck in "buffering" with no progress is dialled again,
   // first after 12 s, then waiting longer each time (up to 30 s) so a bad network is not hammered
   setInterval(function () {
-    if (!wanted || !cur || cur.audio.paused) return;
+    if (!wanted || !cur || cur.audio.paused || document.hidden) return;   // in the background the progress events come late
     var now = Date.now();
     if (now - lastProgress > stallLimit && now - lastReconnect > stallLimit) {
       stallLimit = Math.min(STALL_MAX, stallLimit + 8000);
@@ -980,8 +1126,9 @@
   // phones can suspend a stream in the background; pick it up again on return
   document.addEventListener('visibilitychange', function () {
     if (document.hidden || !wanted) return;
+    lastProgress = Date.now();   // the time away is not a stall: the watchdog counts from now
     if (!cur) start();
-    else if (cur.audio.error || cur.audio.ended || cur.audio.paused || Date.now() - lastProgress > STALL_FIRST) reconnect();
+    else if (reconnectDue || cur.audio.error || cur.audio.ended || cur.audio.paused) reconnect();
   });
 
   // ---- Media Session: the phone's lock screen / notification controls, as on v2in.stream ----
@@ -1371,6 +1518,255 @@
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && sub.open) { sub.open = false; sub.querySelector('summary').focus(); } });
   sub.querySelectorAll('.subscribe-menu a').forEach(function (a) { a.addEventListener('click', function () { sub.open = false; }); });
 
+  // ---- chat (Supabase) ----
+  // To switch it on: fill in the project's address and its public key (Supabase → Project Settings → API).
+  // The key is public by design: what it may do is limited by the rules in supabase-chat.sql.
+  // Until both are filled in, or while the project can't be reached (e.g. paused), the chat stays hidden.
+  var CHAT_URL = 'https://nmrhqfkqcnqkxkumnafw.supabase.co';   // e.g. 'https://abcdefgh.supabase.co'
+  var CHAT_KEY = 'sb_publishable_wS5fkJpF3jyESJOwxFgyaA_3tm4IONC';   // the "anon" / "publishable" key
+  // one Supabase client for the chat and the admin view, its library fetched once
+  var sbReady = null;
+  function supabaseClient() {
+    if (!CHAT_URL || !CHAT_KEY) return Promise.reject(new Error('no project'));
+    if (!sbReady) sbReady = new Promise(function (resolve, reject) {
+      var lib = document.createElement('script');
+      lib.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js';
+      lib.onload = function () { try { resolve(window.supabase.createClient(CHAT_URL, CHAT_KEY)); } catch (e) { reject(e); } };
+      lib.onerror = function () { reject(new Error('library')); };
+      document.head.appendChild(lib);
+    });
+    return sbReady;
+  }
+  (function chat() {
+    if (!CHAT_URL || !CHAT_KEY) return;
+    if (/[?&]admin(\b|=|&|$)/.test(location.search)) return;   // the admin view shows the chat's switch instead
+    var EDIT = /[?&]edit(\b|=|&|$)/.test(location.search);   // in edit mode each message gets "Hide" and "Block"
+    var MOD_KEY = 'kcmd-radio-chat-mod', OPEN_KEY = 'kcmd-radio-chat-open';
+    function $(id) { return document.getElementById(id); }
+    var section = $('chat'), list = $('chat-list'), bar = $('chat-bar'), panel = $('chat-panel');
+    var labelEl = $('chat-label'), lastEl = $('chat-last'), countEl = $('chat-count');
+    var signinBtn = $('chat-signin'), signinLabel = $('chat-signin-label');
+    var form = $('chat-form'), msgIn = $('chat-msg'), sendBtn = $('chat-send');
+    var pForm = $('chat-profile'), pName = $('chat-pname'), pLink = $('chat-plink'), pSave = $('chat-psave'), pCancel = $('chat-pcancel');
+    var meEl = $('chat-me'), errEl = $('chat-err');
+    var msgs = new Map(), people = new Map(), sb = null, errKey = '';
+    var me = null, myProfile = null, editingProfile = false;
+
+    function setErr(k) { errKey = k; errEl.textContent = k ? t(k) : ''; }
+
+    // ---- closed by default: a slim bar with the latest message; opening it is remembered in this browser ----
+    function setOpen(open, focus) {
+      section.classList.toggle('is-open', open);
+      section.classList.remove('has-new');
+      bar.setAttribute('aria-expanded', String(open));
+      panel.hidden = !open;
+      try { localStorage.setItem(OPEN_KEY, open ? '1' : '0'); } catch (x) {}
+      if (open) { list.scrollTop = list.scrollHeight; if (focus && me) msgIn.focus(); }
+    }
+    bar.addEventListener('click', function () { setOpen(panel.hidden, true); track('chat_toggle', { open: !panel.hidden }); });
+
+    // ---- the messages ----
+    function when(d) {
+      var hm = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+      if (d.toDateString() === new Date().toDateString()) return hm;
+      return d.toLocaleDateString(lang === 'uk' ? 'uk-UA' : 'en-GB', { day: 'numeric', month: 'short' }) + ', ' + hm;
+    }
+    function safeLink(u) { return /^https?:\/\/\S+$/i.test(u || '') ? u : ''; }
+    function who(m) {
+      var p = m.user_id && people.get(m.user_id);
+      var name = (p && p.name) || m.name;
+      var av = p && p.avatar_url ? '<img class="chat-av" src="' + esc(p.avatar_url) + '" alt="" referrerpolicy="no-referrer" loading="lazy">' : '';
+      var link = p && safeLink(p.link);
+      return av + (link ? '<a class="chat-who" href="' + esc(link) + '" target="_blank" rel="noopener nofollow ugc">' + esc(name) + '</a>'
+                        : '<span class="chat-who">' + esc(name) + '</span>');
+    }
+    function render(toBottom) {
+      var atBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 40;
+      var arr = Array.from(msgs.values()).sort(function (a, b) { return a.id - b.id; }).slice(-150);
+      list.innerHTML = arr.length ? arr.map(function (m) {
+        return '<li>' + who(m) + ' <span class="chat-body">' + esc(m.body) + '</span>' +
+          '<time class="chat-time" datetime="' + esc(m.created_at) + '">' + esc(when(new Date(m.created_at))) + '</time>' +
+          (EDIT ? '<button type="button" class="chat-hide" data-act="hide" data-id="' + m.id + '">' + esc(t('chatHide')) + '</button>' +
+                  (m.user_id ? '<button type="button" class="chat-hide" data-act="ban" data-id="' + m.id + '">' + esc(t('chatBan')) + '</button>' : '') : '') +
+          '</li>';
+      }).join('') : '<li class="chat-empty">' + esc(t('chatEmpty')) + '</li>';
+      if (toBottom || atBottom) list.scrollTop = list.scrollHeight;
+      var last = arr[arr.length - 1];
+      var lastName = last && ((last.user_id && people.get(last.user_id) && people.get(last.user_id).name) || last.name);
+      lastEl.textContent = last ? lastName + ': ' + last.body : t('chatEmpty');
+      countEl.textContent = arr.length ? String(arr.length) : '';
+    }
+    function keep(m) { if (m && m.id) { if (m.hidden) msgs.delete(m.id); else msgs.set(m.id, m); } }
+    function loadPeople(ids) {
+      ids = ids.filter(function (id) { return id && !people.has(id); });
+      if (!ids.length) return Promise.resolve();
+      return Promise.resolve(sb.from('profiles').select('id,name,link,avatar_url').in('id', ids)).then(function (res) {
+        (res.data || []).forEach(function (p) { people.set(p.id, p); });
+      });
+    }
+
+    // ---- who is writing: signed out → the Google button; signed in → the message field and "You: …" ----
+    function renderFoot() {
+      signinLabel.textContent = t('chatSignIn');
+      sendBtn.textContent = t('chatSend'); pSave.textContent = t('chatSave'); pCancel.textContent = t('chatCancel');
+      signinBtn.hidden = !!me;
+      form.hidden = !me || editingProfile;
+      pForm.hidden = !me || !editingProfile;
+      meEl.hidden = !me || editingProfile;
+      if (me && myProfile) {
+        var link = safeLink(myProfile.link);
+        meEl.innerHTML = esc(t('chatYou')) + ': ' +
+          (myProfile.avatar_url ? '<img src="' + esc(myProfile.avatar_url) + '" alt="" referrerpolicy="no-referrer">' : '') +
+          (link ? '<a href="' + esc(link) + '" target="_blank" rel="noopener">' + esc(myProfile.name) + '</a>' : esc(myProfile.name)) +
+          ' · <button type="button" class="chat-textbtn" data-act="profile">' + esc(t('chatProfile')) + '</button>' +
+          ' · <button type="button" class="chat-textbtn" data-act="signout">' + esc(t('chatSignOut')) + '</button>';
+      }
+    }
+    function loadMe(session) {
+      me = session && session.user ? session.user : null;
+      myProfile = null; editingProfile = false;
+      if (!me) { renderFoot(); return; }
+      Promise.resolve(sb.from('profiles').select('id,name,link,avatar_url,banned').eq('id', me.id).maybeSingle()).then(function (res) {
+        if (res.data) return res.data;
+        // no profile yet (made before the sign-in step was set up): make one from the Google name
+        var md = me.user_metadata || {};
+        return Promise.resolve(sb.from('profiles').insert({ id: me.id, name: (md.full_name || md.name || 'Listener').slice(0, 40) })
+          .select('id,name,link,avatar_url,banned').single()).then(function (r) { return r.data; });
+      }).then(function (p) {
+        myProfile = p || { id: me.id, name: '' };
+        people.set(me.id, myProfile);
+        if (myProfile.banned) setErr('chatBanned');
+        renderFoot(); render();
+      });
+    }
+    signinBtn.addEventListener('click', function () {
+      try { localStorage.setItem(OPEN_KEY, '1'); } catch (x) {}   // come back to an open chat
+      track('chat_signin');
+      sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + location.pathname + location.search } });
+    });
+    meEl.addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      if (b.getAttribute('data-act') === 'signout') { sb.auth.signOut(); return; }
+      editingProfile = true; setErr('');
+      pName.value = myProfile ? myProfile.name : ''; pLink.value = myProfile && myProfile.link || '';
+      renderFoot(); pName.focus();
+    });
+    pCancel.addEventListener('click', function () { editingProfile = false; setErr(''); renderFoot(); });
+    pForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var name = pName.value.trim(), link = pLink.value.trim();
+      if (!name) { setErr('chatNeedName'); pName.focus(); return; }
+      if (link && !/^https?:\/\//i.test(link)) link = 'https://' + link;
+      if (link && !/^https?:\/\/[^\s.]+\.[^\s]+$/i.test(link)) { setErr('chatBadLink'); pLink.focus(); return; }
+      pSave.disabled = true;
+      Promise.resolve(sb.from('profiles').update({ name: name, link: link || null }).eq('id', me.id).select('id,name,link,avatar_url,banned').single())
+        .then(function (res) {
+          pSave.disabled = false;
+          if (res.error) { setErr(/link/.test(res.error.message || '') ? 'chatBadLink' : 'chatErr'); return; }
+          myProfile = res.data; people.set(me.id, myProfile);
+          editingProfile = false; setErr('');
+          renderFoot(); render();
+        }, function () { pSave.disabled = false; setErr('chatErr'); });
+    });
+
+    onLangChange.push(function () {
+      labelEl.textContent = t('chat'); section.setAttribute('aria-label', t('chat'));
+      if (errKey) errEl.textContent = t(errKey);
+      renderFoot(); render();
+    });
+
+    // ---- start: the library, the last messages, then live updates ----
+    // the admin's switch: off hides the chat for everyone at once; clearing empties every open page's list
+    var enabled = true, loaded = false, clearedAt = null;
+    function applySettings(st) {
+      if (!st) return;
+      enabled = st.enabled !== false;
+      if (clearedAt !== null && st.cleared_at && st.cleared_at !== clearedAt) { msgs.clear(); render(); }
+      clearedAt = st.cleared_at || clearedAt || '';
+      section.hidden = !(enabled && loaded);
+    }
+    function start(client) {
+      sb = client;
+      Promise.resolve(sb.from('chat_settings').select('enabled,cleared_at').eq('id', 1).maybeSingle())
+        .then(function (r) { if (r && r.data) applySettings(r.data); else clearedAt = ''; })
+        .then(function () { return sb.from('messages').select('id,created_at,name,body,hidden,user_id').order('id', { ascending: false }).limit(150); })
+        .then(function (res) {
+          if (res.error) throw res.error;
+          res.data.forEach(keep);
+          return loadPeople(res.data.map(function (m) { return m.user_id; }));
+        })
+        .then(function () {
+          loaded = true;
+          section.hidden = !enabled;
+          render(true);
+          var wasOpen = false;
+          try { wasOpen = localStorage.getItem(OPEN_KEY) === '1'; } catch (x) {}
+          setOpen(wasOpen, false);
+          sb.auth.getSession().then(function (r) { loadMe(r.data && r.data.session); });
+          sb.auth.onAuthStateChange(function (event, session) {
+            if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') loadMe(session);
+          });
+          sb.channel('kcmd-chat')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_settings' }, function (p) { applySettings(p.new); })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, function (p) {
+              if (p.eventType === 'DELETE') { if (p.old && p.old.id) { msgs.delete(p.old.id); render(); } return; }
+              var m = p.new;
+              var isNew = m && m.id && !msgs.has(m.id) && !m.hidden;
+              keep(m);
+              loadPeople([m && m.user_id]).then(function () { render(); });
+              if (isNew && panel.hidden) section.classList.add('has-new');
+            })
+            .subscribe();
+        })
+        .catch(function (e) { console.warn('[chat] not shown: ' + (e && e.message)); });
+    }
+    supabaseClient().then(start, function (e) { console.warn('[chat] not shown: ' + (e && e.message)); });
+
+    // ---- sending ----
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var body = msgIn.value.trim();
+      if (!body || !sb || !me) return;
+      if (/(https?:\/\/|www\.)/i.test(body)) { setErr('chatLinks'); return; }
+      setErr('');
+      sendBtn.disabled = true;
+      Promise.resolve(sb.from('messages').insert({ body: body, user_id: me.id }).select()).then(function (res) {
+        sendBtn.disabled = false;
+        if (res.error) {
+          var m = String(res.error.message || '');
+          setErr(m.indexOf('chat:slow') >= 0 ? 'chatSlow' : m.indexOf('chat:links') >= 0 ? 'chatLinks' :
+                 m.indexOf('chat:banned') >= 0 ? 'chatBanned' : m.indexOf('chat:off') >= 0 ? 'chatOff' : 'chatErr');
+          return;
+        }
+        msgIn.value = '';
+        (res.data || []).forEach(keep);
+        render(true);
+        track('chat_send');
+      }, function () { sendBtn.disabled = false; setErr('chatErr'); });
+    });
+
+    // ---- moderation, in edit mode only: the password is asked once and kept in this browser ----
+    list.addEventListener('click', function (e) {
+      var b = e.target.closest('.chat-hide');
+      if (!b || !sb) return;
+      var act = b.getAttribute('data-act');
+      if (act === 'ban' && !confirm(t('chatBanAsk'))) return;
+      var secret = '';
+      try { secret = localStorage.getItem(MOD_KEY) || ''; } catch (x) {}
+      if (!secret) secret = prompt(t('chatSecret')) || '';
+      if (!secret) return;
+      var id = Number(b.getAttribute('data-id'));
+      var m = msgs.get(id);
+      Promise.resolve(sb.rpc(act === 'ban' ? 'ban_user' : 'hide_message', { msg_id: id, secret: secret })).then(function (res) {
+        if (res.error) { try { localStorage.removeItem(MOD_KEY); } catch (x) {} alert(res.error.message); return; }
+        try { localStorage.setItem(MOD_KEY, secret); } catch (x) {}
+        if (act === 'ban' && m && m.user_id) msgs.forEach(function (x, k) { if (x.user_id === m.user_id) msgs.delete(k); });
+        else msgs.delete(id);
+        render();
+      });
+    });
+  })();
+
   applyLang();
   pollNow();
 
@@ -1695,6 +2091,60 @@
       });
     });
     umami(); setInterval(umami, 60000);
+
+    // ---- the chat: on or off for everyone, and clearing all messages (Supabase, with the moderator password) ----
+    var MOD_KEY = 'kcmd-radio-chat-mod';
+    var chatOn = null, sbA = null;
+    function chatErr(msg) { $('adm-chat-err').hidden = !msg; $('adm-chat-err').textContent = msg || ''; }
+    function secret() {
+      var v = ''; try { v = localStorage.getItem(MOD_KEY) || ''; } catch (e) {}
+      if (!v) v = prompt('Пароль модератор_ки:') || '';
+      return v;
+    }
+    function keepSecret(v, ok) { try { if (ok) localStorage.setItem(MOD_KEY, v); else localStorage.removeItem(MOD_KEY); } catch (e) {} }
+    function chatState() {
+      if (!sbA) return;
+      Promise.resolve(sbA.from('chat_settings').select('enabled').eq('id', 1).maybeSingle()).then(function (r) {
+        if (r.error) { chatErr('Не вдалося прочитати стан чату (' + r.error.message + '). Можливо, ще не запущено supabase-chat-step2.sql.'); return; }
+        chatOn = !(r.data && r.data.enabled === false);
+        $('adm-chat-state').textContent = chatOn ? 'Увімкнено' : 'Вимкнено';
+        $('adm-chat-toggle').textContent = chatOn ? 'Вимкнути чат для всіх' : 'Увімкнути чат для всіх';
+        $('adm-chat-toggle').disabled = false; $('adm-chat-clear').disabled = false;
+      });
+      Promise.resolve(sbA.from('messages').select('id', { count: 'exact', head: true }).eq('hidden', false)).then(function (r) {
+        if (!r.error) $('adm-chat-count').textContent = 'Повідомлень у чаті: ' + (r.count || 0);
+      });
+    }
+    function call(fn, args, done) {
+      var v = secret(); if (!v) return;
+      args.secret = v;
+      chatErr('');
+      Promise.resolve(sbA.rpc(fn, args)).then(function (r) {
+        if (r.error) {
+          var bad = /not-allowed/.test(r.error.message || '');
+          keepSecret(v, false);
+          chatErr(bad ? 'Пароль не підійшов. Спробуйте ще раз.' : 'Не вдалося: ' + r.error.message);
+          return;
+        }
+        keepSecret(v, true);
+        if (done) done(r.data);
+        chatState();
+      });
+    }
+    supabaseClient().then(function (client) {
+      sbA = client;
+      chatState();
+      setInterval(chatState, 15000);
+    }, function () { chatErr('Supabase зараз недоступний.'); });
+    $('adm-chat-toggle').addEventListener('click', function () {
+      if (chatOn === null) return;
+      call('set_chat_enabled', { turn_on: !chatOn });
+    });
+    $('adm-chat-clear').addEventListener('click', function () {
+      if (!confirm('Видалити всі повідомлення чату для всіх? Це не можна скасувати.')) return;
+      call('clear_chat', {}, function (n) { $('adm-chat-count').textContent = 'Видалено повідомлень: ' + (n || 0); });
+    });
+    $('adm-chat-forget').addEventListener('click', function () { keepSecret('', false); chatErr(''); });
   })();
 
   // the waves along the foot of the page, as on v2in.stream
