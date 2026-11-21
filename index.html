@@ -417,6 +417,16 @@
   .slot-desc a:hover { color: var(--accent); text-decoration-color: var(--accent); }
   .slot-desc p:last-child { margin-bottom: 0; }
   .slot-desc[hidden] { display: none; }
+  .past-toggle { display: flex; justify-content: center; padding: 0 0 0.6rem; }
+  .past-btn {
+    display: grid; place-items: center; width: 2rem; height: 2rem; padding: 0;
+    border: 1px solid var(--line); border-radius: 50%; background: none; color: var(--muted); cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+  .past-btn svg { width: 1rem; height: 1rem; transition: transform 0.2s ease; }
+  .past-btn[aria-expanded="true"] svg { transform: rotate(180deg); }
+  @media (hover: hover) { .past-btn:hover { color: var(--accent); border-color: var(--accent); } }
+  @media (prefers-reduced-motion: reduce) { .past-btn, .past-btn svg { transition: none; } }
   @media (prefers-reduced-motion: reduce) { .slot-more svg { transition: none; } }
   @media (max-width: 30rem) {
     .slot { grid-template-columns: 1fr auto; }
@@ -803,7 +813,7 @@
       silence: 'Air raid alert in Kyiv.',
       silenceRest: ' Every channel is silent until it ends, then a 30-second signal by a Ukrainian artist breaks the silence and each channel returns to its programme.',
       linkTelegram: 'Chat', linkListen: 'Listen to all V2in channels', linkPropose: 'Take part', linkLinktree: 'Radio Tallinn 1965',
-      timetable: 'Timetable', next: 'Next', onNow: 'Now', subscribe: 'Subscribe', subGoogle: 'Google Calendar', subscribeIcal: 'Apple / Outlook (iCal)', descMore: 'Read more', descLess: 'Hide',
+      timetable: 'Timetable', next: 'Next', onNow: 'Now', subscribe: 'Subscribe', subGoogle: 'Google Calendar', subscribeIcal: 'Apple / Outlook (iCal)', descMore: 'Read more', descLess: 'Hide', pastShow: 'Show past broadcasts', pastHide: 'Hide past broadcasts',
       tzNote: 'Times are shown in your time zone.', tzNoteZone: 'Times are shown in your time zone ({place}).',
       ttIntro: 'Premieres and programmes made for the radio. Between them, the channel plays the KCMD archive, recordings sent in by artists and generative music. New broadcasts will be added over the coming days.',
       about: 'About the project',
@@ -849,7 +859,7 @@
       silence: 'Повітряна тривога в Києві.',
       silenceRest: ' Усі канали мовчать до відбою. Після відбою тишу на всіх каналах порушує 30-секундний сигнал, створений українськими артист_ками, а потім кожен канал повертається до своєї програми.',
       linkTelegram: 'Чат', linkListen: 'Слухати всі канали V2in', linkPropose: 'Долучитися', linkLinktree: 'Radio Tallinn 1965',
-      timetable: 'Розклад', next: 'Наступний етер', onNow: 'зараз', subscribe: 'Підписатися', subGoogle: 'Google Calendar', subscribeIcal: 'Apple / Outlook (iCal)', descMore: 'Детальніше', descLess: 'Згорнути',
+      timetable: 'Розклад', next: 'Наступний етер', onNow: 'зараз', subscribe: 'Підписатися', subGoogle: 'Google Calendar', subscribeIcal: 'Apple / Outlook (iCal)', descMore: 'Детальніше', descLess: 'Згорнути', pastShow: 'Показати минулі етери', pastHide: 'Сховати минулі етери',
       tzNote: 'Час показано у вашому часовому поясі.', tzNoteZone: 'Час показано у вашому часовому поясі ({place}).',
       ttIntro: 'Премʼєри й програми, створені для радіо. Між ними на каналі звучать архів KCMD, записи, надіслані артист_ками, і генеративна музика. Нові етери додаватимуться впродовж наступних днів.',
       about: 'Про проєкт',
@@ -1447,6 +1457,7 @@
   }
 
   var openDesc = new Set();   // which descriptions are open, kept across the minute's redraw
+  var showPast = false;       // past broadcasts folded until the round button at the top is pressed
   // plain text to paragraphs: blank lines split paragraphs, single line breaks stay, links become clickable
   function paragraphs(text) {
     return text.split(/\n\s*\n/).map(function (para) {
@@ -1460,6 +1471,7 @@
     }).join('');
   }
   document.getElementById('timetable').addEventListener('click', function (e) {
+    if (e.target.closest('.past-btn')) { showPast = !showPast; renderTimetable(); track('past_toggle', { open: showPast }); return; }
     var b = e.target.closest('.slot-more');
     if (!b) return;
     var key = b.getAttribute('data-key');
@@ -1481,7 +1493,13 @@
     })).slice().sort(function (a, b) { return a.start - b.start; });
     var now = new Date();
     var nextFound = false;
-    list.innerHTML = items.map(function (it) {
+    // past broadcasts fold under one small round button at the top of the list; it opens them, and closes them again
+    var pastCount = items.filter(function (it) { return now >= it.end; }).length;
+    var toggle = pastCount ? '<li class="past-toggle"><button type="button" class="past-btn" aria-expanded="' + showPast + '"' +
+        ' aria-label="' + esc(t(showPast ? 'pastHide' : 'pastShow')) + '" title="' + esc(t(showPast ? 'pastHide' : 'pastShow')) + '">' +
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+        '</button></li>' : '';
+    list.innerHTML = toggle + items.filter(function (it) { return showPast || now < it.end; }).map(function (it) {
       var cls = 'slot', flag = '';
       if (now >= it.end) cls += ' is-past';
       else if (now >= it.start) { cls += ' is-now'; flag = '<span class="slot-flag">' + esc(t('onNow')) + '</span>'; nextFound = true; }
