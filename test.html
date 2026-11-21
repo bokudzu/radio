@@ -1,0 +1,2725 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- favicon: the files live next to this page -->
+<link rel="icon" href="favicon.ico" sizes="32x32">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#0b0e14">
+<title>KCMD Radio on V2in</title>
+<meta name="description" content="A joint KCMD and Radio Tallinn 1965 project on V2in radio: a place where Ukrainian musicians and their friends can always hear the voices of their own.">
+<!-- Open Graph: the preview card in Telegram, Facebook, Slack, etc.
+     og:url and og:image must be full addresses. The best image is 1200×630 px (PNG or JPG);
+     icon-512.png works as a square fallback. -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Kyiv Contemporary Music Days">
+<meta property="og:title" content="KCMD Radio on V2in">
+<meta property="og:description" content="A joint KCMD and Radio Tallinn 1965 project on V2in radio: a place where Ukrainian musicians and their friends can always hear the voices of their own.">
+<meta property="og:url" content="https://radio.kcmd.eu/">
+<meta property="og:image" content="https://radio.kcmd.eu/icon-512.png">
+<meta property="og:image:alt" content="KCMD Radio on V2in">
+<meta property="og:locale" content="en_GB">
+<meta property="og:locale:alternate" content="uk_UA">
+<meta name="twitter:card" content="summary_large_image">
+<!-- Umami analytics: replace YOUR-WEBSITE-ID with the Website ID from Umami (Settings → Websites → Edit).
+     Self-hosted Umami: change src to https://<your-umami-domain>/script.js -->
+<script defer src="https://cloud.umami.is/script.js" data-website-id="b56cf6b6-550c-49b2-a369-431a49c24ed5"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@300;400;500;600&family=Ubuntu+Sans+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #eef1f4;
+    --surface: #ffffff;
+    --text: #0b0e14;
+    --muted: #59616f;
+    --line: #cfd5dd;
+    --accent: #2c6478;
+    --accent-ink: #ffffff;
+    --wave: #9db1bd;
+    color-scheme: light;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b0e14;
+      --surface: #131823;
+      --text: #e7eaf0;
+      --muted: #8e97a8;
+      --line: #252c3a;
+      --accent: #9cc7d8;
+      --accent-ink: #0b0e14;
+      --wave: #2b3a48;
+      color-scheme: dark;
+    }
+  }
+  *, *::before, *::after { box-sizing: inherit; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Libre Franklin", "Helvetica Neue", Arial, sans-serif;
+    font-weight: 400;
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  main {
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 0;
+  }
+  a { color: inherit; text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent); text-underline-offset: 0.2em; text-decoration-thickness: 1px; }
+  a:hover { color: var(--accent); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+  /* masthead */
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin: 0 0 3.5rem;
+  }
+  .lang { display: flex; border: 1px solid var(--line); border-radius: 999px; padding: 2px; }
+  .lang button {
+    border: 0;
+    border-radius: 999px;
+    padding: 0.3rem 0.75rem;
+    background: none;
+    color: var(--muted);
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .lang button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+  .wordmark {
+    margin: 0;
+    font-weight: 500;
+    font-size: 1rem;
+    letter-spacing: 0.01em;
+    line-height: 1.3;
+    color: var(--text);
+  }
+  .wordmark a { text-decoration: none; }
+  h1 {
+    margin: 0;
+    font-weight: 300;
+    font-size: clamp(2.1rem, 7vw, 3.25rem);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+  }
+  .sub {
+    margin: 1rem 0 1.75rem;
+    color: var(--muted);
+    font-size: 1.0625rem;
+  }
+
+  /* player */
+  .player {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-areas: "btn info" "wave wave";
+    gap: 0 1.1rem;
+    align-items: center;
+    padding: 1.25rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+  }
+  .play {
+    grid-area: btn;
+    align-self: start;
+    width: 3.5rem; height: 3.5rem;
+    border-radius: 50%;
+    border: 0;
+    background: var(--accent);
+    color: var(--accent-ink);
+    cursor: pointer;
+    display: grid; place-items: center;
+  }
+  .play svg { width: 1.35rem; height: 1.35rem; }
+  .play .i-pause { display: none; }
+  .player.is-playing .play .i-play { display: none; }
+  .player.is-playing .play .i-pause { display: block; }
+  .info { grid-area: info; min-width: 0; }
+  .channel { margin: 0; font-weight: 600; font-size: 1.05rem; }
+  .now-line {
+    margin: 0.1rem 0 0;
+    color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .now-line.is-silent { color: var(--text); white-space: normal; text-wrap: pretty; }
+  .status {
+    margin: 0.1rem 0 0;
+    font-family: "Ubuntu Sans Mono", ui-monospace, monospace;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .status::before {
+    content: "";
+    display: inline-block;
+    width: 0.5rem; height: 0.5rem;
+    margin-right: 0.45rem;
+    border-radius: 50%;
+    background: var(--line);
+    vertical-align: 0.05em;
+  }
+  .player.is-playing .status::before { background: var(--accent); }
+  /* the "Next" card: the next broadcast from the calendar, or the one on air now */
+  .next-card {
+    margin: 0 0 1rem; padding: 1rem 1.25rem;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  }
+  .next-card[hidden] { display: none; }
+  .next-card p { margin: 0; }
+  .next-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.75rem; font-size: 0.85rem; }
+  .next-label {
+    font-family: "Ubuntu Sans Mono", ui-monospace, monospace; font-weight: 500;
+    letter-spacing: 0.04em; text-transform: uppercase; color: var(--accent);
+  }
+  .next-card.is-live .next-label::before {
+    content: ""; display: inline-block; width: 0.5rem; height: 0.5rem; margin-right: 0.45rem;
+    border-radius: 50%; background: var(--accent); vertical-align: 0.05em;
+    animation: next-pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes next-pulse { 50% { opacity: 0.3; } }
+  @media (prefers-reduced-motion: reduce) { .next-card.is-live .next-label::before { animation: none; } }
+  .next-when { color: var(--muted); }
+  .next-what { margin-top: 0.3rem !important; font-size: 1.2rem; line-height: 1.35; }
+  .next-what em { font-style: normal; color: var(--muted); }
+  .next-what a { color: inherit; text-decoration-color: var(--line); }
+  .next-what a:hover { color: var(--accent); text-decoration-color: var(--accent); }
+  .next-bar { height: 3px; margin-top: 0.75rem; border-radius: 3px; background: var(--line); overflow: hidden; }
+  .next-bar span { display: block; height: 100%; width: 0; background: var(--accent); transition: width 0.6s ease; }
+  .next-foot { display: flex; justify-content: space-between; gap: 1rem; margin-top: 0.6rem !important; font-size: 0.875rem; color: var(--muted); }
+  .next-more { padding: 0; border: 0; background: none; color: var(--accent); font: inherit; cursor: pointer; white-space: nowrap; }
+  .next-more:hover { text-decoration: underline; text-underline-offset: 0.2em; }
+  .listeners { margin: 0.1rem 0 0; font-size: 0.85rem; color: var(--muted); }
+  /* the signal strip opens only while there is a picture to show, as on v2in.stream */
+  .wave {
+    grid-area: wave;
+    display: block;
+    width: 100%;
+    height: 0;
+    margin-top: 0;
+    transition: height 0.25s ease, margin-top 0.25s ease;
+  }
+  .player.wave-open .wave { height: 56px; margin-top: 1rem; }
+  @media (prefers-reduced-motion: reduce) { .wave { transition: none; } }
+  .volume {
+    grid-area: info;
+    justify-self: end;
+    width: 6.5rem;
+    accent-color: var(--accent);
+  }
+  .player .info { padding-right: 7.5rem; }
+  @media (max-width: 26rem) {
+    .player { grid-template-areas: "btn info" "wave wave" "vol vol"; }
+    .volume { grid-area: vol; justify-self: stretch; width: 100%; margin-top: 1rem; }
+    .player .info { padding-right: 0; }
+  }
+
+  /* chat: a slim bar under the player that opens into the conversation */
+  .chat { margin-top: 0.75rem; }
+  .chat-bar {
+    display: flex; align-items: center; gap: 0.6rem; width: 100%;
+    padding: 0.55rem 0.9rem 0.55rem 1rem;
+    background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 999px;
+    font: inherit; font-size: 0.95rem; text-align: left; cursor: pointer;
+  }
+  /* the accent frame only on a real hover of the closed bar: on phones a tap leaves "hover" stuck, and the open
+     chat's top then had another colour than its body */
+  @media (hover: hover) { .chat:not(.is-open) .chat-bar:hover { border-color: var(--accent); } }
+  .chat.is-open .chat-bar { border-radius: 14px 14px 0 0; border-bottom-color: transparent; }
+  .chat-label { font-weight: 600; flex: none; position: relative; }
+  .chat.has-new .chat-label::after {
+    content: ""; position: absolute; top: 0.1rem; right: -0.55rem;
+    width: 0.4rem; height: 0.4rem; border-radius: 50%; background: var(--accent);
+  }
+  .chat-last { flex: 1; min-width: 0; margin-left: 0.4rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chat.is-open .chat-last { visibility: hidden; }
+  .chat-count { flex: none; font-family: "Ubuntu Sans Mono", ui-monospace, monospace; font-size: 0.8rem; color: var(--muted); }
+  .chat-bar svg { flex: none; width: 0.9rem; height: 0.9rem; color: var(--muted); transition: transform 0.2s ease; }
+  .chat.is-open .chat-bar svg { transform: rotate(180deg); }
+  @media (prefers-reduced-motion: reduce) { .chat-bar svg { transition: none; } }
+  .chat-panel { background: var(--surface); border: 1px solid var(--line); border-top: 0; border-radius: 0 0 14px 14px; }
+  .chat-panel[hidden] { display: none; }
+  .chat-list {
+    margin: 0; padding: 0.25rem 1rem; list-style: none;
+    max-height: 14rem; overflow-y: auto; overscroll-behavior: contain;
+    font-size: 0.95rem; line-height: 1.45;
+  }
+  .chat-list li { padding: 0.35rem 0; overflow-wrap: anywhere; }
+  .chat-who { font-weight: 600; margin-right: 0.35rem; }
+  .chat-body { white-space: pre-wrap; }
+  .chat-time { margin-left: 0.4rem; font-family: "Ubuntu Sans Mono", ui-monospace, monospace; font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
+  .chat-empty { color: var(--muted); }
+  .chat-hide { margin-left: 0.4rem; padding: 0; border: 0; background: none; color: var(--accent); font: inherit; font-size: 0.75rem; cursor: pointer; }
+  .chat-form {
+    display: grid; grid-template-columns: 7.5rem 1fr auto; gap: 0.4rem;
+    padding: 0.6rem; border-top: 1px solid var(--line);
+  }
+  .chat-form input {
+    min-width: 0; padding: 0.4rem 0.7rem; border: 1px solid var(--line); border-radius: 999px;
+    background: var(--bg); color: var(--text); font: inherit; font-size: 0.9rem;
+  }
+  .chat-form input:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+  .chat-send {
+    padding: 0.4rem 0.95rem; border: 0; border-radius: 999px; background: var(--accent); color: var(--accent-ink);
+    font: inherit; font-size: 0.9rem; font-weight: 500; cursor: pointer;
+  }
+  .chat-send:disabled { opacity: 0.6; cursor: default; }
+  .chat-err, .chat-note { grid-column: 1 / -1; margin: 0.1rem 0.3rem 0; font-size: 0.8rem; color: var(--muted); }
+  .chat-err { color: var(--text); }
+  .chat-err:empty { display: none; }
+  @media (max-width: 30rem) {
+    .chat-form { grid-template-columns: 1fr auto; }
+    .chat-name { grid-column: 1 / -1; }
+  }
+  .tacet-note { margin: 1rem 0 0; color: var(--muted); font-size: 0.95rem; }
+  .sec-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin: 0 0 1.25rem; }
+  .sec-head h2 { margin: 0; }
+  .sec-head .subscribe { margin: 0; }
+  .sec-head .subscribe-btn { padding: 0.35rem 0.75rem 0.35rem 0.8rem; font-size: 0.875rem; }
+  .sec-head .subscribe-menu { left: auto; right: 0; min-width: 12rem; }
+  .tt-intro { color: var(--muted); font-size: 0.975rem; }
+  .join { margin-top: 1.5rem; }
+  .credits {
+    max-width: 40rem; margin: 0 auto; padding: 0 1.5rem 1.75rem;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem 1.5rem;
+    font-size: 0.8125rem; line-height: 1.5; color: var(--muted);
+  }
+  .credits .team + .team { margin-top: 0; }
+  .credits p { margin: 0; padding: 0; max-width: none; font-size: inherit; }
+  .artists li a { white-space: nowrap; }
+  .credits .team h3 { font-size: 0.8125rem; color: var(--text); }
+  @media (max-width: 34rem) { .credits { grid-template-columns: 1fr; } }
+  .links-tg a {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    margin: -0.3rem 0; padding: 0.3rem 0.8rem 0.3rem 0.65rem;
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); border-radius: 999px;
+    color: var(--accent); text-decoration: none; font-weight: 500;
+  }
+  .links-tg a:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+  .links-tg svg { width: 1rem; height: 1rem; flex: none; }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.5rem;
+    align-items: center;
+    margin: 1.25rem 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.95rem;
+  }
+
+  /* content */
+  section { margin-top: 3.25rem; }
+  h2 {
+    margin: 0 0 1.25rem;
+    font-weight: 500;
+    font-size: 1.35rem;
+    letter-spacing: -0.01em;
+  }
+  p { margin: 0 0 1.1rem; }
+  .tacet {
+    margin-top: 1.75rem;
+    padding: 0.25rem 0 0.25rem 1.25rem;
+    border-left: 2px solid var(--accent);
+  }
+  .tacet p { margin: 0; }
+
+  dl { margin: 0; }
+  .row {
+    display: grid;
+    grid-template-columns: 7.5rem 1fr;
+    gap: 0.25rem 1.5rem;
+    padding: 1rem 0;
+    border-top: 1px solid var(--line);
+  }
+  .row:last-child { border-bottom: 1px solid var(--line); }
+  dt { font-weight: 600; }
+  dd { margin: 0; }
+  @media (max-width: 30rem) {
+    .row { grid-template-columns: 1fr; }
+  }
+
+  /* timetable */
+  .timetable { margin: 0; padding: 0; list-style: none; }
+  .slot {
+    display: grid;
+    grid-template-columns: 6.5rem 1fr auto;
+    gap: 0.25rem 1.25rem;
+    align-items: baseline;
+    padding: 1rem 0;
+    border-top: 1px solid var(--line);
+  }
+  .slot:last-child { border-bottom: 1px solid var(--line); }
+  .slot-date { font-weight: 600; }
+  .slot-artist { font-size: 1.15rem; }
+  .slot-title { display: block; color: var(--muted); font-size: 0.95rem; }
+  .slot-time { text-align: right; white-space: nowrap; }
+  .slot-kyiv { display: block; font-weight: 500; }
+  .slot-local {
+    display: block;
+    font-family: "Ubuntu Sans Mono", ui-monospace, monospace;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .slot-flag {
+    display: inline-block;
+    margin-left: 0.5rem;
+    padding: 0.05rem 0.5rem;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-size: 0.75rem;
+    font-weight: 600;
+    vertical-align: 0.15em;
+  }
+  .slot.is-past { color: var(--muted); }
+  .slot.is-past .slot-kyiv { font-weight: 400; }
+  .tt-intro { margin: -0.25rem 0 1.5rem; }
+  .tz-note { margin: 1rem 0 0; color: var(--muted); font-size: 0.9rem; }
+  .slot-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-top: 0.35rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--accent);
+    font: inherit;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  .slot-more svg { width: 0.9rem; height: 0.9rem; transition: transform 0.2s ease; }
+  .slot-more[aria-expanded="true"] svg { transform: rotate(180deg); }
+  .slot-desc {
+    grid-column: 2 / -1;
+    max-width: 36rem;
+    padding: 0.75rem 0 0.25rem;
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+  .slot-desc p { margin: 0 0 0.75rem; }
+  .slot-desc a { color: inherit; text-decoration-color: var(--line); }
+  .slot-desc a:hover { color: var(--accent); text-decoration-color: var(--accent); }
+  .slot-desc p:last-child { margin-bottom: 0; }
+  .slot-desc[hidden] { display: none; }
+  .past-toggle { display: flex; justify-content: center; padding: 0 0 0.6rem; }
+  .past-btn {
+    display: grid; place-items: center; width: 2rem; height: 2rem; padding: 0;
+    border: 1px solid var(--line); border-radius: 50%; background: none; color: var(--muted); cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+  .past-btn svg { width: 1rem; height: 1rem; transition: transform 0.2s ease; }
+  .past-btn[aria-expanded="true"] svg { transform: rotate(180deg); }
+  @media (hover: hover) { .past-btn:hover { color: var(--accent); border-color: var(--accent); } }
+  @media (prefers-reduced-motion: reduce) { .past-btn, .past-btn svg { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { .slot-more svg { transition: none; } }
+  @media (max-width: 30rem) {
+    .slot { grid-template-columns: 1fr auto; }
+    .slot-date { grid-column: 1 / -1; }
+    .slot-desc { grid-column: 1 / -1; }
+  }
+
+  .artists { margin: 0; padding: 0; list-style: none; line-height: 1.7; }
+  .artists li { display: inline; }
+  .artists li + li::before { content: " · "; color: var(--muted); }
+  .note { color: var(--muted); }
+  .artists a, .slot-artist a.person, .slot-title a, .team a { color: inherit; text-decoration-color: var(--line); }
+  .artists a:hover, .slot-artist a.person:hover, .slot-title a:hover, .team a:hover { color: var(--accent); text-decoration-color: var(--accent); }
+  .subscribe { position: relative; display: inline-block; margin: 1.25rem 0 0; }
+  .subscribe-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.9rem 0.5rem 1rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+  }
+  .subscribe-btn::-webkit-details-marker { display: none; }
+  .subscribe-btn:hover, .subscribe[open] .subscribe-btn { border-color: var(--accent); color: var(--accent); }
+  .subscribe-btn svg { width: 1.1rem; height: 1.1rem; }
+  .subscribe-btn .chev { width: 0.9rem; height: 0.9rem; transition: transform 0.2s ease; }
+  .subscribe[open] .chev { transform: rotate(180deg); }
+  .subscribe-menu {
+    position: absolute;
+    top: calc(100% + 0.4rem);
+    left: 0;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    min-width: 100%;
+    padding: 0.35rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: 0 10px 28px rgba(11, 14, 20, 0.14);
+  }
+  .subscribe-menu a {
+    padding: 0.55rem 0.75rem;
+    border-radius: 8px;
+    color: var(--text);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .subscribe-menu a:hover, .subscribe-menu a:focus-visible { background: var(--bg); color: var(--accent); }
+  @media (prefers-reduced-motion: reduce) { .subscribe-btn .chev { transition: none; } }
+
+  .team + .team { margin-top: 1.25rem; }
+  .team h3 { margin: 0 0 0.25rem; font-weight: 600; font-size: 1rem; }
+  .team p { margin: 0; }
+
+  footer {
+    margin-top: 4.5rem;
+    position: relative;
+  }
+  footer p {
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: 0 1.5rem 1.5rem;
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+  footer a { text-decoration: none; }
+  /* ---- edit mode (open the page with ?edit) ---- */
+  .ed-on [data-ed] { outline: 1px dashed transparent; outline-offset: 3px; border-radius: 2px; cursor: text; }
+  .ed-on [data-ed]:hover { outline-color: var(--accent); }
+  .ed-on [data-ed]:focus { outline: 2px solid var(--accent); }
+  .ed-on [data-ed].ed-changed { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+  .ed-on body { padding-bottom: 5rem; }
+  .ed-bar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem;
+    padding: 0.7rem 1rem calc(0.7rem + env(safe-area-inset-bottom, 0px));
+    background: var(--surface); border-top: 1px solid var(--line);
+    box-shadow: 0 -8px 24px rgba(11, 14, 20, 0.12);
+    font-size: 0.9rem;
+  }
+  .ed-bar strong { font-weight: 600; }
+  .ed-bar .ed-hint { color: var(--muted); flex: 1 1 14rem; }
+  .ed-bar button, .ed-panel button {
+    border: 1px solid var(--line); border-radius: 999px; padding: 0.4rem 0.9rem;
+    background: var(--surface); color: var(--text); font: inherit; font-weight: 500; cursor: pointer;
+  }
+  .ed-bar button:hover, .ed-panel button:hover { border-color: var(--accent); color: var(--accent); }
+  .ed-bar .ed-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .ed-bar .ed-primary:hover { color: var(--accent-ink); opacity: 0.9; }
+  .ed-panel {
+    position: fixed; top: 0; right: 0; bottom: 0; z-index: 40;
+    width: min(34rem, 100vw); overflow-y: auto;
+    padding: 1.25rem 1.25rem 6rem;
+    background: var(--surface); border-left: 1px solid var(--line);
+    box-shadow: -10px 0 30px rgba(11, 14, 20, 0.18);
+    font-size: 0.9rem;
+  }
+  .ed-panel[hidden] { display: none; }
+  .ed-panel-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 0.75rem; }
+  .ed-panel-head h2 { margin: 0; font-size: 1.1rem; }
+  .ed-panel input[type="search"] {
+    width: 100%; margin: 0 0 1rem; padding: 0.5rem 0.75rem;
+    border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--text); font: inherit;
+  }
+  .ed-field { padding: 0.85rem 0; border-top: 1px solid var(--line); }
+  .ed-field.ed-changed .ed-key::after { content: " · змінено"; color: var(--accent); }
+  .ed-key { margin: 0 0 0.4rem; font-family: "Ubuntu Sans Mono", ui-monospace, monospace; font-size: 0.8rem; color: var(--muted); }
+  .ed-field label { display: block; margin: 0.35rem 0 0.15rem; font-size: 0.78rem; font-weight: 600; color: var(--muted); }
+  .ed-field textarea {
+    width: 100%; min-height: 2.6rem; padding: 0.45rem 0.6rem; resize: vertical;
+    border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--text);
+    font: inherit; line-height: 1.45;
+  }
+  .ed-field textarea:focus { outline: 2px solid var(--accent); outline-offset: 0; }
+  footer p.disclaimer { font-size: 0.72rem; line-height: 1.5; opacity: 0.85; }
+  /* ---- admin view (open the page with ?admin) ---- */
+  .adm-on main, .adm-on footer { display: none; }
+  .adm { max-width: 52rem; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+  .adm[hidden] { display: none; }
+  .adm-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-bottom: 1.5rem; }
+  .adm-head h1 { font-size: 1.6rem; font-weight: 400; }
+  .adm-head a { font-size: 0.9rem; }
+  .adm-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem; }
+  .adm-card { padding: 1.1rem 1.25rem; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+  .adm-card + .adm-card, .adm-grid + .adm-card, .adm-card + .adm-grid { margin-top: 1rem; }
+  .adm-grid > .adm-card { margin-top: 0; }
+  .adm-card h2 { margin: 0 0 0.75rem; font-size: 1rem; font-weight: 600; }
+  .adm-big { font-size: 2.6rem; font-weight: 300; line-height: 1; letter-spacing: -0.02em; }
+  .adm-sub { margin: 0.4rem 0 0; font-size: 0.875rem; color: var(--muted); }
+  .adm-mono { font-family: "Ubuntu Sans Mono", ui-monospace, monospace; font-size: 0.8rem; color: var(--muted); }
+  .adm-chart { display: block; width: 100%; height: 90px; margin-top: 0.5rem; }
+  .adm table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  .adm th, .adm td { padding: 0.45rem 0.5rem 0.45rem 0; text-align: left; border-top: 1px solid var(--line); vertical-align: top; }
+  .adm th { font-weight: 600; color: var(--muted); font-size: 0.8rem; border-top: 0; }
+  .adm td.num, .adm th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .adm-row { display: grid; grid-template-columns: 1.6rem 1fr auto; gap: 0.5rem; align-items: center; padding: 0.3rem 0; font-size: 0.92rem; }
+  .adm-barwrap { grid-column: 2 / -1; height: 3px; background: var(--line); border-radius: 3px; overflow: hidden; margin-top: -0.15rem; }
+  .adm-barwrap span { display: block; height: 100%; background: var(--accent); }
+  .adm-tabs { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 2px; margin-bottom: 1rem; }
+  .adm-tabs button { border: 0; border-radius: 999px; padding: 0.3rem 0.8rem; background: none; color: var(--muted); font: inherit; font-size: 0.85rem; cursor: pointer; }
+  .adm-tabs button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+  .adm-key { display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; margin-top: 0.75rem; }
+  .adm-key input { padding: 0.5rem 0.75rem; border: 1px solid var(--line); border-radius: 999px; background: var(--bg); color: var(--text); font: inherit; font-size: 0.9rem; }
+  .adm button.adm-btn { padding: 0.45rem 1rem; border: 0; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font: inherit; font-size: 0.9rem; cursor: pointer; }
+  .adm .adm-link { padding: 0; border: 0; background: none; color: var(--accent); font: inherit; font-size: 0.85rem; cursor: pointer; }
+  .adm-note { font-size: 0.875rem; color: var(--muted); }
+  .adm-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.9rem 0 0.75rem; }
+  .adm button.adm-btn:disabled { opacity: 0.5; cursor: default; }
+  .adm button.adm-danger { background: none; color: var(--text); border: 1px solid var(--line); }
+  .adm button.adm-danger:hover:not(:disabled) { border-color: #c0392b; color: #c0392b; }
+  .adm-err { font-size: 0.875rem; color: var(--text); }
+  .foot-waves { display: block; width: 100%; height: 110px; }
+  footer p.debug-toggle { padding-top: 0; }
+  .debug-btn {
+    padding: 0.2rem 0.65rem; border: 1px solid var(--line); border-radius: 999px; background: none;
+    color: var(--muted); font: inherit; font-family: "Ubuntu Sans Mono", ui-monospace, monospace; font-size: 0.75rem; cursor: pointer;
+  }
+  .debug-btn:hover { color: var(--accent); border-color: var(--accent); }
+  .debug-btn[aria-pressed="true"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="adm" id="adm" hidden>
+  <div class="adm-head"><h1>KCMD Radio · адмінка</h1><a href="./">← до сторінки</a></div>
+
+  <div class="adm-grid">
+    <div class="adm-card">
+      <h2>Слухають KCMD зараз</h2>
+      <div class="adm-big" id="adm-kcmd">–</div>
+      <p class="adm-sub" id="adm-kcmd-state"></p>
+      <svg class="adm-chart" id="adm-chart" viewBox="0 0 600 90" preserveAspectRatio="none" aria-label="Слухачі KCMD за останні години"></svg>
+      <p class="adm-mono" id="adm-chart-note"></p>
+    </div>
+    <div class="adm-card">
+      <h2>Уся платформа V2in</h2>
+      <div class="adm-big" id="adm-all">–</div>
+      <p class="adm-sub" id="adm-raid"></p>
+      <p class="adm-mono" id="adm-updated"></p>
+    </div>
+  </div>
+
+  <div class="adm-card">
+    <h2>Канали V2in</h2>
+    <table><thead><tr><th>Канал</th><th>Стан</th><th>Зараз грає</th><th class="num">Слухачі</th></tr></thead><tbody id="adm-channels"></tbody></table>
+  </div>
+
+  <div class="adm-card" id="adm-chat">
+    <h2>Чат</h2>
+    <div class="adm-big" id="adm-chat-state">–</div>
+    <p class="adm-sub" id="adm-chat-count"></p>
+    <p class="adm-actions"><button type="button" class="adm-btn" id="adm-chat-toggle" disabled>…</button><button type="button" class="adm-btn adm-danger" id="adm-chat-clear" disabled>Видалити всі повідомлення</button></p>
+    <p class="adm-err" id="adm-chat-err" hidden></p>
+    <p class="adm-note">Кнопки один раз питають пароль модератор_ки й пам'ятають його в цьому браузері. Окремі повідомлення можна приховати на сторінці з <code>?edit</code>. <button type="button" class="adm-link" id="adm-chat-forget">Забути пароль</button></p>
+  </div>
+
+  <div class="adm-card" id="adm-umami">
+    <h2>Відвідувачі сайту (Umami)</h2>
+    <div id="adm-u-login">
+      <p class="adm-note">Щоб бачити країни й події, вставте API-ключ Umami (Umami Cloud → Settings → API keys). Ключ зберігається лише в цьому браузері й нікуди не публікується.</p>
+      <form class="adm-key" id="adm-u-form"><input id="adm-u-key" type="password" placeholder="API-ключ Umami" autocomplete="off"><button class="adm-btn" type="submit">Зберегти</button></form>
+    </div>
+    <div id="adm-u-data" hidden>
+      <div class="adm-tabs" role="group" aria-label="Період">
+        <button type="button" data-days="0" aria-pressed="true">Сьогодні</button>
+        <button type="button" data-days="7" aria-pressed="false">7 днів</button>
+        <button type="button" data-days="30" aria-pressed="false">30 днів</button>
+      </div>
+      <div class="adm-grid">
+        <div><div class="adm-big" id="adm-u-visitors">–</div><p class="adm-sub">відвідувачів</p></div>
+        <div><div class="adm-big" id="adm-u-views">–</div><p class="adm-sub">переглядів сторінки</p></div>
+        <div><div class="adm-big" id="adm-u-active">–</div><p class="adm-sub">на сайті зараз</p></div>
+      </div>
+      <h2 style="margin-top:1.5rem">Країни</h2>
+      <div id="adm-u-countries"></div>
+      <h2 style="margin-top:1.5rem">Події</h2>
+      <div id="adm-u-events"></div>
+      <p class="adm-err" id="adm-u-err" hidden></p>
+      <p class="adm-note" style="margin-top:1rem"><button type="button" class="adm-link" id="adm-u-forget">Забути ключ у цьому браузері</button> · <a href="https://cloud.umami.is" target="_blank" rel="noopener">Відкрити Umami</a></p>
+    </div>
+  </div>
+</div>
+<main>
+  <div class="topbar">
+    <p class="wordmark"><a href="https://en.kcmd.eu" target="_blank" rel="noopener" data-i18n-href="kcmdUrl">Kyiv Contemporary Music Days</a></p>
+    <div class="lang" role="group" aria-label="Language / Мова">
+      <button type="button" data-lang="en" lang="en">EN</button>
+      <button type="button" data-lang="uk" lang="uk">УКР</button>
+    </div>
+  </div>
+
+  <h1 data-i18n="title">KCMD Radio on V2in</h1>
+  <p class="sub" data-i18n-html="sub">A radio channel of new Ukrainian music by Kyiv Contemporary Music Days, on V2in, the new platform by Radio Tallinn 1965</p>
+
+  <div class="next-card" id="next-card" hidden>
+    <p class="next-top"><span class="next-label" id="next-label"></span><span class="next-when" id="next-when"></span></p>
+    <p class="next-what" id="next-what"></p>
+    <div class="next-bar" id="next-bar" hidden><span id="next-fill"></span></div>
+    <p class="next-foot"><span id="next-rel"></span><button type="button" class="next-more" id="next-more"></button></p>
+  </div>
+
+  <div class="player" id="player">
+    <button class="play" id="play" type="button" aria-label="Play KCMD Radio">
+      <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>
+      <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor"/></svg>
+    </button>
+    <div class="info">
+      <p class="channel">KCMD Radio</p>
+      <p class="now-line" id="now-line" hidden></p>
+      <p class="status" id="status" aria-live="polite">Press play to listen</p>
+      <p class="listeners" id="listeners" hidden></p>
+    </div>
+    <input class="volume" id="volume" type="range" min="0" max="1" step="0.01" value="0.9" aria-label="Volume" data-i18n-aria="volume">
+    <canvas class="wave" id="wave" aria-hidden="true"></canvas>
+  </div>
+
+  <section class="chat" id="chat" aria-label="Chat" hidden>
+    <button type="button" class="chat-bar" id="chat-bar" aria-expanded="false" aria-controls="chat-panel">
+      <span class="chat-label" id="chat-label">Chat</span>
+      <span class="chat-last" id="chat-last"></span>
+      <span class="chat-count" id="chat-count"></span>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <div class="chat-panel" id="chat-panel" hidden>
+      <ol class="chat-list" id="chat-list" aria-live="polite"></ol>
+      <form class="chat-form" id="chat-form" autocomplete="off" novalidate>
+        <input class="chat-name" id="chat-name" type="text" maxlength="40" data-i18n-ph="chatName">
+        <input class="chat-msg" id="chat-msg" type="text" maxlength="500" data-i18n-ph="chatMsg" enterkeyhint="send">
+        <button class="chat-send" id="chat-send" type="submit">Send</button>
+        <p class="chat-err" id="chat-err" role="status"></p>
+        <p class="chat-note" data-i18n="chatNote"></p>
+      </form>
+    </div>
+  </section>
+
+  <p class="tacet-note" data-i18n-html="tacetNote">Whenever there is an air raid alert in Kyiv, all V2in channels fall silent.</p>
+
+  <ul class="links">
+    <li><a href="https://v2in.stream/" target="_blank" rel="noopener" data-i18n="linkListen">Listen to all V2in channels</a></li>
+    <li><a href="https://linktr.ee/radiotallinn1965" target="_blank" rel="noopener" data-i18n="linkLinktree">Radio Tallinn 1965</a></li>
+    <li><a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener" data-i18n="linkPropose">Take part</a></li>
+    <li class="links-tg"><a href="https://t.me/kcmdradio" target="_blank" rel="noopener" title="Telegram"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.5 4.2 2.9 11.4c-.9.4-.9 1.5.1 1.8l4.6 1.4 1.8 5.5c.2.7 1.1.9 1.6.4l2.6-2.5 4.8 3.5c.7.5 1.6.1 1.8-.7l3.1-14.7c.2-.9-.7-1.6-1.6-1.2zM9.6 14.2l-.5 3.9-1.3-4.1 9.6-6.1-7.8 6.3z" fill="currentColor"/></svg><span data-i18n="linkTelegram">Chat</span></a></li>
+  </ul>
+
+
+  <section aria-labelledby="timetable-title">
+    <div class="sec-head">
+      <h2 id="timetable-title" data-i18n="timetable">Timetable</h2>
+      <details class="subscribe" id="subscribe">
+        <summary class="subscribe-btn">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M3.5 9.5h17M8 3v4M16 3v4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <span data-i18n="subscribe">Subscribe</span>
+          <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </summary>
+        <div class="subscribe-menu">
+          <a href="https://calendar.google.com/calendar/u/0?cid=Y18yNjQwZGViODE4YWJjODE5M2RlNTMwMzNhZWYyOWFlNWE4N2RiYWFkMzJhMDIyOTMzZTUzN2QwMzk5YzFiNDc4QGdyb3VwLmNhbGVuZGFyLmdvb2dsZS5jb20" target="_blank" rel="noopener" data-i18n="subGoogle">Google Calendar</a>
+          <a href="webcal://calendar.google.com/calendar/ical/c_2640deb818abc8193de53033aef29ae5a87dbaad32a022933e537d0399c1b478%40group.calendar.google.com/public/basic.ics" data-i18n="subscribeIcal">Apple / Outlook (iCal)</a>
+        </div>
+      </details>
+    </div>
+    <p class="tt-intro" data-i18n-html="ttIntro"></p>
+    <ol class="timetable" id="timetable"></ol>
+    <p class="tz-note" id="tz-note"></p>
+  </section>
+
+  <!-- ===== TIMETABLE: edit here =====
+       One line per broadcast:
+       date      — YYYY-MM-DD
+       time      — HH:MM, Kyiv / Tallinn time
+       artist    — name in English;  artist_uk — name in Ukrainian
+       title     — optional, in English;  title_uk — optional, in Ukrainian ('' if none)
+       length    — optional, minutes on air (used for "On air now"; default 60)
+  -->
+  <script>
+    window.KCMD_TIMETABLE = [
+      { date: '2026-11-20', time: '19:00', artist: 'Boris Loginov',        artist_uk: 'Борис Логінов',        title: '', title_uk: '' },
+      { date: '2026-11-21', time: '19:00', artist: 'Tetiana Khoroshun',    artist_uk: 'Тетяна Хорошун',       title: '', title_uk: '' },
+      { date: '2026-11-22', time: '19:00', artist: 'Antonii Baryshevskyi', artist_uk: 'Антоній Баришевський', title: '', title_uk: '' },
+      { date: '2026-11-23', time: '19:00', artist: 'Orest Smovzh',         artist_uk: 'Орест Смовж',          title: '', title_uk: '' },
+      { date: '2026-11-24', time: '19:00', artist: 'Albert Saprykin',      artist_uk: 'Альберт Саприкін',     title: '', title_uk: '' },
+    ];
+  </script>
+  <!-- ===== end of timetable ===== -->
+
+  <section aria-labelledby="about">
+    <h2 id="about" data-i18n="about">About the project</h2>
+    <p data-i18n="about1">Kyiv Contemporary Music Days (KCMD), a platform for new music from Kyiv, and Radio Tallinn 1965, with technical support from POSITRON.STUDIO, have joined forces on a new project: a KCMD channel on V2in, the new radio platform presented at the Huddersfield Contemporary Music Festival (hcmf//) in the UK, 20–29 November 2026.</p>
+    <p data-i18n="about2">The channel is a place where Ukrainian musicians and their friends, scattered across Ukraine and abroad, can always hear each other’s voices and join in themselves. It brings together broadcasts curated by artists, recordings of KCMD concerts over the years, improvised sets, generative streams and conversations, and will remain open to new formats as it evolves over time.</p>
+    <div class="tacet" id="tacet">
+      <p data-i18n="tacet">KCMD also brings TACET to the entire V2in platform: TACET means that whenever there is an air raid alert in Kyiv, all channels on V2in fall silent, and when the air raid ends, a 30-second signal by a Ukrainian artist breaks the silence, and then each channel returns to its programme.</p>
+    </div>
+    <p class="join" data-i18n-html="takePartText"></p>
+  </section>
+
+  <section aria-labelledby="artists">
+    <h2 id="artists" data-i18n="artists">KCMD Radio artists</h2>
+    <ul class="artists" id="artists-list"></ul>
+  </section>
+
+</main>
+
+<footer>
+  <div class="credits">
+    <div class="team">
+      <h3>Radio Tallinn 1965</h3>
+      <p data-i18n="teamRT">Maria Hansar, Asja Dolgaja, Kristjan Jansen, Tarmo Johannes, Andrus Laansalu and Mike Cole</p>
+    </div>
+    <div class="team">
+      <h3>KCMD</h3>
+      <p data-i18n="teamKCMD">Albert Saprykin, Tetiana Khoroshun, Boris Loginov</p>
+    </div>
+    <div class="team">
+      <h3 data-i18n="techSupport">Technical support</h3>
+      <p><a href="https://positron.studio" target="_blank" rel="noopener">POSITRON.STUDIO</a></p>
+    </div>
+  </div>
+  <p data-i18n-html="footer">Kyiv Contemporary Music Days × Radio Tallinn 1965 on V2in</p>
+  <p class="disclaimer" data-i18n="disclaimer">The project is created during the Ulysses Platform In-Situ residency in Tallinn, co-funded by the European Union. Views and opinions expressed are however those of the author(s) only and do not necessarily reflect those of the European Union or the European Education and Culture Executive Agency (EACEA). Neither the European Union nor EACEA can be held responsible for them.</p>
+  <p class="debug-toggle"><button type="button" class="debug-btn" id="debug-btn" aria-pressed="false" title="Журнал плеєра / Player log">Debug</button></p>
+  <svg class="foot-waves" id="foot-waves" viewBox="0 0 1200 110" preserveAspectRatio="none" aria-hidden="true"></svg>
+</footer>
+
+<script>
+(function () {
+  // ---- two languages: English and Ukrainian, switched without reloading ----
+  // ==== PAGE TEXTS START ==== (the editor at ?edit rewrites everything between these two lines)
+  var I18N = {
+    en: {
+      docTitle: 'KCMD Radio on V2in',
+      title: 'KCMD Radio on V2in',
+      sub: 'A radio channel of new Ukrainian music by Kyiv Contemporary Music Days, on V2in, the new platform by Radio Tallinn 1965',
+      tacetNote: 'Whenever there is an air raid alert in Kyiv, all V2in channels fall silent.',
+      volume: 'Volume',
+      play: 'Play KCMD Radio', pause: 'Pause KCMD Radio',
+      st_idle: 'Press play to listen', st_connecting: 'Connecting…', st_onair: 'On air', st_buffering: 'Buffering…',
+      st_reconnecting: 'Reconnecting…', st_paused: 'Paused', st_failed: 'The stream could not start. Press play to try again.',
+      offline: 'Offline',
+      unreachable: 'The radio cannot be reached right now. Trying again.',
+      nxNext: 'Next', nxLive: 'On air now', nxToday: 'today', nxTomorrow: 'tomorrow',
+      nxIn: 'in {t}', nxLeft: '{t} left', nxDays: '{d} days', nxH: '{h} h', nxHM: '{h} h {m} min', nxM: '{m} min',
+      nxMore: 'Details ↓',
+      lnNow: '{n} listening now', lnNowOne: '1 person listening now',
+      lnWith: 'You and {n} others are listening', lnWithOne: 'You and 1 other person are listening', lnAlone: 'Right now it’s just you listening',
+      silenceAt: 'Air raid alert in Kyiv since {t} Kyiv time.',
+      silence: 'Air raid alert in Kyiv.',
+      silenceRest: ' Every channel is silent until it ends, then a 30-second signal by a Ukrainian artist breaks the silence and each channel returns to its programme.',
+      linkTelegram: 'Chat', linkListen: 'Listen to all V2in channels', linkPropose: 'Take part', linkLinktree: 'Radio Tallinn 1965',
+      timetable: 'Timetable', next: 'Next', onNow: 'Now', subscribe: 'Subscribe', subGoogle: 'Google Calendar', subscribeIcal: 'Apple / Outlook (iCal)', descMore: 'Read more', descLess: 'Hide', pastShow: 'Show past broadcasts', pastHide: 'Hide past broadcasts',
+      tzNote: 'Times are shown in your time zone.', tzNoteZone: 'Times are shown in your time zone ({place}).',
+      ttIntro: 'Premieres and programmes made for the radio. Between them, the channel plays the KCMD archive, recordings sent in by artists and generative music. New broadcasts will be added over the coming days.',
+      about: 'About the project',
+      about1: 'Kyiv Contemporary Music Days (KCMD), a platform for new music from Kyiv, and Radio Tallinn 1965, with technical support from POSITRON.STUDIO, have joined forces on a new project: a KCMD channel on V2in, the new radio platform presented at the Huddersfield Contemporary Music Festival (hcmf//) in the UK, 20–29 November 2026.',
+      about2: 'The channel is a place where Ukrainian musicians and their friends, scattered across Ukraine and abroad, can always hear each other’s voices and join in themselves. It brings together broadcasts curated by artists, recordings of KCMD concerts over the years, improvised sets, generative streams and conversations, and will remain open to new formats as it evolves over time.',
+      tacet: 'KCMD also brings TACET to the entire V2in platform: TACET means that whenever there is an air raid alert in Kyiv, all channels on V2in fall silent, and when the air raid ends, a 30-second signal by a Ukrainian artist breaks the silence, and then each channel returns to its programme.',
+      practical: 'Practical information',
+      listen: 'Listen', listenText: 'Right here on this page, or together with all channels on <a href="https://v2in.stream/" target="_blank" rel="noopener">v2in.stream</a>, on a phone or computer.',
+      when: 'When', whenText: 'From 20 November 2026 onwards. Broadcasts are listed in the <a href="#timetable-title">timetable</a>.',
+      takePart: 'Take part', takePartText: 'Ukrainian artists can send a 30-second signal for TACET or propose a broadcast for the channel: fill in the <a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener">form</a>.',
+      artists: 'KCMD Radio artists',
+      more: '<a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener">Take part</a>',
+      chat: 'Chat', chatNote: 'Write to other listeners. Be kind to each other. Links are not posted in the chat.',
+      chatName: 'Your name', chatMsg: 'Message', chatSend: 'Send', chatEmpty: 'Quiet so far. Write the first message.',
+      chatNeedName: 'Write your name first.', chatSlow: 'Wait a few seconds and try again.', chatLinks: 'Links are not posted in the chat.',
+      chatErr: 'The message could not be sent. Try again.', chatHide: 'Hide', chatSecret: 'Moderator password:',
+      chatOff: 'The chat is closed for now.',
+      teams: 'Teams',
+      teamRT: 'Maria Hansar, Asja Dolgaja, Kristjan Jansen, Tarmo Johannes, Andrus Laansalu and Mike Cole',
+      teamKCMD: 'Albert Saprykin, Tetiana Khoroshun, Boris Loginov',
+      techSupport: 'Technical support',
+      disclaimer: 'The project is created during the Ulysses Platform In-Situ residency in Tallinn, co-funded by the European Union. Views and opinions expressed are however those of the author(s) only and do not necessarily reflect those of the European Union or the European Education and Culture Executive Agency (EACEA). Neither the European Union nor EACEA can be held responsible for them.',
+      kcmdUrl: 'https://en.kcmd.eu',
+      footer: '<a href="https://en.kcmd.eu" target="_blank" rel="noopener">Kyiv Contemporary Music Days</a> × <a href="https://linktr.ee/radiotallinn1965" target="_blank" rel="noopener">Radio Tallinn 1965</a> on <a href="https://v2in.stream/" target="_blank" rel="noopener">V2in</a>'
+    },
+    uk: {
+      docTitle: 'KCMD Radio на V2in',
+      title: 'KCMD Radio на V2in',
+      sub: 'Радіоканал нової української музики від Kyiv Contemporary Music Days на V2in, новій платформі Radio Tallinn 1965',
+      tacetNote: 'Коли в Києві повітряна тривога, усі канали V2in замовкають.',
+      volume: 'Гучність',
+      play: 'Слухати KCMD Radio', pause: 'Пауза KCMD Radio',
+      st_idle: 'Натисніть, щоб слухати', st_connecting: 'Підключення…', st_onair: 'В етері', st_buffering: 'Буферизація…',
+      st_reconnecting: 'Перепідключення…', st_paused: 'Пауза', st_failed: 'Не вдалося запустити стрім. Натисніть ще раз.',
+      offline: 'Не в етері',
+      unreachable: 'Радіо зараз недоступне. Пробуємо ще раз.',
+      nxNext: 'Далі', nxLive: 'Зараз в етері', nxToday: 'сьогодні', nxTomorrow: 'завтра',
+      nxIn: 'через {t}', nxLeft: 'ще {t}', nxDays: '{d} дн.', nxH: '{h} год', nxHM: '{h} год {m} хв', nxM: '{m} хв',
+      nxMore: 'Детальніше ↓',
+      lnNow: 'Зараз слухають: {n}', lnNowOne: 'Зараз слухають: 1',
+      lnWith: 'Разом із вами слухають ще {n}', lnWithOne: 'Разом із вами слухає ще 1', lnAlone: 'Зараз слухаєте лише ви',
+      silenceAt: 'Повітряна тривога в Києві з {t} за київським часом.',
+      silence: 'Повітряна тривога в Києві.',
+      silenceRest: ' Усі канали мовчать до відбою. Після відбою тишу на всіх каналах порушує 30-секундний сигнал, створений українськими артист_ками, а потім кожен канал повертається до своєї програми.',
+      linkTelegram: 'Чат', linkListen: 'Слухати всі канали V2in', linkPropose: 'Долучитися', linkLinktree: 'Radio Tallinn 1965',
+      timetable: 'Розклад', next: 'Наступний етер', onNow: 'зараз', subscribe: 'Підписатися', subGoogle: 'Google Calendar', subscribeIcal: 'Apple / Outlook (iCal)', descMore: 'Детальніше', descLess: 'Згорнути', pastShow: 'Показати минулі етери', pastHide: 'Сховати минулі етери',
+      tzNote: 'Час показано у вашому часовому поясі.', tzNoteZone: 'Час показано у вашому часовому поясі ({place}).',
+      ttIntro: 'Премʼєри й програми, створені для радіо. Між ними на каналі звучать архів KCMD, записи, надіслані артист_ками, і генеративна музика. Нові етери додаватимуться впродовж наступних днів.',
+      about: 'Про проєкт',
+      about1: 'Kyiv Contemporary Music Days (KCMD), платформа нової музики з Києва, і Radio Tallinn 1965, за технічної підтримки POSITRON.STUDIO, запустили спільний проєкт: канал KCMD Radio на V2in, новій радіоплатформі, яку презентували на Huddersfield Contemporary Music Festival (hcmf//) у Великій Британії 20–29 листопада 2026 року.',
+      about2: 'KCMD Radio — це місце, де українські музикант_ки та їхні друзі завжди можуть почути голоси одне одного й долучитися самі. Тут звучать етери, які курують артист_ки, записи з концертів KCMD, імпровізаційні сети, генеративні потоки й розмови. Сам канал лишається відкритим до нових форматів і змінюватиметься з часом.',
+      tacet: 'KCMD також приносить на всю платформу TACET: щойно в Києві лунає повітряна тривога, усі канали V2in замовкають, а коли вона закінчується, тишу порушує 30-секундний сигнал, створений українськими артист_ками, після чого кожен канал повертається до своєї програми.',
+      practical: 'Практична інформація',
+      listen: 'Слухати', listenText: 'Тут, на цій сторінці, або разом з усіма каналами на <a href="https://v2in.stream/" target="_blank" rel="noopener">v2in.stream</a>, з телефона чи компʼютера.',
+      when: 'Коли', whenText: 'З 20 листопада 2026 року. Етери — у <a href="#timetable-title">розкладі</a>.',
+      takePart: 'Долучитися', takePartText: 'Українські артист_ки можуть надіслати 30-секундний сигнал для TACET або запропонувати етер для каналу: заповніть <a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener">форму</a>.',
+      artists: 'Артист_ки KCMD Radio',
+      more: '<a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener">Долучитися</a>',
+      chat: 'Чат', chatNote: 'Напишіть іншим слухач_кам. Будьмо уважні одне до одного. Посилання в чаті не публікуються.',
+      chatName: 'Ваше імʼя', chatMsg: 'Повідомлення', chatSend: 'Надіслати', chatEmpty: 'Поки що тихо. Напишіть перше повідомлення.',
+      chatNeedName: 'Спершу напишіть своє імʼя.', chatSlow: 'Зачекайте кілька секунд і спробуйте ще раз.', chatLinks: 'Посилання в чаті не публікуються.',
+      chatErr: 'Не вдалося надіслати. Спробуйте ще раз.', chatHide: 'Приховати', chatSecret: 'Пароль модератор_ки:',
+      chatOff: 'Чат зараз закритий.',
+      teams: 'Команди',
+      teamRT: 'Maria Hansar, Asja Dolgaja, Kristjan Jansen, Tarmo Johannes, Andrus Laansalu і Mike Cole',
+      teamKCMD: 'Альберт Саприкін, Тетяна Хорошун, Борис Логінов',
+      techSupport: 'Технічна підтримка',
+      disclaimer: 'The project is created during the Ulysses Platform In-Situ residency in Tallinn, co-funded by the European Union. Views and opinions expressed are however those of the author(s) only and do not necessarily reflect those of the European Union or the European Education and Culture Executive Agency (EACEA). Neither the European Union nor EACEA can be held responsible for them.',
+      kcmdUrl: 'https://www.kcmd.eu',
+      footer: '<a href="https://www.kcmd.eu" target="_blank" rel="noopener">Kyiv Contemporary Music Days</a> × <a href="https://linktr.ee/radiotallinn1965" target="_blank" rel="noopener">Radio Tallinn 1965</a> на <a href="https://v2in.stream/" target="_blank" rel="noopener">V2in</a>'
+    }
+  };
+  // ==== PAGE TEXTS END ====
+  // ---- analytics (Umami): quiet no-op until the Umami script has loaded with a real Website ID ----
+  function track(name, data) {
+    try { if (window.umami && typeof window.umami.track === 'function') window.umami.track(name, data); } catch (e) {}
+  }
+
+  // ---- KCMD Radio artists: names in both languages, profiles in the KCMD Portfolio ----
+  // Edit here. "list: true" shows the person in the artists list (sorted by surname, the one with "last: true" at the end);
+  // every person here is linked wherever their name appears (list, timetable, team).
+  var PORTFOLIO = 'https://www.kcmd.eu/portfolio/';
+  var PEOPLE = [
+    { en: 'Anna Arkushyna',       uk: 'Анна Аркушина',        url: PORTFOLIO + 'composers/anna-arkushyna',        list: true },
+    { en: 'Antonii Baryshevskyi', uk: 'Антоній Баришевський', url: PORTFOLIO + 'performers/antonii-baryshevskyi', list: true },
+    { en: 'Mykhailo Chedryk',     uk: 'Михайло Чедрик',       url: PORTFOLIO + 'composers/mykhailo-chedryk',      list: true },
+    { en: 'Tetiana Khoroshun',    uk: 'Тетяна Хорошун',       url: PORTFOLIO + 'composers/tetiana-khoroshun',     list: true },
+    { en: 'Viktor Rekalo',        uk: 'Віктор Рекало',        url: PORTFOLIO + 'performers/viktor-rekalo',        list: true },
+    { en: 'Orest Smovzh',         uk: 'Орест Смовж',          url: PORTFOLIO + 'performers/orest-smovzh',         list: true },
+    { en: 'Nazarii Stets',        uk: 'Назарій Стець',        url: PORTFOLIO + 'performers/nazarii-stets',        list: true },
+    { en: 'Vitalii Vyshynskyi',   uk: 'Віталій Вишинський',   url: PORTFOLIO + 'composers/vitalii-vyshynskyi',    list: true },
+    { en: 'Ihor Zavhorodnii',     uk: 'Ігор Завгородній',     url: PORTFOLIO + 'composers/ihor-zavhorodnii',      list: true },
+    { en: 'Albert Saprykin',      uk: 'Альберт Саприкін',     url: PORTFOLIO + 'composers/albert-saprykin',       list: true, last: true },
+    { en: 'Boris Loginov',        uk: 'Борис Логінов',        url: PORTFOLIO + 'composers/boris-loginov',         list: true }
+  ];
+  function surname(name) { var w = name.trim().split(/\s+/); return w[w.length - 1]; }
+  function personFor(name) {
+    var n = String(name || '').trim().toLowerCase();
+    return PEOPLE.filter(function (p) { return p.en.toLowerCase() === n || p.uk.toLowerCase() === n; })[0];
+  }
+  function escHtml(x) { return String(x).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function personLink(name, cls) {
+    var p = personFor(name);
+    if (!p) return escHtml(name);
+    return '<a' + (cls ? ' class="' + cls + '"' : '') + ' href="' + p.url + '" target="_blank" rel="noopener">' + escHtml(name) + '</a>';
+  }
+  function renderArtists() {
+    var key = lang === 'uk' ? 'uk' : 'en';
+    var people = PEOPLE.filter(function (p) { return p.list; }).sort(function (a, b) {
+      if (a.last !== b.last) return a.last ? 1 : -1;
+      return surname(a[key]).localeCompare(surname(b[key]), key);
+    });
+    document.getElementById('artists-list').innerHTML = people.map(function (p) {
+      return '<li><a href="' + p.url + '" target="_blank" rel="noopener">' + escHtml(p[key]) + '</a></li>';
+    }).join('');
+  }
+  // a text with people's names in it (the team line): each known name becomes a link
+  function linkNames(text) {
+    var html = escHtml(text);
+    PEOPLE.forEach(function (p) {
+      [p.en, p.uk].forEach(function (n) { html = html.split(escHtml(n)).join(personLink(n)); });
+    });
+    return html;
+  }
+
+  var LANG_KEY = 'kcmd-radio-lang';
+  function pickLang() {
+    try { var saved = localStorage.getItem(LANG_KEY); if (saved && I18N[saved]) return saved; } catch (e) {}
+    var langs = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || 'en'];
+    for (var i = 0; i < langs.length; i++) {
+      var l = String(langs[i]).toLowerCase();
+      if (l.indexOf('uk') === 0) return 'uk';
+      if (l.indexOf('en') === 0) return 'en';
+    }
+    return 'en';
+  }
+  var lang = pickLang();
+  function t(key, vars) {
+    var str = (I18N[lang] && I18N[lang][key]) || I18N.en[key] || '';
+    if (vars) Object.keys(vars).forEach(function (k) { str = str.replace('{' + k + '}', vars[k]); });
+    return str;
+  }
+  var onLangChange = [];   // the player, the now-line and the timetable redraw themselves in the new language
+  function applyLang() {
+    document.documentElement.lang = lang;
+    document.title = t('docTitle');
+    document.querySelectorAll('[data-i18n]').forEach(function (el) { el.textContent = t(el.getAttribute('data-i18n')); });
+    document.querySelectorAll('[data-i18n-html]').forEach(function (el) { el.innerHTML = t(el.getAttribute('data-i18n-html')); });
+    document.querySelectorAll('[data-i18n-names]').forEach(function (el) { el.innerHTML = linkNames(t(el.getAttribute('data-i18n-names'))); });
+    renderArtists();
+    document.querySelectorAll('[data-i18n-href]').forEach(function (el) { el.setAttribute('href', t(el.getAttribute('data-i18n-href'))); });
+    document.querySelectorAll('[data-i18n-aria]').forEach(function (el) { el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria'))); });
+    document.querySelectorAll('[data-i18n-ph]').forEach(function (el) { var v = t(el.getAttribute('data-i18n-ph')); el.placeholder = v; el.setAttribute('aria-label', v); });
+    document.querySelectorAll('.lang button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-lang') === lang)); });
+    onLangChange.forEach(function (fn) { fn(); });
+  }
+  document.querySelectorAll('.lang button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      lang = b.getAttribute('data-lang');
+      try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}
+      track('lang_switch', { to: lang });
+      applyLang();
+    });
+  });
+
+  // ---- debug log: open the page with ?debug ----
+  // Every step of the player is written with its time into this browser's storage (kept across reloads),
+  // plus a "still alive" line every 10 s: a gap in those lines means the phone froze the page, not the network.
+  // A panel at the bottom copies or shares the log.
+  // also switched on by the Debug button at the foot of the page: kept in this browser until switched off
+  var DBG_ON_KEY = 'kcmd-radio-debug-on';
+  var PAGE_VERSION = '2026-11-21 live-3';
+  var DEBUG = /[?&]debug(\b|=|&|$)/.test(location.search);
+  try { if (localStorage.getItem(DBG_ON_KEY) === '1') DEBUG = true; } catch (e) {}
+  (function () {
+    var b = document.getElementById('debug-btn');
+    if (!b) return;
+    b.setAttribute('aria-pressed', String(DEBUG));
+    // the page reloads, so the log watches the player from its very start
+    b.addEventListener('click', function () {
+      try { if (DEBUG) localStorage.removeItem(DBG_ON_KEY); else localStorage.setItem(DBG_ON_KEY, '1'); } catch (e) {}
+      var url = new URL(location.href);
+      url.searchParams.delete('debug');
+      location.replace(url.toString());
+    });
+  })();
+  // Each page load starts a new log; the one before is kept apart ("Попередній"), in case the page had to be reloaded.
+  var DBG_KEY = 'kcmd-radio-debug', DBG_PREV_KEY = 'kcmd-radio-debug-prev', DBG_MAX = 3000, dbgLines = [], dbgView = null;
+  if (DEBUG) {
+    try {
+      var lastLog = localStorage.getItem(DBG_KEY);
+      if (lastLog && lastLog !== '[]') localStorage.setItem(DBG_PREV_KEY, lastLog);
+      localStorage.removeItem(DBG_KEY);
+    } catch (e) {}
+  }
+  function dbgTime() {
+    var d = new Date(), p = function (n, w) { return String(n).padStart(w || 2, '0'); };
+    return p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds()) + '.' + p(Math.floor(d.getMilliseconds() / 100), 1);
+  }
+  function dbg(what, detail) {
+    if (!DEBUG) return;
+    var line = dbgTime() + (document.hidden ? ' BG ' : ' ') + what + (detail ? ' ' + detail : '');
+    dbgLines.push(line);
+    if (dbgLines.length > DBG_MAX) dbgLines.splice(0, dbgLines.length - DBG_MAX);
+    try { localStorage.setItem(DBG_KEY, JSON.stringify(dbgLines)); } catch (e) {}
+    if (dbgView) { dbgView.textContent = dbgLines.slice(-40).join('\n'); dbgView.scrollTop = dbgView.scrollHeight; }
+  }
+  // the player's state in one line
+  // the player's state in one short line (the legend is at the top of the copied log)
+  function dbgState() {
+    if (!cur) return '[no player' + (wanted ? '' : ', off') + ']';
+    var a = cur.audio, ahead = 0, L = cur.live;
+    try { if (a.buffered.length) ahead = a.buffered.end(a.buffered.length - 1) - a.currentTime; } catch (e) {}
+    var flags = (a.paused ? 'P' : '') + (held ? 'H' : '') + (wanted ? '' : 'W0') + (navigator.onLine ? '' : 'OFF') +
+      (navigator.connection && navigator.connection.saveData ? 'S' : '');
+    return '[' + (flags ? flags + ' ' : '') + 'r' + a.readyState + ' t' + a.currentTime.toFixed(0) + ' a' + ahead.toFixed(1) +
+      (L ? ' ' + L.state + ' q' + L.queueDur.toFixed(1) + ' g' + L.target + ' nd' + Math.round((Date.now() - L.lastData) / 1000) : ' src') +
+      (ctx && ctx.state !== 'running' ? ' ctx:' + ctx.state : '') +
+      (navigator.mediaSession && navigator.mediaSession.playbackState !== 'playing' ? ' ms:' + navigator.mediaSession.playbackState : '') +
+      (navigator.connection ? ' ' + (navigator.connection.effectiveType || '?') : '') + ']';
+  }
+  function dbgWatch(a) {
+    if (!DEBUG) return;
+    ['loadstart', 'loadedmetadata', 'canplay', 'playing', 'waiting', 'stalled', 'suspend', 'pause', 'play',
+     'ended', 'emptied', 'abort', 'error'].forEach(function (ev) {
+      a.addEventListener(ev, function () {
+        if (cur && cur.audio !== a) return;
+        var extra = ev === 'error' && a.error ? 'code=' + a.error.code + ' ' + (a.error.message || '') + ' | ' : '';
+        dbg('a:' + ev, extra + dbgState());
+      });
+    });
+  }
+
+  var STREAM = 'https://v2in.stream/stream/kcmd';
+  var player = document.getElementById('player');
+  var btn = document.getElementById('play');
+  var statusEl = document.getElementById('status');
+  var vol = document.getElementById('volume');
+  var wanted = false;       // the listener pressed play and has not paused
+  var retryTimer = null;
+  var ctx = null;           // Web Audio, for the real waveform (as on v2in.stream)
+  // How the sound reaches the speakers and the spectrogram:
+  //   'webaudio' — the sound itself goes through an AudioContext (desktop, iOS: as on v2in.stream).
+  //   'capture'  — the sound plays as a plain <audio>; the spectrogram reads a copy of it (audio.captureStream()).
+  //                Default on Android: there a suspended AudioContext in the background silenced the radio, while
+  //                a plain <audio> keeps playing. If the context sleeps now, only the picture stops, never the sound.
+  //   'plain'    — plain <audio>, no spectrogram (when the stream can't be read by Web Audio, or no captureStream).
+  // To compare on a phone, open the page with ?audio=webaudio, ?audio=capture or ?audio=plain.
+  var IS_ANDROID = /Android/i.test(navigator.userAgent);
+  var CAN_CAPTURE = typeof HTMLMediaElement !== 'undefined' && typeof HTMLMediaElement.prototype.captureStream === 'function';
+  var forcedMode = (/[?&]audio=(webaudio|capture|plain)\b/.exec(location.search) || [])[1];
+  var mode = forcedMode || (IS_ANDROID ? (CAN_CAPTURE ? 'capture' : 'plain') : 'webaudio');
+  if (mode === 'capture' && !CAN_CAPTURE) mode = 'plain';
+
+  // ---- the live engine for phones (MSE): the page downloads the stream itself and feeds the player ----
+  // Why: with a plain <audio src> Android's Chrome keeps only ~2.5 s of sound in hand, and a network switch (Wi-Fi to
+  // mobile data, one cell to the next) breaks the connection without any error. In the background a stuck player
+  // can't be restarted, so the radio went quiet until the listener came back (seen in the debug log).
+  // Here the player is never restarted, only the download is: when no data has come for 5 s it is opened again,
+  // in the background too, and the new data joins the old seamlessly. The player keeps 10 s of sound in hand;
+  // each time it still runs dry, 2.5 s more (up to 15 s). A short break of the network is then not heard at all.
+  // Where the stream's format can't be played this way, the page falls back to the plain player by itself.
+  // A new connection may begin with a few seconds the old one already brought (servers send a burst on connect):
+  // the page finds where the old data ended and drops the repeat, so nothing is heard twice.
+  // ?engine=mse / ?engine=src force one or the other.
+  var LIVE_MIN = 10, LIVE_MAX = 15, LIVE_STEP = 2.5, LIVE_NODATA = 3500, LIVE_CONNECT_FIRST = 5000, LIVE_CONNECT_MAX = 12000;
+  var MSE_OFF_KEY = 'kcmd-radio-mse-off';
+  var CAN_MSE = !!(window.MediaSource && window.ReadableStream && window.AbortController && window.fetch);
+  var forcedEngine = (/[?&]engine=(mse|src)\b/.exec(location.search) || [])[1];
+  var engine = forcedEngine || (IS_ANDROID && CAN_MSE ? 'mse' : 'src');
+  if (engine === 'mse' && !CAN_MSE) engine = 'src';
+  if (!forcedEngine && engine === 'mse') {   // the format was found unplayable this way in the last day: don't try again yet
+    try { var mseOff = Number(localStorage.getItem(MSE_OFF_KEY) || 0); if (mseOff && Date.now() - mseOff < 86400000) engine = 'src'; } catch (e) {}
+  }
+  function liveType(ct) {
+    ct = String(ct || '').split(';')[0].trim().toLowerCase();
+    var known = { 'audio/mpeg': 'audio/mpeg', 'audio/mp3': 'audio/mpeg', 'audio/mpeg3': 'audio/mpeg', 'audio/x-mpeg': 'audio/mpeg',
+      'audio/aac': 'audio/aac', 'audio/aacp': 'audio/aac', 'audio/x-aac': 'audio/aac' }[ct];
+    try { return known && MediaSource.isTypeSupported(known) ? known : ''; } catch (e) { return ''; }
+  }
+  // how many seconds of sound a piece of the stream holds, counted frame by frame (MP3 or AAC/ADTS)
+  var MP3_BR = {
+    '3-3': [0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448],   // MPEG-1 layer I
+    '3-2': [0, 32, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384],      // MPEG-1 layer II
+    '3-1': [0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320],       // MPEG-1 layer III
+    '2-3': [0, 32, 48, 56, 64, 80, 96, 112, 128, 144, 160, 176, 192, 224, 256],      // MPEG-2/2.5 layer I
+    '2-2': [0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160]            // MPEG-2/2.5 layers II, III
+  };
+  var MP3_SR = { 3: [44100, 48000, 32000], 2: [22050, 24000, 16000], 0: [11025, 12000, 8000] };
+  var ADTS_SR = [96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350];
+  function frameAt(b, i) {   // the frame starting at b[i]: { len, dur }; 0 when more bytes are needed; null when none starts here
+    if (b[i] !== 0xFF) return null;
+    if (i + 7 > b.length) return 0;
+    var b1 = b[i + 1], b2 = b[i + 2];
+    if ((b1 & 0xF6) === 0xF0) {   // AAC in ADTS
+      var asr = ADTS_SR[(b2 >> 2) & 15], alen = ((b[i + 3] & 3) << 11) | (b[i + 4] << 3) | (b[i + 5] >> 5);
+      if (!asr || alen < 7) return null;
+      return { len: alen, dur: 1024 * ((b[i + 6] & 3) + 1) / asr };
+    }
+    if ((b1 & 0xE0) !== 0xE0) return null;
+    var ver = (b1 >> 3) & 3, layer = (b1 >> 1) & 3, bri = b2 >> 4, sri = (b2 >> 2) & 3, pad = (b2 >> 1) & 1;
+    if (ver === 1 || layer === 0 || bri === 0 || bri === 15 || sri === 3) return null;
+    var v1 = ver === 3;
+    var br = MP3_BR[v1 ? '3-' + layer : (layer === 3 ? '2-3' : '2-2')][bri] * 1000, rate = MP3_SR[ver][sri];
+    var half = layer === 1 && !v1;   // MPEG-2/2.5 layer III: half the samples
+    var len = layer === 3 ? (Math.floor(12 * br / rate) + pad) * 4 : Math.floor((half ? 72 : 144) * br / rate) + pad;
+    return { len: len, dur: (layer === 3 ? 384 : half ? 576 : 1152) / rate };
+  }
+  function measure(L, bytes) {   // whole frames only: a frame split between two pieces counts with the second
+    var b = bytes;
+    if (L.carry && L.carry.length) { b = new Uint8Array(L.carry.length + bytes.length); b.set(L.carry); b.set(bytes, L.carry.length); }
+    var i = 0, dur = 0;
+    while (i < b.length) {
+      var f = frameAt(b, i);
+      if (f === 0) break;
+      if (!f) { i++; continue; }
+      if (i + f.len > b.length) break;
+      dur += f.dur; i += f.len; L.parsed = true;
+    }
+    L.carry = b.length - i > 16384 ? null : b.slice(i);
+    if (!L.parsed && L.bytesSeen > 65536) return bytes.length / 16000;   // a format the counter doesn't know: 128 kbit/s
+    return dur;
+  }
+
+  function liveSetup(c) {
+    var L = { c: c, gen: 0, ms: new MediaSource(), sb: null, ctl: null, pending: [], queue: [], queueDur: 0,
+      holding: true, target: LIVE_MIN, state: 'idle', lastData: Date.now(), connStart: Date.now(), fails: 0,
+      everHeaders: false, appendGen: -1, carry: null, parsed: false, bytesSeen: 0, flushes: 0, lastTrim: 0,
+      paused: false, heldSince: 0, dead: false, tail: null, probeGen: -1, probe: null, probeStart: 0 };
+    c.live = L;
+    L.url = URL.createObjectURL(L.ms);
+    L.ms.addEventListener('sourceopen', function () { if (!L.dead) liveConnect(L, 'open'); }, { once: true });
+    c.audio.src = L.url;
+  }
+  function liveConnect(L, why) {
+    if (L.dead) return;
+    if (L.ctl) { try { L.ctl.abort(); } catch (e) {} }
+    var gen = ++L.gen, ctl = new AbortController();
+    L.ctl = ctl; L.state = 'connecting'; L.paused = false;
+    L.connStart = L.lastData = Date.now();
+    L.carry = null;
+    if (L.tail) { L.probeGen = gen; L.probe = null; }   // the first data of this connection is matched against the old
+    dbg('live: connect', why + ' | ' + dbgState());
+    fetch(STREAM + '?t=' + Date.now(), { signal: ctl.signal, cache: 'no-store' }).then(function (r) {
+      if (gen !== L.gen || L.dead) return;
+      if (!r.ok || !r.body) throw new Error('HTTP ' + r.status);
+      if (!L.sb) {
+        var raw = r.headers.get('content-type') || '', type = liveType(raw);
+        dbg('live: stream type', (raw || '?') + ' → ' + (type || 'not playable this way'));
+        if (!type) { try { ctl.abort(); } catch (e) {} liveGiveUp(L, 'type'); return; }
+        if (L.ms.readyState !== 'open') throw new Error('MediaSource ' + L.ms.readyState);
+        L.sb = L.ms.addSourceBuffer(type);
+        try { L.sb.mode = 'sequence'; } catch (e) {}   // pieces follow each other in time, whatever came between
+        L.sb.addEventListener('updateend', function () { livePump(L); });
+        L.sb.addEventListener('error', function () { dbg('live: append error'); });
+      }
+      L.everHeaders = true; L.state = 'streaming'; L.fails = 0; L.slowTries = 0;
+      var reader = r.body.getReader();
+      function next() {
+        return reader.read().then(function (res) {
+          if (gen !== L.gen || L.dead) { try { reader.cancel(); } catch (e) {} return; }
+          if (res.done) throw new Error('the server ended the stream');
+          liveData(L, gen, res.value);
+          return next();
+        });
+      }
+      return next();
+    }).catch(function (e) {
+      if (gen !== L.gen || L.dead) return;
+      L.fails += 1; L.state = 'retry';
+      dbg('live: download broke', (e && e.message) + ' | try ' + L.fails);
+      if (!L.everHeaders && L.fails >= 3) { liveGiveUp(L, 'no connection'); return; }
+      setTimeout(function () { if (gen === L.gen && !L.dead && !L.paused) liveConnect(L, 'retry'); },
+        Math.min(8000, 500 * Math.pow(2, L.fails - 1)));
+    });
+  }
+  function liveData(L, gen, bytes) {
+    L.lastData = Date.now();
+    if (L.probeGen === gen) { liveProbe(L, gen, bytes); return; }
+    liveTake(L, gen, bytes);
+  }
+  // the start of a new connection: is the end of what came before somewhere in it? Then only what follows is new.
+  var PROBE_NEEDLE = 1024, PROBE_MAX = 200000, PROBE_WAIT = 1500;
+  function liveProbe(L, gen, bytes) {
+    if (!L.probe) { L.probe = bytes; L.probeStart = Date.now(); }
+    else { var m = new Uint8Array(L.probe.length + bytes.length); m.set(L.probe); m.set(bytes, L.probe.length); L.probe = m; }
+    var hay = L.probe, needle = L.tail.subarray(Math.max(0, L.tail.length - PROBE_NEEDLE)), at = -1;
+    for (var i = 0; i + needle.length <= hay.length; i++) {
+      if (hay[i] !== needle[0]) continue;
+      var j = 1;
+      while (j < needle.length && hay[i + j] === needle[j]) j++;
+      if (j === needle.length) at = i + needle.length;   // the last match: the newest place the old data reached
+    }
+    if (at >= 0) {
+      dbg('live: dropped a repeat', (at / 16000).toFixed(1) + ' s already heard (approx.)');
+      L.probeGen = -1; L.probe = null;
+      if (at < hay.length) liveTake(L, gen, hay.slice(at));
+    } else if (hay.length >= PROBE_MAX || Date.now() - L.probeStart >= PROBE_WAIT) {
+      L.probeGen = -1; L.probe = null;   // no repeat in it: all of it is new
+      liveTake(L, gen, hay);
+    }
+  }
+  function liveTake(L, gen, bytes) {
+    L.bytesSeen += bytes.length;
+    var t = L.tail ? new Uint8Array(Math.min(4096, L.tail.length + bytes.length)) : new Uint8Array(Math.min(4096, bytes.length));
+    if (bytes.length >= t.length) t.set(bytes.subarray(bytes.length - t.length));
+    else { t.set(L.tail.subarray(L.tail.length - (t.length - bytes.length))); t.set(bytes, t.length - bytes.length); }
+    L.tail = t;
+    var item = { gen: gen, bytes: bytes, dur: measure(L, bytes) };
+    if (L.holding) {
+      L.queue.push(item); L.queueDur += item.dur;
+      if (liveAhead(L) + L.queueDur >= L.target) liveFlush(L);
+    } else { L.pending.push(item); livePump(L); }
+  }
+  function liveAhead(L) {
+    var a = L.c.audio;
+    try { var b = a.buffered; return b.length ? Math.max(0, b.end(b.length - 1) - a.currentTime) : 0; } catch (e) { return 0; }
+  }
+  // the sound held back until the buffer is full goes to the player all at once
+  function liveFlush(L) {
+    dbg('live: buffer full', (liveAhead(L) + L.queueDur).toFixed(1) + ' s of ' + L.target + ' s');
+    L.holding = false; L.flushes += 1;
+    L.pending = L.pending.concat(L.queue); L.queue = []; L.queueDur = 0;
+    livePump(L);
+  }
+  function livePump(L) {
+    var sb = L.sb;
+    if (!sb || sb.updating || L.dead || L.ms.readyState !== 'open') return;
+    if (!L.pending.length) { liveTrim(L, false); return; }
+    var gen = L.pending[0].gen, n = 0, size = 0;   // one connection at a time
+    while (n < L.pending.length && L.pending[n].gen === gen) { size += L.pending[n].bytes.length; n++; }
+    var items = L.pending.splice(0, n), buf = new Uint8Array(size), off = 0;
+    items.forEach(function (it) { buf.set(it.bytes, off); off += it.bytes.length; });
+    try {
+      // the first piece of a new connection: the decoder forgets the half frame the old one broke off on
+      if (gen !== L.appendGen) { if (L.appendGen !== -1) sb.abort(); L.appendGen = gen; }
+      sb.appendBuffer(buf);
+    } catch (e) {
+      if (e.name === 'QuotaExceededError' && liveTrim(L, true)) L.pending = items.concat(L.pending);
+      else dbg('live: append failed, piece dropped', e.name + ': ' + e.message);
+    }
+  }
+  // sound already heard is let go: the last 30 s stay
+  function liveTrim(L, hard) {
+    var sb = L.sb, a = L.c.audio;
+    if (!sb || sb.updating) return false;
+    if (!hard && Date.now() - L.lastTrim < 20000) return false;
+    L.lastTrim = Date.now();
+    try {
+      if (!sb.buffered.length) return false;
+      var from = sb.buffered.start(0), to = a.currentTime - (hard ? 2 : 30);
+      if (to - from < (hard ? 0.5 : 10)) return false;
+      sb.remove(from, to);
+      return true;
+    } catch (e) { return false; }
+  }
+  // the player ran dry (the network was away longer than the buffer): hold the sound back until the buffer is full
+  // again, a little fuller than before
+  function liveStall(L) {
+    if (L.dead || L.holding || !L.flushes || liveAhead(L) > 0.5) return;
+    L.holding = true;
+    L.target = Math.min(LIVE_MAX, L.target + LIVE_STEP);
+    dbg('live: ran dry, refilling to ' + L.target + ' s');
+  }
+  // The system paused the sound (another app's sound, a call). Often it gives the sound back by itself seconds later,
+  // so the download goes on for a minute: the radio then continues at once, a little behind, and catches up with
+  // the live edge by itself (liveTick). Only after a minute of pause does the download stop.
+  var LIVE_HOLD_MAX = 60000;
+  function liveHold(L) {
+    if (L.dead || L.heldSince) return;
+    L.heldSince = Date.now();
+    dbg('live: paused by the system, download goes on for now');
+  }
+  function liveStopDownload(L) {
+    L.paused = true; L.gen++; L.state = 'paused';
+    if (L.ctl) { try { L.ctl.abort(); } catch (e) {} }
+    dbg('live: paused for a minute, download stopped');
+  }
+  // the player plays again, whoever started it (the listener, the notification, or the system by itself)
+  function liveUnhold(L) {
+    if (L.dead) return;
+    var wasHeld = L.heldSince;
+    L.heldSince = 0;
+    if (L.paused) { L.paused = false; liveConnect(L, 'playing again after a pause'); }
+    else if (wasHeld) dbg('live: playing again, the download never stopped');
+  }
+  function liveRelease(L) {
+    L.dead = true; L.gen++;
+    if (L.ctl) { try { L.ctl.abort(); } catch (e) {} }
+    try { URL.revokeObjectURL(L.url); } catch (e) {}
+  }
+  function liveGiveUp(L, why) {
+    dbg('live: switching to the plain player', why);
+    if (why === 'type') { try { localStorage.setItem(MSE_OFF_KEY, String(Date.now())); } catch (e) {} }
+    engine = 'src';
+    if (cur === L.c && wanted) start();
+  }
+  function liveConnectLimit(L) { return Math.min(LIVE_CONNECT_MAX, LIVE_CONNECT_FIRST + 2500 * (L.slowTries || 0)); }
+  // a moment when the network is likely back: the page is seen again, the network changed, the phone is online.
+  // A download that is waiting out a pause between tries (up to 8 s) or hangs dials at once instead.
+  function liveNudge(L, why) {
+    if (!L || L.dead || L.paused) return;
+    var now = Date.now();
+    if (L.state === 'retry' ||
+        (L.state === 'connecting' && now - L.connStart > 2000) ||
+        (L.state === 'streaming' && now - L.lastData > 2500)) liveConnect(L, why);
+  }
+  if (navigator.connection && navigator.connection.addEventListener) {
+    navigator.connection.addEventListener('change', function () { if (wanted && cur && cur.live) liveNudge(cur.live, 'network changed'); });
+  }
+  function liveTick(L) {
+    if (L.dead || L.paused) return;
+    var now = Date.now();
+    if (L.heldSince && now - L.heldSince > LIVE_HOLD_MAX) { liveStopDownload(L); return; }
+    if (L.probeGen === L.gen && L.probe && now - L.probeStart >= PROBE_WAIT) liveProbe(L, L.gen, new Uint8Array(0));
+    if (L.state === 'streaming' && now - L.lastData > LIVE_NODATA) liveConnect(L, 'no data for ' + Math.round((now - L.lastData) / 1000) + ' s');
+    else if (L.state === 'connecting' && now - L.connStart > liveConnectLimit(L)) {
+      // no answer: drop this try and dial again; on a slow network each such try is given 2.5 s more (5 s … 12 s)
+      L.slowTries = (L.slowTries || 0) + 1;
+      liveConnect(L, 'no answer for ' + Math.round((now - L.connStart) / 1000) + ' s');
+    }
+    // far behind the live edge (more sound in hand than needed): jump forward, keeping the buffer
+    var a = L.c.audio, ahead = liveAhead(L);
+    if (!L.holding && !a.paused && !a.seeking && a.readyState >= 3 && ahead > L.target + 6) {
+      try { a.currentTime = a.currentTime + ahead - L.target; dbg('live: jumped closer to the live edge', ahead.toFixed(1) + ' s were in hand'); } catch (e) {}
+    }
+    livePump(L);
+  }
+  setInterval(function () { if (cur && cur.live) liveTick(cur.live); }, 1000);
+  var held = false;         // the system paused the sound (a call, another app's audio): the listener still wants the radio
+  var cur = null;           // { audio, src, gain, analyser, buf }
+
+  var statusKey = 'st_idle';
+  function setStatus(key) { statusKey = key; statusEl.textContent = t(key); }
+  onLangChange.push(function () { statusEl.textContent = t(statusKey); btn.setAttribute('aria-label', t(player.classList.contains('is-playing') ? 'pause' : 'play')); });
+  function setPlaying(on) {
+    player.classList.toggle('is-playing', on);
+    btn.setAttribute('aria-label', t(on ? 'pause' : 'play'));
+    if (typeof updateMediaSession === 'function') updateMediaSession();
+    if (typeof renderListeners === 'function' && lnEl) renderListeners();
+  }
+  function release() {
+    if (!cur) return;
+    var a = cur.audio;
+    a.onplaying = a.onwaiting = a.onstalled = a.onerror = a.onended = a.onpause = a.onplay = null;
+    a.pause();
+    a.removeAttribute('src');
+    a.load();
+    if (cur.live) liveRelease(cur.live);
+    if (cur.src) { try { cur.src.disconnect(); } catch (e) {} }
+    if (cur.sink) { try { cur.sink.disconnect(); } catch (e) {} }
+    cur = null;
+  }
+  // 'capture' mode: the spectrogram listens to a copy of the playing element, the element itself plays as usual.
+  // Called on every "playing": after a reconnect the element carries a new track, so the copy is taken again.
+  function attachCapture(c) {
+    if (mode !== 'capture' || !ctx || cur !== c) return;
+    try {
+      var stream = c.audio.captureStream();
+      if (!stream.getAudioTracks().length) {   // the track can come a moment after "playing"
+        stream.onaddtrack = function () { stream.onaddtrack = null; attachCapture(c); };
+        return;
+      }
+      if (ctx.state !== 'running') { try { ctx.resume(); } catch (e) {} }
+      if (c.src) { try { c.src.disconnect(); } catch (e) {} }
+      if (!c.analyser) {
+        c.analyser = ctx.createAnalyser();
+        c.analyser.fftSize = 2048;
+        c.buf = new Float32Array(c.analyser.fftSize);
+        // a muted path to the output, so the browser keeps feeding the analyser; nothing is heard twice
+        c.sink = ctx.createGain();
+        c.sink.gain.value = 0;
+        c.analyser.connect(c.sink).connect(ctx.destination);
+      }
+      c.src = ctx.createMediaStreamSource(stream);
+      c.src.connect(c.analyser);
+    } catch (e) {
+      dbg('capture failed', e && (e.name + ': ' + e.message));
+      // no picture this time (e.g. no cross-origin access); the sound is not touched
+      if (c.src) { try { c.src.disconnect(); } catch (x) {} }
+      c.src = null; c.analyser = null;
+    }
+  }
+
+  // a live stream: every start picks up the live edge, not an old buffer
+  function start() {
+    clearTimeout(retryTimer);
+    release();
+    var a = new Audio();
+    var c = { audio: a, src: null, gain: null, analyser: null, buf: null, live: null };
+    if (mode !== 'plain') {
+      try {
+        if (!ctx) {   // made here, inside the tap on Play, so the phone lets it run
+          ctx = new (window.AudioContext || window.webkitAudioContext)();
+          ctx.onstatechange = function () {
+            dbg('ctx:' + ctx.state);
+            if (wanted && (ctx.state === 'suspended' || ctx.state === 'interrupted')) { try { ctx.resume(); } catch (e) {} }
+          };
+        }
+        ctx.resume();
+        a.crossOrigin = 'anonymous';
+        if (mode === 'webaudio') {
+          c.src = ctx.createMediaElementSource(a);
+          c.analyser = ctx.createAnalyser();
+          c.analyser.fftSize = 2048;
+          c.gain = ctx.createGain();
+          c.gain.gain.value = Number(vol.value);
+          c.src.connect(c.analyser);
+          c.analyser.connect(c.gain).connect(ctx.destination);
+          c.buf = new Float32Array(c.analyser.fftSize);
+        }
+      } catch (e) { mode = 'plain'; c = { audio: a, src: null, gain: null, analyser: null, buf: null }; a.removeAttribute('crossorigin'); }
+    }
+    if (mode !== 'webaudio') a.volume = Number(vol.value);
+    dbg('start', 'mode=' + mode + ' engine=' + engine);
+    dbgWatch(a);
+    cur = c;
+    zeroTime = 0;
+    c.played = false;
+    lastProgress = Date.now(); lastTime = 0; stallLimit = STALL_FIRST;   // a new source starts at 0: that is no progress yet
+    held = false;
+    a.onplaying = function () { c.played = true; held = false; if (c.live) liveUnhold(c.live); lastProgress = Date.now(); setPlaying(true); setStatus('st_onair'); attachCapture(c); };
+    a.onwaiting = function () { if (wanted) setStatus('st_buffering'); if (c.live) liveStall(c.live); };
+    // started again, by anyone (the system after taking the sound away, too): the download must be running
+    a.onplay = function () { if (c.live && cur === c) liveUnhold(c.live); };
+    // Android pauses the element itself when another app takes the sound (a call, a video, a messenger's ping).
+    // Without noticing it the page kept saying "On air" and the lock-screen Play button did nothing.
+    // A short interruption ends by itself (the browser plays on, onplaying clears the flag); a long one waits for Play.
+    a.onpause = function () {
+      if (!wanted || cur !== c || a.ended || Date.now() - lastReconnect < 1500) return;
+      held = true;
+      if (c.live) liveHold(c.live);
+      setPlaying(false);
+      setStatus('st_paused');
+    };
+    // the stream moving on is what counts as alive (also during an alert: the silence still flows)
+    a.ontimeupdate = function () {
+      if (a.currentTime !== lastTime) { lastTime = a.currentTime; lastProgress = Date.now(); stallLimit = STALL_FIRST; failedTries = 0; }
+    };
+    // a stream the server ends is dialled again, as a radio app does (as on v2in.stream)
+    a.onended = function () { if (cur === c && !c.live) reconnect(true); };
+    a.onerror = function () {
+      if (!wanted || cur !== c) return;
+      if (c.live) {   // the live engine: its downloads mend themselves, so an error here is the player's own
+        dbg('live: player error', a.error ? 'code=' + a.error.code + ' ' + (a.error.message || '') : '');
+        if (!c.played) { liveGiveUp(c.live, 'player error before any sound'); return; }
+        if (document.hidden) { reconnectDue = true; return; }   // a fresh player when the page is seen again
+        start(); return;
+      }
+      // the stream refused Web Audio before it ever played (no cross-origin access): play it plainly instead
+      if (mode !== 'plain' && !c.played) { mode = 'plain'; start(); return; }
+      // a dropped connection later on: dial again on the same player, in the background too (a real error is no
+      // false alarm like a late progress event); if the phone refuses there, the retry waits for the page's return
+      setTimeout(function () { if (cur === c) reconnect(true); }, 2000);
+    };
+    if (engine === 'mse') liveSetup(c); else a.src = STREAM + '?t=' + Date.now();
+    setStatus('st_connecting');
+    var p = a.play();
+    if (p && p.catch) p.catch(function (e) {
+      dbg('start: play refused', e && (e.name + ': ' + e.message));
+      if (cur !== c || e.name === 'AbortError') return;
+      if (mode !== 'plain') { mode = 'plain'; start(); return; }
+      if (wanted) { setStatus('st_failed'); wanted = false; setPlaying(false); }
+    });
+  }
+  function stop() {
+    clearTimeout(retryTimer);
+    release();
+    setPlaying(false);
+    setStatus('st_paused');
+  }
+  function retry() {
+    if (!wanted) return;
+    setStatus('st_reconnecting');
+    clearTimeout(retryTimer);
+    retryTimer = setTimeout(start, 3000);
+  }
+
+  // ---- keeping a long listen alive on phones ----
+  // While the page is in the background nothing is reloaded: Android's Chrome lets a stream that already plays go on,
+  // but won't start one anew from the background, so a reload there silenced the radio until the listener came back
+  // (as on v2in.stream, which reloads nothing). A reload that is due waits until the page is seen again.
+  var reconnectDue = false;
+  // Reconnect on the SAME audio element (not a new one): in the background a phone may refuse to start a
+  // new player, but lets the one already playing load its source again. The lock-screen controls stay.
+  var STALL_FIRST = 12000, STALL_MAX = 30000, STALL_HIDDEN = 20000;
+  var lastProgress = 0, lastTime = -1, stallLimit = STALL_FIRST, lastReconnect = 0;
+  var failedTries = 0;      // reconnects in a row that brought no sound
+  // progress read straight from the player, not only from its events (in the background they come late or not at all)
+  function sampleProgress() {
+    if (!cur) return;
+    var tNow = cur.audio.currentTime;
+    if (tNow !== lastTime) { lastTime = tNow; lastProgress = Date.now(); stallLimit = STALL_FIRST; failedTries = 0; }
+  }
+  function reconnect(ended) {
+    if (!wanted) return;
+    // the live engine: only the download is opened again, never the player (in the background too)
+    if (cur && cur.live) { reconnectDue = false; liveNudge(cur.live, 'reconnect'); return; }
+    if (document.hidden && !ended) { reconnectDue = true; dbg('reconnect postponed (background)'); return; }   // a stream the server ended is dialled again, as on v2in.stream
+    reconnectDue = false;
+    if (!cur) { start(); return; }
+    var a = cur.audio, c = cur;
+    dbg('reconnect', 'ended=' + !!ended + ' | ' + dbgState());
+    lastReconnect = Date.now();
+    lastProgress = Date.now();
+    lastTime = 0;             // the reloaded source starts at 0: that is no progress yet
+    held = false;
+    setStatus('st_reconnecting');
+    if (ctx && ctx.state !== 'running') { try { ctx.resume(); } catch (e) {} }
+    a.src = STREAM + '?t=' + Date.now();
+    a.load();
+    var p = a.play();
+    if (p && p.catch) p.catch(function (e) {
+      dbg('reconnect: play refused', e && (e.name + ': ' + e.message));
+      if (cur !== c || !wanted || (e && e.name === 'AbortError')) return;
+      if (document.hidden) { reconnectDue = true; return; }   // refused in the background: try again on return
+      // refused in front of the listener (the phone wants a tap): show Play, so one tap brings the radio back.
+      // Before, this left the player paused and silent, with nothing watching it, until the page was reloaded.
+      if (e && e.name === 'NotAllowedError') { held = true; setPlaying(false); setStatus('st_paused'); }
+      // any other refusal: the watchdog below tries again
+    });
+  }
+  // A stuck stream is brought back. The first try reloads the same player (allowed in the background too);
+  // if that brought no sound and the page is in front, a fresh player is made — what a page reload did by hand.
+  function recover() {
+    failedTries += 1;
+    dbg('recover', 'try=' + failedTries + ' | ' + dbgState());
+    stallLimit = Math.min(STALL_MAX, stallLimit + 8000);
+    if (!document.hidden && failedTries >= 2) { failedTries = 0; start(); return; }
+    reconnect(true);
+  }
+  // Play after the system took the sound away: a live stream is dialled again, not continued from an old buffer.
+  // The live engine goes on from its buffer (a short pause) or opens the download again (after a long one).
+  function resumeHeld() {
+    held = false; failedTries = 0;
+    if (cur && cur.live) {
+      lastReconnect = Date.now();
+      setStatus('st_buffering');
+      liveUnhold(cur.live);
+      var p = cur.audio.play();
+      if (p && p.catch) p.catch(function (e) { dbg('resume: play refused', e && (e.name + ': ' + e.message)); });
+      return;
+    }
+    reconnect(true);
+  }
+  // the watchdog: a stream stuck in "buffering" with no progress is dialled again,
+  // first after 12 s, then waiting longer each time (up to 30 s) so a bad network is not hammered.
+  // It now watches in the background too (after 20 s at least): a stream that stalled there used to stay stalled.
+  setInterval(function () {
+    sampleProgress();
+    if (!wanted || !cur || held) return;
+    // the live engine watches its own download (liveTick); here only a broken player in front of the listener
+    if (cur.live) {
+      if (!document.hidden && (cur.audio.error || (cur.audio.paused && Date.now() - lastReconnect > 4000))) { failedTries = 0; start(); }
+      return;
+    }
+    // In the background a stalled player is left alone: reloading it there (load()) pauses it, Android then refuses
+    // to start it again from the background, the media session closes and the notification goes. Left alone, the
+    // player keeps its session and may pick up by itself; on the page's return a fresh player starts at once.
+    if (document.hidden) { if (cur.audio.error || cur.audio.ended) reconnectDue = true; return; }
+    var now = Date.now();
+    var limit = document.hidden ? Math.max(stallLimit, STALL_HIDDEN) : stallLimit;
+    // a player that is paused though nobody paused it (a refused play) counts as stuck as well
+    var stuck = cur.audio.paused ? now - lastReconnect > 4000 : now - lastProgress > limit;
+    if (stuck && now - lastReconnect > Math.min(limit, 8000)) recover();
+  }, 2000);
+  // a phone back on the network (Wi-Fi to mobile data and back) gets the stream again at once
+  window.addEventListener('online', function () { dbg('network: online'); if (wanted) reconnect(); });
+  if (DEBUG) {
+    window.addEventListener('offline', function () { dbg('network: offline'); });
+    // Chrome's page lifecycle: "freeze" means the phone stopped the page's scripts
+    document.addEventListener('freeze', function () { dbg('page: FREEZE', dbgState()); });
+    document.addEventListener('resume', function () { dbg('page: resume', dbgState()); });
+    window.addEventListener('pagehide', function (e) { dbg('page: hide', 'persisted=' + e.persisted); });
+    window.addEventListener('pageshow', function (e) { dbg('page: show', 'persisted=' + e.persisted); });
+    document.addEventListener('visibilitychange', function () { dbg(document.hidden ? 'page: to background' : 'page: back in front', dbgState()); });
+    if (navigator.connection && navigator.connection.addEventListener) {
+      navigator.connection.addEventListener('change', function () { dbg('net ' + (navigator.connection.effectiveType || '?')); });
+    }
+    setInterval(function () { dbg('alive', dbgState()); }, 10000);
+  }
+
+  // listening time counts only the seconds the sound actually plays (not connecting, not paused)
+  var PING_MIN = 5;          // one 'listening' event per 5 minutes of playback (keeps the event count low)
+  var heard = 0, pinged = 0, session = false;
+  setInterval(function () {
+    if (!session || !player.classList.contains('is-playing') || !cur || cur.audio.paused) return;
+    heard += 1;
+    if (heard - pinged >= PING_MIN * 60) { pinged = heard; track('listening', { minutes: PING_MIN, lang: lang }); }
+  }, 1000);
+  function endSession() {
+    if (!session) return;
+    session = false;
+    track('play_stop', { seconds: heard, minutes: Math.round(heard / 60), lang: lang });
+  }
+  window.addEventListener('pagehide', endSession);
+
+  btn.addEventListener('click', function () {
+    dbg('button: ' + (wanted && !held ? 'pause' : 'play'));
+    if (wanted && held) { resumeHeld(); return; }   // the system paused it: Play brings it back, it does not switch off
+    wanted = !wanted;
+    if (wanted) {
+      heard = 0; pinged = 0; session = true;
+      track('play_start', { lang: lang });
+      start();
+    } else {
+      stop();
+      endSession();
+    }
+  });
+  vol.addEventListener('input', function () {
+    if (!cur) return;
+    if (cur.gain) cur.gain.gain.value = Number(vol.value); else cur.audio.volume = Number(vol.value);
+  });
+
+  // phones can suspend a stream in the background; pick it up again on return
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden || !wanted || held) return;
+    sampleProgress();
+    dbg('back in front: check', dbgState());
+    if (!cur) start();
+    else if (cur.live) {
+      var L = cur.live;
+      if (reconnectDue || cur.audio.error) { failedTries = 0; start(); return; }
+      if (cur.audio.paused) { var pp = cur.audio.play(); if (pp && pp.catch) pp.catch(function () {}); }
+      liveNudge(L, 'back in front');
+      if (ctx && mode === 'capture') {
+        if (ctx.state !== 'running') { try { ctx.resume(); } catch (e) {} }
+        if (!cur.src) attachCapture(cur);
+      }
+    }
+    // stuck in "buffering" while away (no progress for 6 s), or broken: a fresh player at once, as a reload would.
+    // Before, a stalled player looked "not paused, no error" and was left to the watchdog for another 12–30 s.
+    else if (reconnectDue || cur.audio.error || cur.audio.ended || cur.audio.paused ||
+             Date.now() - lastProgress > 6000 ||
+             (mode === 'webaudio' && ctx && ctx.state !== 'running')) { failedTries = 0; start(); }   // a suspended AudioContext leaves the element "playing" in silence
+    else if (mode === 'capture' && ctx) {   // the sound went on; only the picture slept: wake it
+      if (ctx.state !== 'running') { try { ctx.resume(); } catch (e) {} }
+      if (!cur.src) attachCapture(cur);
+    }
+  });
+
+  // ---- Media Session: the phone's lock screen / notification controls, as on v2in.stream ----
+  // With it Android treats the page as a media player and keeps it playing in the background.
+  var hasMS = 'mediaSession' in navigator && typeof MediaMetadata !== 'undefined';
+  function updateMediaSession() {
+    if (!hasMS) return;
+    var line = nowState && nowState.kind === 'line' ? nowState.text : '';
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: line || 'KCMD Radio',
+      artist: line ? 'KCMD Radio · V2in' : 'V2in',
+      artwork: [192, 512].map(function (n) {
+        return { src: new URL('icon-' + n + '.png', location.href).href, sizes: n + 'x' + n, type: 'image/png' };
+      })
+    });
+    navigator.mediaSession.playbackState = wanted && !held ? 'playing' : 'paused';
+  }
+  if (hasMS) {
+    try {
+      navigator.mediaSession.setActionHandler('play', function () { dbg('notification: play'); if (!wanted) btn.click(); else if (held) resumeHeld(); });
+      navigator.mediaSession.setActionHandler('pause', function () { dbg('notification: pause'); if (wanted && !held) btn.click(); });
+      navigator.mediaSession.setActionHandler('stop', function () { dbg('notification: stop'); if (wanted) { if (held) { held = false; } btn.click(); } });
+    } catch (e) {}
+  }
+
+  // ---- the signal picture: v2in.stream's own spectrogram (web/wave.mjs, drawSpectre), carried over as is ----
+  // A scrolling spectrogram from the analyser's time-domain samples: rows log-spaced 60 Hz to 12 kHz, ink in the
+  // accent colour, alpha over the 60 dB under the recent loudest bin. It comes up when sound starts, fades when it stops.
+  // As on v2in.stream, plain playback (no Web Audio) draws nothing.
+  var FADE_S = 0.25;
+  var FFT_N = 1024, LO_HZ = 60, HI_HZ = 12000, RANGE = 60, FALL = 3, CEIL_DB = -20;
+  var hann = Float32Array.from({ length: FFT_N }, function (_, i) { return 0.5 - 0.5 * Math.cos(2 * Math.PI * i / FFT_N); });
+  function fft(re, im) {
+    var n = re.length;
+    for (var i = 1, j = 0; i < n; i++) {
+      var bit = n >> 1;
+      for (; j & bit; bit >>= 1) j ^= bit;
+      j ^= bit;
+      if (i < j) { var tr = re[i]; re[i] = re[j]; re[j] = tr; var ti = im[i]; im[i] = im[j]; im[j] = ti; }
+    }
+    for (var len = 2; len <= n; len <<= 1) {
+      var ang = -2 * Math.PI / len, wr = Math.cos(ang), wi = Math.sin(ang);
+      for (var i2 = 0; i2 < n; i2 += len) {
+        var cr = 1, ci = 0;
+        for (var j2 = 0; j2 < len / 2; j2++) {
+          var pp = i2 + j2, q = pp + len / 2, vr = re[q] * cr - im[q] * ci, vi = re[q] * ci + im[q] * cr;
+          re[q] = re[pp] - vr; im[q] = im[pp] - vi; re[pp] += vr; im[pp] += vi;
+          var tt = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = tt;
+        }
+      }
+    }
+  }
+  function rgb(c) {
+    var m = /^#?([0-9a-f]{6})$/i.exec(String(c).trim());
+    var n = m ? parseInt(m[1], 16) : 0x42b649;
+    return [n >> 16, (n >> 8) & 255, n & 255];
+  }
+  function drawSpectre(w, o) {
+    var on = o.on, analyser = o.analyser, buf = o.buf, dt = o.dt, still = o.still, sr = o.sr || 48000;
+    w.amp = still ? +on : Math.min(1, Math.max(0, (w.amp || 0) + (on ? dt : -dt) / FADE_S));
+    var cv = w.canvas;
+    if (!on && !w.amp) { if (w.drawn) cv.getContext('2d').clearRect(0, 0, cv.width, cv.height); w.drawn = false; return false; }
+    var dpr = window.devicePixelRatio || 1;
+    var cw = Math.round(cv.clientWidth * dpr), h = Math.round(cv.clientHeight * dpr);
+    if (!cw || !h) return false;
+    if (cv.width !== cw || cv.height !== h) { cv.width = cw; cv.height = h; w.col = null; }
+    var g = cv.getContext('2d'), step = Math.max(1, Math.round(dpr));
+    if (!w.col) w.col = g.createImageData(step, h);
+    var p = w.col.data, c = rgb(o.color), r0 = c[0], g0 = c[1], b0 = c[2];
+    if (on) {
+      analyser.getFloatTimeDomainData(buf);
+      var peak = 0;
+      for (var k0 = 0; k0 < buf.length; k0++) { var av = Math.abs(buf[k0]); if (av > peak) peak = av; }
+      w.peak = peak;
+      // exact digital silence is a feed that has not arrived: nothing drawn, nothing scrolled
+      if (w.peak === 0) return w.drawn;
+      if (!w.re) w.re = new Float32Array(FFT_N);
+      if (!w.im) w.im = new Float32Array(FFT_N);
+      var off = Math.max(0, buf.length - FFT_N);
+      for (var i = 0; i < FFT_N; i++) { w.re[i] = (buf[off + i] || 0) * hann[i]; w.im[i] = 0; }
+      fft(w.re, w.im);
+      var hi = Math.min(HI_HZ, sr / 2), dbs = new Float32Array(h), top = -Infinity;
+      for (var y = 0; y < h; y++) {
+        var f = LO_HZ * Math.pow(hi / LO_HZ, 1 - y / h);
+        var k = Math.min(FFT_N / 2 - 1, Math.max(1, Math.round(f / sr * FFT_N)));
+        dbs[y] = 20 * Math.log10(Math.hypot(w.re[k], w.im[k]) / (FFT_N / 4) + 1e-9);   // a bin's amplitude in dBFS (Hann)
+        if (dbs[y] > top) top = dbs[y];
+      }
+      w.top = Math.max(top, Math.min(CEIL_DB, (w.top == null ? top : w.top) - (RANGE / FALL) * dt));
+      for (var y2 = 0; y2 < h; y2++) {
+        var a = Math.round(255 * w.amp * Math.pow(Math.max(0, Math.min(1, (dbs[y2] - (w.top - RANGE)) / RANGE)), 1.5));
+        for (var x = 0; x < step; x++) { var oo = (y2 * step + x) * 4; p[oo] = r0; p[oo + 1] = g0; p[oo + 2] = b0; p[oo + 3] = a; }
+      }
+    } else { w.peak = 0; for (var i3 = 3; i3 < p.length; i3 += 4) p[i3] = 0; }
+    if (!still) { g.globalCompositeOperation = 'copy'; g.drawImage(cv, -step, 0); g.globalCompositeOperation = 'source-over'; }
+    g.putImageData(w.col, cw - step, 0);
+    w.drawn = true;
+    return true;
+  }
+
+  function drawSilence(w, color) {
+    var cv = w.canvas, dpr = window.devicePixelRatio || 1;
+    var cw = Math.round(cv.clientWidth * dpr), h = Math.round(cv.clientHeight * dpr);
+    if (!cw || !h) return;
+    if (cv.width !== cw || cv.height !== h) { cv.width = cw; cv.height = h; w.col = null; }
+    var g = cv.getContext('2d');
+    g.clearRect(0, 0, cw, h);
+    g.fillStyle = color;
+    g.globalAlpha = 0.7;
+    g.fillRect(0, Math.round(h / 2) - Math.max(1, Math.round(dpr / 2)), cw, Math.max(1, Math.round(dpr)));
+    g.globalAlpha = 1;
+    w.amp = 1; w.drawn = true; w.top = null;
+  }
+  var strip = { canvas: document.getElementById('wave') };
+  var stillMq = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var lastFrame = 0, zeroTime = 0, lastSound = -1e9;
+  function cssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+  function draw(now) {
+    var dt = lastFrame ? Math.min(0.1, (now - lastFrame) / 1000) : 0;
+    lastFrame = now;
+    var on = !!(cur && cur.analyser && player.classList.contains('is-playing'));
+    // the strip is open whenever the stream plays; while the signal is silence (during an alert)
+    // it shows a thin flat line, the picture of silence, and the spectrogram takes over when sound returns
+    var silent = false;
+    if (on) {
+      cur.analyser.getFloatTimeDomainData(cur.buf);
+      var level = 0;
+      for (var li = 0; li < cur.buf.length; li++) { var lv = Math.abs(cur.buf[li]); if (lv > level) level = lv; }
+      if (level > 0.001) lastSound = now;
+      silent = now - lastSound >= 1500;   // a short gap between pieces doesn't count as silence
+    }
+    player.classList.toggle('wave-open', on);
+    if (on && silent) drawSilence(strip, cssVar('--accent'));
+    else drawSpectre(strip, {
+      on: on, analyser: cur && cur.analyser, buf: cur && cur.buf, dt: dt,
+      still: stillMq.matches, color: cssVar('--accent'), sr: ctx ? ctx.sampleRate : 48000
+    });
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+
+  // ---- what is on air now: the same source v2in.stream uses (GET /api/now), checked every 5 seconds ----
+  var NOW_API = 'https://v2in.stream/api/now';
+  var CHANNEL_ID = 'kcmd';
+  var nowEl = document.getElementById('now-line');
+  var nowState = { kind: 'none' };
+  function renderNow() {
+    var text = '', silent = false;
+    if (nowState.kind === 'silent') {
+      silent = true;
+      text = (nowState.at ? t('silenceAt', { t: nowState.at }) : t('silence')) + t('silenceRest');
+    } else if (nowState.kind === 'offline') text = t('offline');
+    else if (nowState.kind === 'unreachable') { text = t('unreachable'); silent = true; }
+    else if (nowState.kind === 'line') text = nowState.text;
+    nowEl.textContent = text;
+    nowEl.hidden = !text;
+    nowEl.classList.toggle('is-silent', silent);
+  }
+  onLangChange.push(renderNow);
+
+  // ---- how many are listening: the radio's own count for the KCMD channel (listeners in /api/now) ----
+  // While you play, you are one of them, so the line says how many others listen with you.
+  var listeners = null;
+  var lnEl = document.getElementById('listeners');
+  function renderListeners() {
+    var n = listeners, text = '';
+    if (typeof n === 'number' && nowState.kind !== 'unreachable') {
+      if (player.classList.contains('is-playing')) {
+        var others = Math.max(0, n - 1);
+        if (others === 1) text = t('lnWithOne');
+        else if (others > 1) text = t('lnWith', { n: others });
+        else text = t('lnAlone');
+      } else if (n === 1) text = t('lnNowOne');
+      else if (n > 1) text = t('lnNow', { n: n });
+    }
+    lnEl.textContent = text;
+    lnEl.hidden = !text;
+  }
+  onLangChange.push(renderListeners);
+  function setNow(st) {
+    var changed = JSON.stringify(st) !== JSON.stringify(nowState);
+    nowState = st; renderNow();
+    if (changed && wanted) updateMediaSession();
+  }
+  // the radio counts as unreachable after two failed checks in a row (about 10 s), so one hiccup shows nothing
+  var nowFails = 0;
+  function pollNow() {
+    if (document.hidden) return;
+    var ctl = window.AbortController ? new AbortController() : null;
+    var timer = ctl ? setTimeout(function () { ctl.abort(); }, 8000) : null;   // a server that hangs counts as down
+    fetch(NOW_API, { cache: 'no-store', signal: ctl ? ctl.signal : undefined }).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(function (data) {
+      clearTimeout(timer);
+      nowFails = 0;
+      var ch = (data.channels || []).filter(function (x) { return x && x.id === CHANNEL_ID; })[0];
+      listeners = ch && typeof ch.listeners === 'number' ? ch.listeners : null;
+      renderListeners();
+      if (!ch) return setNow({ kind: 'none' });
+      if (ch.status === 'silent') {
+        // the alert's start, as the radio's own title gives it ("Air raid alert in Kyiv since 12:14")
+        var at = /(\d{1,2}:\d{2})/.exec(ch.title || '');
+        return setNow({ kind: 'silent', at: at ? at[1] : '' });
+      }
+      if (ch.status === 'offline') return setNow({ kind: 'offline' });
+      var line = [ch.by, ch.title].filter(Boolean).join(' - ');
+      if (Array.isArray(ch.live) && ch.live.length) {
+        line = ch.live.map(function (l) { return [l.artist, l.title].filter(Boolean).join(' - '); })
+          .filter(Boolean).join(', ') || 'Live';
+      }
+      setNow(line ? { kind: 'line', text: line } : { kind: 'none' });
+    }).catch(function () {
+      clearTimeout(timer);
+      nowFails += 1;
+      if (nowFails >= 2) { setNow({ kind: 'unreachable' }); renderListeners(); }
+    });
+  }
+  setInterval(pollNow, 5000);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) pollNow(); });
+
+  // ---- timetable: Kyiv/Tallinn time from the list, plus the visitor's own time ----
+  var ZONE = 'Europe/Kyiv';   // Tallinn shares this time all year
+  function zoneOffset(ts, tz) {
+    var v = {};
+    new Intl.DateTimeFormat('en-US', { timeZone: tz, hourCycle: 'h23', year: 'numeric', month: '2-digit',
+      day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })
+      .formatToParts(new Date(ts)).forEach(function (p) { v[p.type] = p.value; });
+    return Date.UTC(+v.year, +v.month - 1, +v.day, +v.hour, +v.minute, +v.second) - ts;
+  }
+  function kyivToDate(date, time) {
+    var d = date.split('-').map(Number), t = time.split(':').map(Number);
+    var guess = Date.UTC(d[0], d[1] - 1, d[2], t[0], t[1]);
+    var ts = guess - zoneOffset(guess, ZONE);
+    var ts2 = guess - zoneOffset(ts, ZONE);
+    return new Date(ts2);
+  }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+  var localZone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+  var localPlace = localZone.indexOf('/') > 0 ? localZone.split('/').pop().replace(/_/g, ' ').replace(/^Kiev$/, 'Kyiv') : '';
+
+  // ---- the timetable's source: the public Google Calendar of KCMD Radio ----
+  // Event title: "English / Ukrainian" (the part after " / " is optional): the piece or the person, as you like.
+  // A known name anywhere in the title or the description's first line links to its KCMD Portfolio profile.
+  // Event description (optional): the piece or programme, the same way: "English / Ukrainian".
+  // If the calendar can't be read or has no events, the timetable stays empty.
+  // Set USE_FALLBACK to true to show the list written in KCMD_TIMETABLE above in that case.
+  var USE_FALLBACK = false;
+  var CAL_ID = 'c_2640deb818abc8193de53033aef29ae5a87dbaad32a022933e537d0399c1b478@group.calendar.google.com';
+  var CAL_KEY = 'AIzaSyAm5BWlW4kiZ3885wEo7nzhLd9oil7mMas';
+  var calItems = null;   // null until the calendar has answered with events
+  function twoLangs(text) {
+    var parts = String(text || '').split(' / ');
+    return { en: parts[0].trim(), uk: (parts[1] || parts[0]).trim() };
+  }
+  // the description as plain text with its line breaks (Google may send it as HTML)
+  function plainText(html) {
+    var d = document.createElement('div');
+    d.innerHTML = String(html || '').replace(/<br\s*\/?>/gi, '\n').replace(/<\/(p|div|li)>/gi, '\n');
+    return (d.textContent || '').replace(/\r/g, '').trim();
+  }
+  // Description layout: first line "English title / Ukrainian title"; then the full text, English first,
+  // then a line with only a dash (—), then Ukrainian. Without the dash, both languages show the same text.
+  function splitDescription(html) {
+    var text = plainText(html);
+    var lines = text.split('\n');
+    var head = twoLangs(lines.shift() || '');
+    var body = lines.join('\n').trim();
+    var parts = body.split(/\n\s*[—–-]{1,3}\s*\n/);
+    return { title: head, en: (parts[0] || '').trim(), uk: (parts[1] || parts[0] || '').trim() };
+  }
+  function kyivHHMM(d) {
+    return d.toLocaleTimeString('en-GB', { timeZone: ZONE, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+  }
+  function loadCalendar() {
+    var since = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();   // the past week too, shown greyed
+    var url = 'https://www.googleapis.com/calendar/v3/calendars/' + encodeURIComponent(CAL_ID) + '/events' +
+      '?key=' + encodeURIComponent(CAL_KEY) + '&singleEvents=true&orderBy=startTime&maxResults=50' +
+      '&timeMin=' + encodeURIComponent(since);
+    fetch(url, { cache: 'no-store' }).then(function (r) {
+      // on an error Google says why (a blocked referrer, a disabled API, a private calendar): pass that on
+      if (!r.ok) return r.json().catch(function () { return {}; }).then(function (j) {
+        throw new Error('HTTP ' + r.status + ': ' + ((j.error && j.error.message) || r.statusText));
+      });
+      return r.json();
+    }).then(function (data) {
+      var items = (data.items || []).filter(function (e) { return e.status !== 'cancelled' && e.start; }).map(function (e) {
+        var start = new Date(e.start.dateTime || e.start.date);
+        var end = new Date((e.end && (e.end.dateTime || e.end.date)) || (start.getTime() + 3600000));
+        var who = twoLangs(e.summary), d = splitDescription(e.description);
+        return {
+          id: e.id || (start.toISOString() + who.en), start: start, end: end, time: kyivHHMM(start),
+          artist: who.en, artist_uk: who.uk, title: d.title.en, title_uk: d.title.uk,
+          desc: d.en, desc_uk: d.uk
+        };
+      });
+      calItems = items.length ? items : null;
+      renderTimetable();
+    }).catch(function (err) {
+      console.warn('[timetable] Google Calendar could not be read, showing the list in the page. ' + err.message);
+    });
+  }
+
+  var openDesc = new Set();   // which descriptions are open, kept across the minute's redraw
+  var showPast = false;       // past broadcasts folded until the round button at the top is pressed
+  // plain text to paragraphs: blank lines split paragraphs, single line breaks stay, links become clickable
+  function paragraphs(text) {
+    return text.split(/\n\s*\n/).map(function (para) {
+      var html = esc(para.trim()).replace(/\n/g, '<br>')
+        .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+      // a known name in the text links to its KCMD Portfolio profile, as in the list of artists
+      PEOPLE.forEach(function (pp) {
+        [pp.en, pp.uk].forEach(function (n) { html = html.split(escHtml(n)).join(personLink(n)); });
+      });
+      return '<p>' + html + '</p>';
+    }).join('');
+  }
+  document.getElementById('timetable').addEventListener('click', function (e) {
+    if (e.target.closest('.past-btn')) { showPast = !showPast; renderTimetable(); track('past_toggle', { open: showPast }); return; }
+    var b = e.target.closest('.slot-more');
+    if (!b) return;
+    var key = b.getAttribute('data-key');
+    if (openDesc.has(key)) openDesc.delete(key); else openDesc.add(key);
+    var open = openDesc.has(key), panel = document.getElementById(b.getAttribute('aria-controls'));
+    b.setAttribute('aria-expanded', String(open));
+    b.querySelector('span').textContent = t(open ? 'descLess' : 'descMore');
+    if (panel) panel.hidden = !open;
+  });
+
+  function renderTimetable() {
+    var list = document.getElementById('timetable');
+    var items = (calItems || (USE_FALLBACK ? window.KCMD_TIMETABLE || [] : []).map(function (s) {
+      var start = kyivToDate(s.date, s.time);
+      return {
+        start: start, end: new Date(start.getTime() + (s.length || 60) * 60000), time: s.time,
+        artist: s.artist, artist_uk: s.artist_uk, title: s.title, title_uk: s.title_uk
+      };
+    })).slice().sort(function (a, b) { return a.start - b.start; });
+    var now = new Date();
+    var nextFound = false;
+    // past broadcasts fold under one small round button at the top of the list; it opens them, and closes them again
+    var pastCount = items.filter(function (it) { return now >= it.end; }).length;
+    var toggle = pastCount ? '<li class="past-toggle"><button type="button" class="past-btn" aria-expanded="' + showPast + '"' +
+        ' aria-label="' + esc(t(showPast ? 'pastHide' : 'pastShow')) + '" title="' + esc(t(showPast ? 'pastHide' : 'pastShow')) + '">' +
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+        '</button></li>' : '';
+    list.innerHTML = toggle + items.filter(function (it) { return showPast || now < it.end; }).map(function (it) {
+      var cls = 'slot', flag = '';
+      if (now >= it.end) cls += ' is-past';
+      else if (now >= it.start) { cls += ' is-now'; flag = '<span class="slot-flag">' + esc(t('onNow')) + '</span>'; nextFound = true; }
+      else if (!nextFound) { cls += ' is-next'; flag = '<span class="slot-flag">' + esc(t('next')) + '</span>'; nextFound = true; }
+      var loc = lang === 'uk' ? 'uk-UA' : 'en-GB';
+      // date and time in the device's own time zone
+      var day = it.start.toLocaleDateString(loc, { weekday: 'short', day: 'numeric', month: 'short' });
+      var hhmm = function (d) { return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }); };
+      var time = hhmm(it.start) + '–' + hhmm(it.end);   // start–end
+      var who = (lang === 'uk' && it.artist_uk) || it.artist;
+      var what = (lang === 'uk' && it.title_uk) || it.title;
+      var desc = (lang === 'uk' && it.desc_uk) || it.desc || '';
+      var key = it.id || (it.start.toISOString() + it.artist);
+      var open = openDesc.has(key), descId = 'desc-' + String(key).replace(/[^a-z0-9_-]/gi, '');
+      var more = desc ? '<button type="button" class="slot-more" data-key="' + esc(key) + '" aria-expanded="' + open + '" aria-controls="' + descId + '">' +
+          '<span>' + esc(t(open ? 'descLess' : 'descMore')) + '</span>' +
+          '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+        '</button>' : '';
+      var panel = desc ? '<div class="slot-desc" id="' + descId + '"' + (open ? '' : ' hidden') + '>' + paragraphs(desc) + '</div>' : '';
+      return '<li class="' + cls + '" id="slot-' + String(key).replace(/[^a-z0-9_-]/gi, '') + '">' +
+        '<span class="slot-date">' + esc(day) + '</span>' +
+        '<span class="slot-artist">' + personLink(who, 'person') + flag +
+          (what ? '<span class="slot-title">' + linkNames(what) + '</span>' : '') + more + '</span>' +
+        '<span class="slot-time"><span class="slot-kyiv">' + esc(time) + '</span></span>' +
+        panel +
+        '</li>';
+    }).join('');
+    lastItems = items;
+    renderNext();
+    var note = document.getElementById('tz-note');
+    note.textContent = localPlace ? t('tzNoteZone', { place: localPlace }) : t('tzNote');
+    note.hidden = !items.length;
+  }
+  // ---- the "Next" card ----
+  var lastItems = [];
+  var nextCard = document.getElementById('next-card');
+  function span(ms) {
+    var min = Math.max(1, Math.round(ms / 60000));
+    if (min >= 48 * 60) return t('nxDays', { d: Math.round(min / 1440) });
+    var h = Math.floor(min / 60), m = min % 60;
+    return h ? (m ? t('nxHM', { h: h, m: m }) : t('nxH', { h: h })) : t('nxM', { m: m });
+  }
+  function dayWord(d) {
+    var a = new Date(); a.setHours(0, 0, 0, 0);
+    var b = new Date(d); b.setHours(0, 0, 0, 0);
+    var diff = Math.round((b - a) / 86400000);
+    if (diff === 0) return t('nxToday');
+    if (diff === 1) return t('nxTomorrow');
+    return d.toLocaleDateString(lang === 'uk' ? 'uk-UA' : 'en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+  }
+  function hhmm(d) { return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }); }
+  function itemKey(it) { return it.id || (it.start.toISOString() + it.artist); }
+  function renderNext() {
+    var now = new Date();
+    var it = lastItems.filter(function (x) { return now < x.end; })[0];   // on air now, or the next one
+    if (!it) { nextCard.hidden = true; return; }
+    var live = now >= it.start;
+    nextCard.hidden = false;
+    nextCard.classList.toggle('is-live', live);
+    nextCard.setAttribute('data-key', itemKey(it));
+    document.getElementById('next-label').textContent = t(live ? 'nxLive' : 'nxNext');
+    document.getElementById('next-when').textContent = dayWord(it.start) + ', ' + hhmm(it.start) + '–' + hhmm(it.end);
+    var who = (lang === 'uk' && it.artist_uk) || it.artist;
+    var what = (lang === 'uk' && it.title_uk) || it.title;
+    document.getElementById('next-what').innerHTML = personLink(who) + (what ? ' — <em>' + linkNames(what) + '</em>' : '');
+    document.getElementById('next-rel').textContent = live ? t('nxLeft', { t: span(it.end - now) }) : t('nxIn', { t: span(it.start - now) });
+    var bar = document.getElementById('next-bar');
+    bar.hidden = !live;
+    if (live) document.getElementById('next-fill').style.width = Math.min(100, 100 * (now - it.start) / (it.end - it.start)).toFixed(1) + '%';
+    document.getElementById('next-more').textContent = t('nxMore');
+  }
+  setInterval(renderNext, 30000);   // "in 2 h 15 min" and the bar stay current
+  document.getElementById('next-more').addEventListener('click', function () {
+    var key = nextCard.getAttribute('data-key');
+    if (!key) return;
+    openDesc.add(key);   // the description opens in the timetable
+    renderTimetable();
+    var row = document.getElementById('slot-' + key.replace(/[^a-z0-9_-]/gi, ''));
+    (row || document.getElementById('timetable-title')).scrollIntoView({ behavior: stillMq.matches ? 'auto' : 'smooth', block: 'start' });
+    track('next_details');
+  });
+
+  loadCalendar();
+  setInterval(loadCalendar, 5 * 60000);   // calendar changes reach the page within five minutes
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) loadCalendar(); });
+  onLangChange.push(renderTimetable);
+  setInterval(renderTimetable, 60000);   // keeps "Next" and "On air now" current
+
+  var sub = document.getElementById('subscribe');
+  document.addEventListener('click', function (e) {
+    // a "subscribe to the calendar" link in the text: scroll to the button and open its menu
+    var link = e.target.closest && e.target.closest('a[href="#subscribe"]');
+    if (link) {
+      e.preventDefault();
+      sub.open = true;
+      sub.scrollIntoView({ behavior: stillMq.matches ? 'auto' : 'smooth', block: 'center' });
+      sub.querySelector('summary').focus({ preventScroll: true });
+      track('subscribe_link');
+      return;
+    }
+    if (sub.open && !sub.contains(e.target)) sub.open = false;
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && sub.open) { sub.open = false; sub.querySelector('summary').focus(); } });
+  sub.querySelectorAll('.subscribe-menu a').forEach(function (a) { a.addEventListener('click', function () { sub.open = false; }); });
+
+  // ---- chat (Supabase) ----
+  // To switch it on: fill in the project's address and its public key (Supabase → Project Settings → API).
+  // The key is public by design: what it may do is limited by the rules in supabase-chat.sql.
+  // Until both are filled in, or while the project can't be reached (e.g. paused), the chat stays hidden.
+  var CHAT_URL = 'https://nmrhqfkqcnqkxkumnafw.supabase.co';   // e.g. 'https://abcdefgh.supabase.co'
+  var CHAT_KEY = 'sb_publishable_wS5fkJpF3jyESJOwxFgyaA_3tm4IONC';   // the "anon" / "publishable" key
+  // one Supabase client for the chat and the admin view, its library fetched once
+  var sbReady = null;
+  function supabaseClient() {
+    if (!CHAT_URL || !CHAT_KEY) return Promise.reject(new Error('no project'));
+    if (!sbReady) sbReady = new Promise(function (resolve, reject) {
+      var lib = document.createElement('script');
+      lib.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js';
+      lib.onload = function () {
+        try { resolve(window.supabase.createClient(CHAT_URL, CHAT_KEY, { auth: { persistSession: false } })); } catch (e) { reject(e); }
+      };
+      lib.onerror = function () { reject(new Error('library')); };
+      document.head.appendChild(lib);
+    });
+    return sbReady;
+  }
+  (function chat() {
+    if (!CHAT_URL || !CHAT_KEY) return;
+    if (/[?&]admin(\b|=|&|$)/.test(location.search)) return;   // the admin view shows the chat's switch instead
+    var EDIT = /[?&]edit(\b|=|&|$)/.test(location.search);   // in edit mode each message gets a "Hide" button
+    var NAME_KEY = 'kcmd-radio-chat-name', MOD_KEY = 'kcmd-radio-chat-mod';
+    var section = document.getElementById('chat'), list = document.getElementById('chat-list');
+    var form = document.getElementById('chat-form'), nameIn = document.getElementById('chat-name');
+    var msgIn = document.getElementById('chat-msg'), sendBtn = document.getElementById('chat-send');
+    var errEl = document.getElementById('chat-err');
+    var bar = document.getElementById('chat-bar'), panel = document.getElementById('chat-panel');
+    var labelEl = document.getElementById('chat-label'), lastEl = document.getElementById('chat-last');
+    var countEl = document.getElementById('chat-count');
+    var OPEN_KEY = 'kcmd-radio-chat-open';
+    var msgs = new Map(), sb = null, errKey = '';
+
+    // closed by default: a slim bar with the latest message; opening it is remembered in this browser
+    function setOpen(open, focus) {
+      section.classList.toggle('is-open', open);
+      section.classList.remove('has-new');
+      bar.setAttribute('aria-expanded', String(open));
+      panel.hidden = !open;
+      try { localStorage.setItem(OPEN_KEY, open ? '1' : '0'); } catch (x) {}
+      if (open) { list.scrollTop = list.scrollHeight; if (focus) (nameIn.value ? msgIn : nameIn).focus(); }
+    }
+    bar.addEventListener('click', function () { setOpen(panel.hidden, true); track('chat_toggle', { open: !panel.hidden }); });
+    try { nameIn.value = localStorage.getItem(NAME_KEY) || ''; } catch (e) {}
+
+    function setErr(k) { errKey = k; errEl.textContent = k ? t(k) : ''; }
+    function when(d) {
+      var hm = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+      if (d.toDateString() === new Date().toDateString()) return hm;
+      return d.toLocaleDateString(lang === 'uk' ? 'uk-UA' : 'en-GB', { day: 'numeric', month: 'short' }) + ', ' + hm;
+    }
+    function render(toBottom) {
+      var atBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 40;
+      var arr = Array.from(msgs.values()).sort(function (a, b) { return a.id - b.id; }).slice(-150);
+      list.innerHTML = arr.length ? arr.map(function (m) {
+        return '<li><span class="chat-who">' + esc(m.name) + '</span>' +
+          '<span class="chat-body">' + esc(m.body) + '</span>' +
+          '<time class="chat-time" datetime="' + esc(m.created_at) + '">' + esc(when(new Date(m.created_at))) + '</time>' +
+          (EDIT ? '<button type="button" class="chat-hide" data-id="' + m.id + '">' + esc(t('chatHide')) + '</button>' : '') +
+          '</li>';
+      }).join('') : '<li class="chat-empty">' + esc(t('chatEmpty')) + '</li>';
+      if (toBottom || atBottom) list.scrollTop = list.scrollHeight;
+      var last = arr[arr.length - 1];
+      lastEl.textContent = last ? last.name + ': ' + last.body : t('chatEmpty');
+      countEl.textContent = arr.length ? String(arr.length) : '';
+    }
+    onLangChange.push(function () {
+      sendBtn.textContent = t('chatSend'); labelEl.textContent = t('chat'); section.setAttribute('aria-label', t('chat'));
+      if (errKey) errEl.textContent = t(errKey);
+      render();
+    });
+    function keep(m) { if (m && m.id) { if (m.hidden) msgs.delete(m.id); else msgs.set(m.id, m); } }
+
+    // the admin's switch: off hides the chat for everyone at once; clearing empties every open page's list
+    var enabled = true, loaded = false, clearedAt = null;
+    function applySettings(st) {
+      if (!st) return;
+      enabled = st.enabled !== false;
+      if (clearedAt !== null && st.cleared_at && st.cleared_at !== clearedAt) { msgs.clear(); render(); }
+      clearedAt = st.cleared_at || clearedAt || '';
+      section.hidden = !(enabled && loaded);
+    }
+    function start(client) {
+      sb = client;
+      Promise.resolve(sb.from('chat_settings').select('enabled,cleared_at').eq('id', 1).maybeSingle())
+        .then(function (r) { if (r && r.data) applySettings(r.data); else clearedAt = ''; })
+        .then(function () { return sb.from('messages').select('id,created_at,name,body,hidden').order('id', { ascending: false }).limit(150); })
+        .then(function (res) {
+          if (res.error) throw res.error;
+          res.data.forEach(keep);
+          loaded = true;
+          section.hidden = !enabled;
+          render(true);
+          var wasOpen = false;
+          try { wasOpen = localStorage.getItem(OPEN_KEY) === '1'; } catch (x) {}
+          setOpen(wasOpen, false);
+          sb.channel('kcmd-chat')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_settings' }, function (p) { applySettings(p.new); })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, function (p) {
+              if (p.eventType === 'DELETE') { if (p.old && p.old.id) { msgs.delete(p.old.id); render(); } return; }
+              var isNew = p.new && p.new.id && !msgs.has(p.new.id) && !p.new.hidden;
+              keep(p.new); render();
+              if (isNew && panel.hidden) section.classList.add('has-new');
+            })
+            .subscribe();
+        })
+        .catch(function (e) { console.warn('[chat] not shown: ' + (e && e.message)); });
+    }
+    supabaseClient().then(start, function (e) { console.warn('[chat] not shown: ' + (e && e.message)); });
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var name = nameIn.value.trim(), body = msgIn.value.trim();
+      if (!name) { setErr('chatNeedName'); nameIn.focus(); return; }
+      if (!body || !sb) return;
+      if (/(https?:\/\/|www\.)/i.test(body)) { setErr('chatLinks'); return; }
+      setErr('');
+      sendBtn.disabled = true;
+      try { localStorage.setItem(NAME_KEY, name); } catch (x) {}
+      Promise.resolve(sb.from('messages').insert({ name: name, body: body }).select()).then(function (res) {
+        sendBtn.disabled = false;
+        if (res.error) {
+          var m = String(res.error.message || '');
+          setErr(m.indexOf('chat:slow') >= 0 ? 'chatSlow' : m.indexOf('chat:links') >= 0 ? 'chatLinks' : m.indexOf('chat:off') >= 0 ? 'chatOff' : 'chatErr');
+          return;
+        }
+        msgIn.value = '';
+        (res.data || []).forEach(keep);
+        render(true);
+        track('chat_send');
+      }, function () { sendBtn.disabled = false; setErr('chatErr'); });
+    });
+
+    // moderation, in edit mode only: the password is asked once and kept in this browser
+    list.addEventListener('click', function (e) {
+      var b = e.target.closest('.chat-hide');
+      if (!b || !sb) return;
+      var secret = '';
+      try { secret = localStorage.getItem(MOD_KEY) || ''; } catch (x) {}
+      if (!secret) secret = prompt(t('chatSecret')) || '';
+      if (!secret) return;
+      var id = Number(b.getAttribute('data-id'));
+      Promise.resolve(sb.rpc('hide_message', { msg_id: id, secret: secret })).then(function (res) {
+        if (res.error) { try { localStorage.removeItem(MOD_KEY); } catch (x) {} alert(res.error.message); return; }
+        try { localStorage.setItem(MOD_KEY, secret); } catch (x) {}
+        msgs.delete(id);
+        render();
+      });
+    });
+  })();
+
+  applyLang();
+  pollNow();
+
+  if (DEBUG) (function debugPanel() {
+    var box = document.createElement('div');
+    box.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--surface);border-top:1px solid var(--line);' +
+      'padding:0.5rem 0.75rem calc(0.5rem + env(safe-area-inset-bottom,0px));font-size:0.8rem;box-shadow:0 -8px 24px rgba(11,14,20,0.12)';
+    box.innerHTML =
+      '<div style="display:flex;gap:0.4rem;flex-wrap:wrap;align-items:center;margin-bottom:0.4rem">' +
+        '<strong style="margin-right:auto">Журнал плеєра</strong>' +
+        '<button type="button" data-a="copy">Скопіювати</button>' +
+        '<button type="button" data-a="share">Поділитися</button>' +
+        '<button type="button" data-a="prev">Попередній</button>' +
+        '<button type="button" data-a="fold">Згорнути</button>' +
+        '<button type="button" data-a="clear">Очистити</button>' +
+      '</div>' +
+      '<pre style="margin:0;max-height:9rem;overflow:auto;white-space:pre-wrap;font:0.7rem/1.35 \'Ubuntu Sans Mono\',ui-monospace,monospace;color:var(--muted)"></pre>';
+    box.querySelectorAll('button').forEach(function (b) {
+      b.style.cssText = 'border:1px solid var(--line);border-radius:999px;padding:0.3rem 0.7rem;background:var(--surface);color:var(--text);font:inherit;cursor:pointer';
+    });
+    document.body.appendChild(box);
+    document.body.style.paddingBottom = '13rem';
+    dbgView = box.querySelector('pre');
+    var LEGEND = 'legend: BG = page in background; [P paused, H paused by the system, W0 radio off, OFF offline, S data saver; ' +
+      'r readyState, t position s, a sound in hand s; download state, q held back s, g target s, nd s since last data; net type]';
+    function full(lines, which) {
+      return 'KCMD Radio debug log (' + (which || 'this page load') + ')\n' + navigator.userAgent + '\npage: ' + location.href +
+        '\ncopied: ' + new Date().toString() + '\n' + LEGEND + '\n\n' + lines.join('\n');
+    }
+    // as a file, so a long log is not cut short by the app it goes to; as text where files can't be shared
+    function share(text, name) {
+      try {
+        var f = new File([text], name, { type: 'text/plain' });
+        if (navigator.canShare && navigator.canShare({ files: [f] })) return navigator.share({ files: [f], title: name }).catch(function () {});
+      } catch (x) {}
+      if (navigator.share) return navigator.share({ title: name, text: text }).catch(function () {});
+      return copy(text);
+    }
+    function copy(text) {
+      if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text);
+      var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); } finally { ta.remove(); }
+      return Promise.resolve();
+    }
+    box.addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      var act = b.getAttribute('data-a');
+      if (act === 'copy') copy(full(dbgLines)).then(function () { b.textContent = 'Скопійовано ✓'; setTimeout(function () { b.textContent = 'Скопіювати'; }, 2000); },
+        function () { alert('Не вдалося скопіювати. Спробуйте «Поділитися».'); });
+      if (act === 'share') share(full(dbgLines), 'kcmd-radio-log-' + dbgTime().slice(0, 5).replace(':', '') + '.txt');
+      if (act === 'prev') {
+        var prev = []; try { prev = JSON.parse(localStorage.getItem(DBG_PREV_KEY) || '[]'); } catch (x) {}
+        if (!prev.length) alert('Попереднього журналу немає.');
+        else share(full(prev, 'the page load before'), 'kcmd-radio-log-previous.txt');
+      }
+      if (act === 'fold') { dbgView.hidden = !dbgView.hidden; b.textContent = dbgView.hidden ? 'Розгорнути' : 'Згорнути'; }
+      if (act === 'clear' && confirm('Очистити журнал?')) { dbgLines = []; try { localStorage.removeItem(DBG_KEY); localStorage.removeItem(DBG_PREV_KEY); } catch (x) {} dbgView.textContent = ''; }
+    });
+    dbg('page loaded', 'mode=' + mode + ' engine=' + engine + ' page version: ' + PAGE_VERSION);
+  })();
+
+  // ---- edit mode: open the page with ?edit, change the texts right on the page, then download the new index.html ----
+  // Only the person's own browser changes. Nothing reaches the website until the downloaded file is uploaded.
+  // Unsaved edits are kept in this browser, so a reload or a closed tab loses nothing.
+  if (/[?&]edit(\b|=|&|$)/.test(location.search)) (function editor() {
+    var DRAFT_KEY = 'kcmd-radio-edit-draft';
+    var ORIG = JSON.parse(JSON.stringify(I18N));          // the texts as published
+    var LANGS = Object.keys(I18N);
+    var KEYS = Object.keys(I18N.en);
+    var SKIP = { kcmdUrl: 1 };                             // addresses, not texts
+    var LABEL = { en: 'English', uk: 'Українська' };
+    document.documentElement.classList.add('ed-on');
+
+    function keyOf(el) { return el.getAttribute('data-i18n') || el.getAttribute('data-i18n-html'); }
+    function isHtml(el) { return el.hasAttribute('data-i18n-html'); }
+    function changed(l, k) { return I18N[l][k] !== ORIG[l][k]; }
+    function count() { var n = 0; LANGS.forEach(function (l) { KEYS.forEach(function (k) { if (changed(l, k)) n++; }); }); return n; }
+
+    // draft: only what changed, with what it changed from, so a newer published text is never overwritten by an old draft
+    function saveDraft() {
+      var d = {};
+      LANGS.forEach(function (l) { KEYS.forEach(function (k) {
+        if (changed(l, k)) { (d[l] = d[l] || {})[k] = { from: ORIG[l][k], to: I18N[l][k] }; }
+      }); });
+      try { if (Object.keys(d).length) localStorage.setItem(DRAFT_KEY, JSON.stringify(d)); else localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+    }
+    function loadDraft() {
+      var d; try { d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); } catch (e) {}
+      if (!d) return;
+      Object.keys(d).forEach(function (l) { Object.keys(d[l]).forEach(function (k) {
+        var c = d[l][k];
+        if (I18N[l] && I18N[l][k] === c.from) I18N[l][k] = c.to;   // still the same published text: apply the edit
+      }); });
+      saveDraft();   // drops edits that are already published or no longer apply
+    }
+
+    // ---- the bar along the bottom ----
+    var bar = document.createElement('div');
+    bar.className = 'ed-bar';
+    bar.innerHTML =
+      '<strong>Редагування</strong>' +
+      '<span class="ed-hint">Клацніть на текст і пишіть. Мова — перемикачем угорі. Тексти плеєра, розкладу й посилання — в «Усіх текстах».</span>' +
+      '<span class="ed-count"></span>' +
+      '<button type="button" class="ed-all">Усі тексти</button>' +
+      '<button type="button" class="ed-reset">Скасувати зміни</button>' +
+      '<button type="button" class="ed-primary ed-save">Завантажити index.html</button>';
+    document.body.appendChild(bar);
+    var countEl = bar.querySelector('.ed-count');
+
+    // ---- the panel with every text, both languages side by side ----
+    var panel = document.createElement('aside');
+    panel.className = 'ed-panel';
+    panel.hidden = true;
+    panel.innerHTML =
+      '<div class="ed-panel-head"><h2>Усі тексти</h2><button type="button" class="ed-close">Закрити</button></div>' +
+      '<input type="search" placeholder="Пошук за текстом або ключем">' +
+      '<div class="ed-fields"></div>';
+    document.body.appendChild(panel);
+    var fields = panel.querySelector('.ed-fields');
+    fields.innerHTML = KEYS.filter(function (k) { return !SKIP[k]; }).map(function (k) {
+      return '<div class="ed-field" data-key="' + k + '"><p class="ed-key">' + k + '</p>' +
+        LANGS.map(function (l) {
+          return '<label for="ed-' + l + '-' + k + '">' + LABEL[l] + '</label>' +
+            '<textarea id="ed-' + l + '-' + k + '" data-lang="' + l + '" data-key="' + k + '" rows="1"></textarea>';
+        }).join('') + '</div>';
+    }).join('');
+    function fit(ta) { ta.style.height = 'auto'; ta.style.height = (ta.scrollHeight + 2) + 'px'; }
+    function fillPanel() {
+      fields.querySelectorAll('textarea').forEach(function (ta) {
+        var v = I18N[ta.getAttribute('data-lang')][ta.getAttribute('data-key')];
+        if (document.activeElement !== ta && ta.value !== v) ta.value = v;
+        if (!panel.hidden) fit(ta);
+      });
+      fields.querySelectorAll('.ed-field').forEach(function (f) {
+        var k = f.getAttribute('data-key');
+        f.classList.toggle('ed-changed', LANGS.some(function (l) { return changed(l, k); }));
+      });
+    }
+    fields.addEventListener('input', function (e) {
+      var ta = e.target; if (ta.tagName !== 'TEXTAREA') return;
+      I18N[ta.getAttribute('data-lang')][ta.getAttribute('data-key')] = ta.value;
+      fit(ta);
+      if (ta.getAttribute('data-lang') === lang) applyLang(); else refresh();
+    });
+    panel.querySelector('input[type="search"]').addEventListener('input', function (e) {
+      var q = e.target.value.trim().toLowerCase();
+      fields.querySelectorAll('.ed-field').forEach(function (f) {
+        var k = f.getAttribute('data-key');
+        var hay = (k + ' ' + LANGS.map(function (l) { return I18N[l][k]; }).join(' ')).toLowerCase();
+        f.hidden = q && hay.indexOf(q) < 0;
+      });
+    });
+    function openPanel(key) {
+      panel.hidden = false;
+      fillPanel();
+      if (key) {
+        var ta = document.getElementById('ed-' + lang + '-' + key);
+        if (ta) { ta.scrollIntoView({ block: 'center' }); ta.focus(); }
+      }
+    }
+    bar.querySelector('.ed-all').addEventListener('click', function () { panel.hidden ? openPanel() : (panel.hidden = true); });
+    panel.querySelector('.ed-close').addEventListener('click', function () { panel.hidden = true; });
+
+    // ---- editing right on the page ----
+    function markEditable() {
+      document.querySelectorAll('[data-i18n], [data-i18n-html]').forEach(function (el) {
+        if (el.closest('.ed-bar, .ed-panel')) return;
+        if (!el.hasAttribute('data-ed')) {
+          el.setAttribute('data-ed', '');
+          el.setAttribute('contenteditable', 'true');
+          el.setAttribute('spellcheck', 'true');
+        }
+        el.classList.toggle('ed-changed', changed(lang, keyOf(el)));
+      });
+    }
+    function refresh() { markEditable(); fillPanel(); var n = count(); countEl.textContent = n ? 'Змін: ' + n : 'Без змін'; saveDraft(); }
+    onLangChange.push(refresh);
+
+    document.addEventListener('input', function (e) {
+      var el = e.target.closest && e.target.closest('[data-ed]');
+      if (!el) return;
+      var k = keyOf(el);
+      I18N[lang][k] = isHtml(el) ? el.innerHTML : el.textContent;
+      // the same text elsewhere on the page follows
+      document.querySelectorAll('[data-i18n="' + k + '"], [data-i18n-html="' + k + '"]').forEach(function (o) {
+        if (o !== el) { if (isHtml(o)) o.innerHTML = I18N[lang][k]; else o.textContent = I18N[lang][k]; }
+      });
+      if (k === 'docTitle') document.title = I18N[lang][k];
+      refresh();
+    });
+    // one paragraph each: Enter leaves the field instead of starting a new line
+    document.addEventListener('keydown', function (e) {
+      var el = e.target.closest && e.target.closest('[data-ed]');
+      if (el && e.key === 'Enter') { e.preventDefault(); el.blur(); }
+      if (el && e.key === ' ' && el.closest('summary')) { e.stopPropagation(); }
+    }, true);
+    // pasting brings only the words, not the formatting of where they came from
+    document.addEventListener('paste', function (e) {
+      var el = e.target.closest && e.target.closest('[data-ed]');
+      if (!el) return;
+      e.preventDefault();
+      var txt = (e.clipboardData || window.clipboardData).getData('text/plain').replace(/\s*\n\s*/g, ' ');
+      document.execCommand('insertText', false, txt);
+    });
+    // links inside texts don't open while editing; a double click opens the text in the panel, where its address can be changed
+    document.addEventListener('click', function (e) {
+      var el = e.target.closest && e.target.closest('[data-ed]');
+      if (!el) return;
+      if (e.target.closest('a') || el.closest('summary') || el.tagName === 'A') e.preventDefault();
+    }, true);
+    document.addEventListener('dblclick', function (e) {
+      var el = e.target.closest && e.target.closest('[data-ed]');
+      if (el && (e.target.closest('a') || isHtml(el))) openPanel(keyOf(el));
+    });
+
+    // ---- undo everything ----
+    bar.querySelector('.ed-reset').addEventListener('click', function () {
+      if (!count() || !confirm('Скасувати всі зміни й повернути тексти, як на сайті?')) return;
+      LANGS.forEach(function (l) { KEYS.forEach(function (k) { I18N[l][k] = ORIG[l][k]; }); });
+      applyLang();
+    });
+
+    // ---- download: the page's own file, with the new texts written in ----
+    var START = '// ==== PAGE TEXTS START ====', END = '// ==== PAGE TEXTS END ====';
+    function build(src) {
+      var a = src.indexOf(START), b = src.indexOf(END);
+      if (a < 0 || b < a) { alert('Не вдалося знайти в файлі місце з текстами (позначки PAGE TEXTS). Файл не змінено.'); return null; }
+      var lineEnd = src.indexOf('\n', a);
+      var json = JSON.stringify(I18N, null, 2).replace(/<\//g, '<\\/').replace(/\n/g, '\n  ');
+      return src.slice(0, lineEnd + 1) + '  var I18N = ' + json + ';\n  ' + src.slice(b);
+    }
+    function download(text) {
+      var blob = new Blob([text], { type: 'text/html;charset=utf-8' });
+      var url = URL.createObjectURL(blob), link = document.createElement('a');
+      link.href = url; link.download = 'index.html';
+      document.body.appendChild(link); link.click(); link.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+    }
+    function pickFile() {   // opened from disk, where the page can't read its own file: ask for it
+      var inp = document.createElement('input');
+      inp.type = 'file'; inp.accept = '.html,text/html';
+      inp.onchange = function () {
+        var f = inp.files && inp.files[0]; if (!f) return;
+        f.text().then(function (src) { var out = build(src); if (out) download(out); });
+      };
+      alert('Оберіть файл index.html, у який записати нові тексти.');
+      inp.click();
+    }
+    bar.querySelector('.ed-save').addEventListener('click', function () {
+      if (location.protocol === 'file:') { pickFile(); return; }
+      fetch(location.pathname, { cache: 'no-store' })
+        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
+        .then(function (src) { var out = build(src); if (out) download(out); })
+        .catch(pickFile);
+    });
+    window.addEventListener('beforeunload', saveDraft);
+
+    loadDraft();
+    applyLang();
+  })();
+
+  // ---- admin view: open the page with ?admin ----
+  // Live listener numbers come from the radio's public /api/now. Countries and events come from Umami,
+  // with an API key the admin pastes once: it is kept only in that browser, never in this file.
+  if (/[?&]admin(\b|=|&|$)/.test(location.search)) (function admin() {
+    var UMAMI_API = 'https://api.umami.is/v1';                    // Umami Cloud API
+    var WEBSITE_ID = 'b56cf6b6-550c-49b2-a369-431a49c24ed5';
+    var KEY_STORE = 'kcmd-radio-umami-key', HIST_STORE = 'kcmd-radio-admin-history';
+    var EVENTS = { play_start: 'Натиснули «слухати»', listening: '5 хвилин прослуховування', play_stop: 'Зупинили', lang_switch: 'Змінили мову', next_details: '«Детальніше» з картки', subscribe_link: 'Посилання на підписку' };
+    function $(id) { return document.getElementById(id); }
+    document.documentElement.classList.add('adm-on');
+    $('adm').hidden = false;
+    try { localStorage.setItem('umami.disabled', '1'); } catch (e) {}   // this browser stops counting itself in Umami
+    document.title = 'KCMD Radio · адмінка';
+
+    // ---- live: from the radio ----
+    var hist = [];
+    try { hist = JSON.parse(localStorage.getItem(HIST_STORE) || '[]'); } catch (e) {}
+    var STATUS = { 'on air': 'в етері', silent: 'тиша (тривога)', offline: 'не в етері' };
+    function drawChart() {
+      var cut = Date.now() - 6 * 3600000;
+      hist = hist.filter(function (p) { return p[0] >= cut; });
+      var svg = $('adm-chart');
+      if (hist.length < 2) { svg.innerHTML = ''; $('adm-chart-note').textContent = 'Графік збирається, поки ця сторінка відкрита.'; return; }
+      var max = Math.max(1, Math.max.apply(null, hist.map(function (p) { return p[1]; })));
+      var t0 = hist[0][0], t1 = hist[hist.length - 1][0] || t0 + 1;
+      var pts = hist.map(function (p) { return ((p[0] - t0) / (t1 - t0 || 1) * 600).toFixed(1) + ',' + (86 - p[1] / max * 80).toFixed(1); }).join(' ');
+      svg.innerHTML = '<polyline points="' + pts + '" fill="none" stroke="var(--accent)" stroke-width="1.5" vector-effect="non-scaling-stroke"/>';
+      var fmt = function (ts) { return new Date(ts).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }); };
+      $('adm-chart-note').textContent = fmt(t0) + '–' + fmt(t1) + ' · максимум ' + max + ' · дані лише за час, коли адмінка відкрита';
+    }
+    function live() {
+      fetch('https://v2in.stream/api/now', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (data) {
+        var chs = data.channels || [], total = 0;
+        var kc = chs.filter(function (c) { return c.id === 'kcmd'; })[0];
+        $('adm-channels').innerHTML = chs.map(function (c) {
+          var n = typeof c.listeners === 'number' ? c.listeners : 0; total += n;
+          return '<tr><td>' + esc(c.name || c.id) + '</td><td>' + esc(STATUS[c.status] || c.status || '') + '</td><td>' +
+            esc([c.by, c.title].filter(Boolean).join(' — ')) + '</td><td class="num">' + n + '</td></tr>';
+        }).join('');
+        var n = kc && typeof kc.listeners === 'number' ? kc.listeners : 0;
+        $('adm-kcmd').textContent = n;
+        $('adm-kcmd-state').textContent = kc ? (STATUS[kc.status] || kc.status) + (kc.title ? ' · ' + kc.title : '') : 'каналу kcmd немає у відповіді радіо';
+        $('adm-all').textContent = typeof data.listeners === 'number' ? data.listeners : total;
+        var raid = data.raid || {};
+        $('adm-raid').textContent = raid.on ? 'Тривога в Києві' + (raid.since ? ' з ' + new Date(raid.since).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '') : 'Тривоги в Києві немає';
+        $('adm-updated').textContent = 'оновлено ' + new Date().toLocaleTimeString('en-GB');
+        var last = hist[hist.length - 1];
+        if (!last || Date.now() - last[0] > 25000) {   // a point every ~30 s, kept for 6 hours
+          hist.push([Date.now(), n]);
+          try { localStorage.setItem(HIST_STORE, JSON.stringify(hist)); } catch (e) {}
+        }
+        drawChart();
+      }).catch(function () { $('adm-updated').textContent = 'радіо зараз не відповідає'; });
+    }
+    live(); setInterval(live, 5000);
+
+    // ---- Umami ----
+    var key = '';
+    try { key = localStorage.getItem(KEY_STORE) || ''; } catch (e) {}
+    var days = 0;
+    var regionName = function (code) { try { return new Intl.DisplayNames(['uk'], { type: 'region' }).of(code); } catch (e) { return code; } };
+    function flag(code) { return /^[A-Z]{2}$/.test(code) ? String.fromCodePoint.apply(null, code.split('').map(function (c) { return 127397 + c.charCodeAt(0); })) : '🌐'; }
+    function num(v) { return v && typeof v === 'object' ? v.value : v; }   // older and newer Umami answer shapes
+    function range() {
+      var end = Date.now(), start = new Date(); start.setHours(0, 0, 0, 0);
+      if (days) start = new Date(end - days * 86400000);
+      return 'startAt=' + start.getTime() + '&endAt=' + end;
+    }
+    function api(path) {
+      return fetch(UMAMI_API + '/websites/' + WEBSITE_ID + path, { headers: { 'x-umami-api-key': key, accept: 'application/json' } })
+        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
+    }
+    function bars(el, rows, label, icon) {
+      var max = Math.max.apply(null, [1].concat(rows.map(function (r) { return r.y; })));
+      el.innerHTML = rows.length ? rows.map(function (r) {
+        return '<div class="adm-row"><span>' + icon(r.x) + '</span><span>' + esc(label(r.x)) + '</span><span class="num">' + r.y + '</span>' +
+          '<div class="adm-barwrap"><span style="width:' + (100 * r.y / max).toFixed(1) + '%"></span></div></div>';
+      }).join('') : '<p class="adm-note">Поки немає даних за цей період.</p>';
+    }
+    function showErr(msg) { var e = $('adm-u-err'); e.hidden = !msg; e.textContent = msg || ''; }
+    function umami() {
+      $('adm-u-login').hidden = !!key; $('adm-u-data').hidden = !key;
+      if (!key) return;
+      showErr('');
+      var q = '?' + range();
+      Promise.all([
+        api('/stats' + q).then(function (d) {
+          $('adm-u-visitors').textContent = num(d.visitors) != null ? num(d.visitors) : '–';
+          $('adm-u-views').textContent = num(d.pageviews) != null ? num(d.pageviews) : '–';
+        }),
+        api('/active').then(function (d) {
+          $('adm-u-active').textContent = Array.isArray(d) ? (d[0] && d[0].x) || 0 : (d.visitors != null ? d.visitors : d.x != null ? d.x : '–');
+        }),
+        api('/metrics' + q + '&type=country').then(function (rows) {
+          bars($('adm-u-countries'), rows, function (c) { return c ? regionName(c) : 'Невідомо'; }, flag);
+        }),
+        api('/metrics' + q + '&type=event').then(function (rows) {
+          bars($('adm-u-events'), rows, function (e) { return EVENTS[e] ? EVENTS[e] + ' (' + e + ')' : e; }, function () { return '·'; });
+        })
+      ]).catch(function (e) {
+        var m = String(e && e.message || '');
+        showErr(/401|403/.test(m) ? 'Umami не прийняв ключ (' + m + '). Перевірте ключ або натисніть «Забути ключ» і вставте його знову.'
+          : 'Не вдалося отримати дані з Umami (' + (m || 'мережа') + '). Якщо помилка повторюється, Umami може не дозволяти такі запити з браузера: тоді дивіться країни в самому Umami.');
+      });
+    }
+    $('adm-u-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      key = $('adm-u-key').value.trim(); if (!key) return;
+      try { localStorage.setItem(KEY_STORE, key); } catch (x) {}
+      $('adm-u-key').value = '';
+      umami();
+    });
+    $('adm-u-forget').addEventListener('click', function () { key = ''; try { localStorage.removeItem(KEY_STORE); } catch (x) {} umami(); });
+    document.querySelectorAll('.adm-tabs button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        days = Number(b.getAttribute('data-days'));
+        document.querySelectorAll('.adm-tabs button').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+        umami();
+      });
+    });
+    umami(); setInterval(umami, 60000);
+
+    // ---- the chat: on or off for everyone, and clearing all messages (Supabase, with the moderator password) ----
+    var MOD_KEY = 'kcmd-radio-chat-mod';
+    var chatOn = null, sbA = null;
+    function chatErr(msg) { $('adm-chat-err').hidden = !msg; $('adm-chat-err').textContent = msg || ''; }
+    function secret() {
+      var v = ''; try { v = localStorage.getItem(MOD_KEY) || ''; } catch (e) {}
+      if (!v) v = prompt('Пароль модератор_ки:') || '';
+      return v;
+    }
+    function keepSecret(v, ok) { try { if (ok) localStorage.setItem(MOD_KEY, v); else localStorage.removeItem(MOD_KEY); } catch (e) {} }
+    function chatState() {
+      if (!sbA) return;
+      Promise.resolve(sbA.from('chat_settings').select('enabled').eq('id', 1).maybeSingle()).then(function (r) {
+        if (r.error) { chatErr('Не вдалося прочитати стан чату (' + r.error.message + '). Можливо, ще не запущено supabase-chat-step2.sql.'); return; }
+        chatOn = !(r.data && r.data.enabled === false);
+        $('adm-chat-state').textContent = chatOn ? 'Увімкнено' : 'Вимкнено';
+        $('adm-chat-toggle').textContent = chatOn ? 'Вимкнути чат для всіх' : 'Увімкнути чат для всіх';
+        $('adm-chat-toggle').disabled = false; $('adm-chat-clear').disabled = false;
+      });
+      Promise.resolve(sbA.from('messages').select('id', { count: 'exact', head: true }).eq('hidden', false)).then(function (r) {
+        if (!r.error) $('adm-chat-count').textContent = 'Повідомлень у чаті: ' + (r.count || 0);
+      });
+    }
+    function call(fn, args, done) {
+      var v = secret(); if (!v) return;
+      args.secret = v;
+      chatErr('');
+      Promise.resolve(sbA.rpc(fn, args)).then(function (r) {
+        if (r.error) {
+          var bad = /not-allowed/.test(r.error.message || '');
+          keepSecret(v, false);
+          chatErr(bad ? 'Пароль не підійшов. Спробуйте ще раз.' : 'Не вдалося: ' + r.error.message);
+          return;
+        }
+        keepSecret(v, true);
+        if (done) done(r.data);
+        chatState();
+      });
+    }
+    supabaseClient().then(function (client) {
+      sbA = client;
+      chatState();
+      setInterval(chatState, 15000);
+    }, function () { chatErr('Supabase зараз недоступний.'); });
+    $('adm-chat-toggle').addEventListener('click', function () {
+      if (chatOn === null) return;
+      call('set_chat_enabled', { turn_on: !chatOn });
+    });
+    $('adm-chat-clear').addEventListener('click', function () {
+      if (!confirm('Видалити всі повідомлення чату для всіх? Це не можна скасувати.')) return;
+      call('clear_chat', {}, function (n) { $('adm-chat-count').textContent = 'Видалено повідомлень: ' + (n || 0); });
+    });
+    $('adm-chat-forget').addEventListener('click', function () { keepSecret('', false); chatErr(''); });
+  })();
+
+  // the waves along the foot of the page, as on v2in.stream
+  var foot = document.getElementById('foot-waves');
+  var paths = '';
+  for (var i = 0; i < 9; i++) {
+    var d = 'M0 ' + (20 + i * 10);
+    for (var x = 0; x <= 1200; x += 20) {
+      var y = 20 + i * 10 + Math.sin(x / (90 + i * 14) + i) * (4 + i * 0.8);
+      d += ' L' + x + ' ' + y.toFixed(1);
+    }
+    paths += '<path d="' + d + '" fill="none" stroke="var(--wave)" stroke-width="1" vector-effect="non-scaling-stroke"/>';
+  }
+  foot.innerHTML = paths;
+})();
+</script>
+</body>
+</html>
