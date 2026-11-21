@@ -993,7 +993,8 @@
   // A panel at the bottom copies or shares the log.
   // also switched on by the Debug button at the foot of the page: kept in this browser until switched off
   var DBG_ON_KEY = 'kcmd-radio-debug-on';
-  var PAGE_VERSION = '2026-11-21 live-3';
+  var PAGE_VERSION = '2026-11-21 live-4';
+  var BG_RETRY = /[?&]bgretry(\b|=|&|$)/.test(location.search);   // test: the plain player reconnects in the background
   var DEBUG = /[?&]debug(\b|=|&|$)/.test(location.search);
   try { if (localStorage.getItem(DBG_ON_KEY) === '1') DEBUG = true; } catch (e) {}
   (function () {
@@ -1089,12 +1090,18 @@
   // ?engine=mse / ?engine=src force one or the other.
   var LIVE_MIN = 10, LIVE_MAX = 15, LIVE_STEP = 2.5, LIVE_NODATA = 3500, LIVE_CONNECT_FIRST = 5000, LIVE_CONNECT_MAX = 12000;
   var MSE_OFF_KEY = 'kcmd-radio-mse-off';
+  // Some phones (Android's battery saver) stop the page's own downloads in the background, yet let the plain
+  // player's go on. When the live engine sees that twice (downloads failing only while the page is away, working at
+  // once when it's back), it switches this browser to the plain player for a day.
+  var BG_BLOCKED_KEY = 'kcmd-radio-bg-blocked', BG_BLOCKED_TIMES = 2;
+  var bgBlockedSeen = 0;
   var CAN_MSE = !!(window.MediaSource && window.ReadableStream && window.AbortController && window.fetch);
   var forcedEngine = (/[?&]engine=(mse|src)\b/.exec(location.search) || [])[1];
   var engine = forcedEngine || (IS_ANDROID && CAN_MSE ? 'mse' : 'src');
   if (engine === 'mse' && !CAN_MSE) engine = 'src';
   if (!forcedEngine && engine === 'mse') {   // the format was found unplayable this way in the last day: don't try again yet
     try { var mseOff = Number(localStorage.getItem(MSE_OFF_KEY) || 0); if (mseOff && Date.now() - mseOff < 86400000) engine = 'src'; } catch (e) {}
+    try { var bgOff = Number(localStorage.getItem(BG_BLOCKED_KEY) || 0); if (bgOff && Date.now() - bgOff < 86400000) engine = 'src'; } catch (e) {}
   }
   function liveType(ct) {
     ct = String(ct || '').split(';')[0].trim().toLowerCase();
@@ -1192,6 +1199,7 @@
     }).catch(function (e) {
       if (gen !== L.gen || L.dead) return;
       L.fails += 1; L.state = 'retry';
+      if (document.hidden) L.bgFails = (L.bgFails || 0) + 1;
       dbg('live: download broke', (e && e.message) + ' | try ' + L.fails);
       if (!L.everHeaders && L.fails >= 3) { liveGiveUp(L, 'no connection'); return; }
       setTimeout(function () { if (gen === L.gen && !L.dead && !L.paused) liveConnect(L, 'retry'); },
@@ -1200,6 +1208,12 @@
   }
   function liveData(L, gen, bytes) {
     L.lastData = Date.now();
+    if (document.hidden) L.bgFails = 0;   // data comes in the background: the phone lets it through
+    else if (L.frontAt) {
+      // the page came back after downloads kept failing in the background, and now data comes at once
+      if (L.frontFails >= 2 && Date.now() - L.frontAt < 6000) liveBgBlocked(L);
+      L.frontAt = 0;
+    }
     if (L.probeGen === gen) { liveProbe(L, gen, bytes); return; }
     liveTake(L, gen, bytes);
   }
@@ -1332,6 +1346,15 @@
   if (navigator.connection && navigator.connection.addEventListener) {
     navigator.connection.addEventListener('change', function () { if (wanted && cur && cur.live) liveNudge(cur.live, 'network changed'); });
   }
+  function liveBgBlocked(L) {
+    bgBlockedSeen += 1;
+    dbg('live: downloads blocked in the background (' + bgBlockedSeen + ' of ' + BG_BLOCKED_TIMES + ')');
+    if (bgBlockedSeen < BG_BLOCKED_TIMES || forcedEngine) return;
+    try { localStorage.setItem(BG_BLOCKED_KEY, String(Date.now())); } catch (e) {}
+    dbg('live: switching to the plain player for a day (this phone lets its downloads go on in the background)');
+    engine = 'src';
+    if (cur === L.c && wanted) start();   // the page is in front: a new player may start
+  }
   function liveTick(L) {
     if (L.dead || L.paused) return;
     var now = Date.now();
@@ -1341,6 +1364,7 @@
     else if (L.state === 'connecting' && now - L.connStart > liveConnectLimit(L)) {
       // no answer: drop this try and dial again; on a slow network each such try is given 2.5 s more (5 s … 12 s)
       L.slowTries = (L.slowTries || 0) + 1;
+      if (document.hidden) L.bgFails = (L.bgFails || 0) + 1;
       liveConnect(L, 'no answer for ' + Math.round((now - L.connStart) / 1000) + ' s');
     }
     // far behind the live edge (more sound in hand than needed): jump forward, keeping the buffer
@@ -1581,6 +1605,15 @@
     // In the background a stalled player is left alone: reloading it there (load()) pauses it, Android then refuses
     // to start it again from the background, the media session closes and the notification goes. Left alone, the
     // player keeps its session and may pick up by itself; on the page's return a fresh player starts at once.
+    if (document.hidden && BG_RETRY) {
+      // test mode: try it, and log the outcome ("reconnect: play refused" or "a:playing" in the background)
+      var nowB = Date.now();
+      if ((cur.audio.error || cur.audio.ended || nowB - lastProgress > 12000) && nowB - lastReconnect > 20000) {
+        dbg('bgretry: reconnecting in the background', dbgState());
+        reconnect(true);
+      }
+      return;
+    }
     if (document.hidden) { if (cur.audio.error || cur.audio.ended) reconnectDue = true; return; }
     var now = Date.now();
     var limit = document.hidden ? Math.max(stallLimit, STALL_HIDDEN) : stallLimit;
@@ -1647,6 +1680,7 @@
       var L = cur.live;
       if (reconnectDue || cur.audio.error) { failedTries = 0; start(); return; }
       if (cur.audio.paused) { var pp = cur.audio.play(); if (pp && pp.catch) pp.catch(function () {}); }
+      L.frontAt = Date.now(); L.frontFails = L.bgFails || 0; L.bgFails = 0;
       liveNudge(L, 'back in front');
       if (ctx && mode === 'capture') {
         if (ctx.state !== 'running') { try { ctx.resume(); } catch (e) {} }
@@ -2325,9 +2359,9 @@
         else share(full(prev, 'the page load before'), 'kcmd-radio-log-previous.txt');
       }
       if (act === 'fold') { dbgView.hidden = !dbgView.hidden; b.textContent = dbgView.hidden ? 'Розгорнути' : 'Згорнути'; }
-      if (act === 'clear' && confirm('Очистити журнал?')) { dbgLines = []; try { localStorage.removeItem(DBG_KEY); localStorage.removeItem(DBG_PREV_KEY); } catch (x) {} dbgView.textContent = ''; }
+      if (act === 'clear' && confirm('Очистити журнал і забути вибір плеєра на цьому телефоні?')) { dbgLines = []; try { localStorage.removeItem(DBG_KEY); localStorage.removeItem(DBG_PREV_KEY); localStorage.removeItem(BG_BLOCKED_KEY); localStorage.removeItem(MSE_OFF_KEY); } catch (x) {} dbgView.textContent = ''; }
     });
-    dbg('page loaded', 'mode=' + mode + ' engine=' + engine + ' page version: ' + PAGE_VERSION);
+    dbg('page loaded', 'mode=' + mode + ' engine=' + engine + (BG_RETRY ? ' bgretry' : '') + ' page version: ' + PAGE_VERSION);
   })();
 
   // ---- edit mode: open the page with ?edit, change the texts right on the page, then download the new index.html ----
