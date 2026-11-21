@@ -411,6 +411,8 @@
     line-height: 1.6;
   }
   .slot-desc p { margin: 0 0 0.75rem; }
+  .slot-desc a { color: inherit; text-decoration-color: var(--line); }
+  .slot-desc a:hover { color: var(--accent); text-decoration-color: var(--accent); }
   .slot-desc p:last-child { margin-bottom: 0; }
   .slot-desc[hidden] { display: none; }
   @media (prefers-reduced-motion: reduce) { .slot-more svg { transition: none; } }
@@ -1448,6 +1450,10 @@
     return text.split(/\n\s*\n/).map(function (para) {
       var html = esc(para.trim()).replace(/\n/g, '<br>')
         .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+      // a known name in the text links to its KCMD Portfolio profile, as in the list of artists
+      PEOPLE.forEach(function (pp) {
+        [pp.en, pp.uk].forEach(function (n) { html = html.split(escHtml(n)).join(personLink(n)); });
+      });
       return '<p>' + html + '</p>';
     }).join('');
   }
