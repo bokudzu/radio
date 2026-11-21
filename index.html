@@ -236,7 +236,9 @@
     background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 999px;
     font: inherit; font-size: 0.95rem; text-align: left; cursor: pointer;
   }
-  .chat-bar:hover { border-color: var(--accent); }
+  /* the accent frame only on a real hover of the closed bar: on phones a tap leaves "hover" stuck, and the open
+     chat's top then had another colour than its body */
+  @media (hover: hover) { .chat:not(.is-open) .chat-bar:hover { border-color: var(--accent); } }
   .chat.is-open .chat-bar { border-radius: 14px 14px 0 0; border-bottom-color: transparent; }
   .chat-label { font-weight: 600; flex: none; position: relative; }
   .chat.has-new .chat-label::after {
