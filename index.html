@@ -286,6 +286,19 @@
     .chat-name { grid-column: 1 / -1; }
   }
   .tacet-note { margin: 1rem 0 0; color: var(--muted); font-size: 0.95rem; }
+  /* a hint for Android listeners whose phone stops Chrome's network in the background */
+  .bg-hint {
+    margin-top: 0.75rem; padding: 1rem 1.25rem;
+    background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 14px;
+    font-size: 0.95rem; line-height: 1.5;
+  }
+  .bg-hint[hidden] { display: none; }
+  .bg-hint p { margin: 0 0 0.5rem; }
+  .bg-hint-title { font-weight: 600; }
+  .bg-hint-ok {
+    padding: 0.35rem 0.9rem; border: 0; border-radius: 999px; background: var(--accent); color: var(--accent-ink);
+    font: inherit; font-size: 0.875rem; font-weight: 500; cursor: pointer;
+  }
   .sec-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin: 0 0 1.25rem; }
   .sec-head h2 { margin: 0; }
   .sec-head .subscribe { margin: 0; }
@@ -690,6 +703,12 @@
     <canvas class="wave" id="wave" aria-hidden="true"></canvas>
   </div>
 
+  <div class="bg-hint" id="bg-hint" role="status" hidden>
+    <p class="bg-hint-title" data-i18n="bgHintTitle">The radio went quiet while this page was in the background</p>
+    <p data-i18n="bgHintText"></p>
+    <button type="button" class="bg-hint-ok" id="bg-hint-ok" data-i18n="bgHintOk">Got it</button>
+  </div>
+
   <section class="chat" id="chat" aria-label="Chat" hidden>
     <button type="button" class="chat-bar" id="chat-bar" aria-expanded="false" aria-controls="chat-panel">
       <span class="chat-label" id="chat-label">Chat</span>
@@ -839,6 +858,9 @@
       chatNeedName: 'Write your name first.', chatSlow: 'Wait a few seconds and try again.', chatLinks: 'Links are not posted in the chat.',
       chatErr: 'The message could not be sent. Try again.', chatHide: 'Hide', chatSecret: 'Moderator password:',
       chatOff: 'The chat is closed for now.',
+      bgHintTitle: 'The radio went quiet while this page was in the background',
+      bgHintText: 'Your phone seems to limit Chrome in the background. To listen without breaks, open Settings → Apps → Chrome, set Battery to “Unrestricted” and turn on “Background data” under Mobile data. Menu names vary between phones. Battery saver can also stop the radio.',
+      bgHintOk: 'Got it',
       teams: 'Teams',
       teamRT: 'Maria Hansar, Asja Dolgaja, Kristjan Jansen, Tarmo Johannes, Andrus Laansalu and Mike Cole',
       teamKCMD: 'Albert Saprykin, Tetiana Khoroshun, Boris Loginov',
@@ -885,6 +907,9 @@
       chatNeedName: 'Спершу напишіть своє імʼя.', chatSlow: 'Зачекайте кілька секунд і спробуйте ще раз.', chatLinks: 'Посилання в чаті не публікуються.',
       chatErr: 'Не вдалося надіслати. Спробуйте ще раз.', chatHide: 'Приховати', chatSecret: 'Пароль модератор_ки:',
       chatOff: 'Чат зараз закритий.',
+      bgHintTitle: 'Радіо замовкало, поки сторінка була згорнута',
+      bgHintText: 'Схоже, телефон обмежує Chrome у фоні. Щоб слухати без перерв, відкрийте Налаштування → Застосунки → Chrome і виберіть «Батарея: без обмежень», а в «Мобільних даних» увімкніть «Фонові дані». Назви пунктів меню залежать від моделі телефона. Режим економії батареї теж може зупиняти радіо.',
+      bgHintOk: 'Зрозуміло',
       teams: 'Команди',
       teamRT: 'Maria Hansar, Asja Dolgaja, Kristjan Jansen, Tarmo Johannes, Andrus Laansalu і Mike Cole',
       teamKCMD: 'Альберт Саприкін, Тетяна Хорошун, Борис Логінов',
@@ -993,7 +1018,7 @@
   // A panel at the bottom copies or shares the log.
   // also switched on by the Debug button at the foot of the page: kept in this browser until switched off
   var DBG_ON_KEY = 'kcmd-radio-debug-on';
-  var PAGE_VERSION = '2026-11-21 release-1';
+  var PAGE_VERSION = '2026-11-22 release-2';
   var DEBUG = /[?&]debug(\b|=|&|$)/.test(location.search);
   try { if (localStorage.getItem(DBG_ON_KEY) === '1') DEBUG = true; } catch (e) {}
   (function () {
@@ -1212,7 +1237,10 @@
     if (document.hidden) L.bgFails = 0;   // data comes in the background: the phone lets it through
     else if (L.frontAt) {
       // the page came back after downloads kept failing in the background, and now data comes at once
-      if (L.frontFails >= 2 && Date.now() - L.frontAt < 6000) liveBgBlocked(L);
+      if (L.frontFails >= 2 && Date.now() - L.frontAt < 6000) {
+        if (L.frontDry) showBgHint();   // the listener heard it stop: tell them why and what helps
+        liveBgBlocked(L);
+      }
       L.frontAt = 0;
     }
     if (L.probeGen === gen) { liveProbe(L, gen, bytes); return; }
@@ -1297,6 +1325,7 @@
   // again, a little fuller than before
   function liveStall(L) {
     if (L.dead || L.holding || !L.flushes || liveAhead(L) > 0.5) return;
+    if (document.hidden && !held) L.bgDry = true;   // the sound ran out while the page was away
     L.holding = true;
     L.target = Math.min(LIVE_MAX, L.target + LIVE_STEP);
     dbg('live: ran dry, refilling to ' + L.target + ' s');
@@ -1356,6 +1385,22 @@
     engine = 'src';
     if (cur === L.c && wanted) start();   // the page is in front: a new player may start
   }
+  // ---- the hint for listeners (Android): shown when the radio went quiet in the background because the phone
+  // blocked Chrome's network there; "Got it" hides it for 30 days in this browser ----
+  var BG_HINT_KEY = 'kcmd-radio-bg-hint', BG_HINT_DAYS = 2;
+  function showBgHint() {
+    var box = document.getElementById('bg-hint');
+    if (!box || !box.hidden) return;
+    try { var seen = Number(localStorage.getItem(BG_HINT_KEY) || 0); if (seen && Date.now() - seen < BG_HINT_DAYS * 86400000) return; } catch (e) {}
+    box.hidden = false;
+    dbg('hint shown: background limits');
+    track('bg_hint');
+  }
+  document.getElementById('bg-hint-ok').addEventListener('click', function () {
+    document.getElementById('bg-hint').hidden = true;
+    try { localStorage.setItem(BG_HINT_KEY, String(Date.now())); } catch (e) {}
+    track('bg_hint_ok');
+  });
   function liveTick(L) {
     if (L.dead || L.paused) return;
     var now = Date.now();
@@ -1679,7 +1724,7 @@
       var L = cur.live;
       if (reconnectDue || cur.audio.error) { failedTries = 0; start(); return; }
       if (cur.audio.paused && !held) { var pp = cur.audio.play(); if (pp && pp.catch) pp.catch(function () {}); }   // a system pause is the listener's to end
-      L.frontAt = Date.now(); L.frontFails = L.bgFails || 0; L.bgFails = 0;
+      L.frontAt = Date.now(); L.frontFails = L.bgFails || 0; L.bgFails = 0; L.frontDry = !!L.bgDry; L.bgDry = false;
       liveNudge(L, 'back in front');
       if (ctx && mode === 'capture') {
         if (ctx.state !== 'running') { try { ctx.resume(); } catch (e) {} }
@@ -2358,7 +2403,7 @@
         else share(full(prev, 'the page load before'), 'kcmd-radio-log-previous.txt');
       }
       if (act === 'fold') { dbgView.hidden = !dbgView.hidden; b.textContent = dbgView.hidden ? 'Розгорнути' : 'Згорнути'; }
-      if (act === 'clear' && confirm('Очистити журнал і забути вибір плеєра на цьому телефоні?')) { dbgLines = []; try { localStorage.removeItem(DBG_KEY); localStorage.removeItem(DBG_PREV_KEY); localStorage.removeItem(BG_BLOCKED_KEY); localStorage.removeItem(MSE_OFF_KEY); } catch (x) {} dbgView.textContent = ''; }
+      if (act === 'clear' && confirm('Очистити журнал і забути вибір плеєра на цьому телефоні?')) { dbgLines = []; try { localStorage.removeItem(DBG_KEY); localStorage.removeItem(DBG_PREV_KEY); localStorage.removeItem(BG_BLOCKED_KEY); localStorage.removeItem(MSE_OFF_KEY); localStorage.removeItem(BG_HINT_KEY); } catch (x) {} dbgView.textContent = ''; }
     });
     dbg('page loaded', 'mode=' + mode + ' engine=' + engine + ' page version: ' + PAGE_VERSION);
   })();
@@ -2570,7 +2615,7 @@
     var UMAMI_API = 'https://api.umami.is/v1';                    // Umami Cloud API
     var WEBSITE_ID = 'b56cf6b6-550c-49b2-a369-431a49c24ed5';
     var KEY_STORE = 'kcmd-radio-umami-key', HIST_STORE = 'kcmd-radio-admin-history';
-    var EVENTS = { play_start: 'Натиснули «слухати»', listening: '5 хвилин прослуховування', play_stop: 'Зупинили', lang_switch: 'Змінили мову', next_details: '«Детальніше» з картки', subscribe_link: 'Посилання на підписку' };
+    var EVENTS = { play_start: 'Натиснули «слухати»', listening: '5 хвилин прослуховування', play_stop: 'Зупинили', lang_switch: 'Змінили мову', next_details: '«Детальніше» з картки', subscribe_link: 'Посилання на підписку', bg_hint: 'Показано підказку про фон', bg_hint_ok: '«Зрозуміло» в підказці' };
     function $(id) { return document.getElementById(id); }
     document.documentElement.classList.add('adm-on');
     $('adm').hidden = false;
