@@ -792,7 +792,7 @@
   </div>
   <p data-i18n-html="footer">Kyiv Contemporary Music Days × Radio Tallinn 1965 on V2in</p>
   <p class="disclaimer" data-i18n="disclaimer">The project is created during the Ulysses Platform In-Situ residency in Tallinn, co-funded by the European Union. Views and opinions expressed are however those of the author(s) only and do not necessarily reflect those of the European Union or the European Education and Culture Executive Agency (EACEA). Neither the European Union nor EACEA can be held responsible for them.</p>
-  <p class="debug-toggle"><button type="button" class="debug-btn" id="debug-btn" aria-pressed="false" title="Журнал плеєра / Player log">Debug</button></p>
+  <p class="debug-toggle" id="debug-toggle" hidden><button type="button" class="debug-btn" id="debug-btn" aria-pressed="false" title="Журнал плеєра / Player log">Debug</button></p>
   <svg class="foot-waves" id="foot-waves" viewBox="0 0 1200 110" preserveAspectRatio="none" aria-hidden="true"></svg>
 </footer>
 
@@ -993,14 +993,15 @@
   // A panel at the bottom copies or shares the log.
   // also switched on by the Debug button at the foot of the page: kept in this browser until switched off
   var DBG_ON_KEY = 'kcmd-radio-debug-on';
-  var PAGE_VERSION = '2026-11-21 live-4';
-  var BG_RETRY = /[?&]bgretry(\b|=|&|$)/.test(location.search);   // test: the plain player reconnects in the background
+  var PAGE_VERSION = '2026-11-21 release-1';
   var DEBUG = /[?&]debug(\b|=|&|$)/.test(location.search);
   try { if (localStorage.getItem(DBG_ON_KEY) === '1') DEBUG = true; } catch (e) {}
   (function () {
     var b = document.getElementById('debug-btn');
     if (!b) return;
     b.setAttribute('aria-pressed', String(DEBUG));
+    // listeners don't see the button: it appears once the page has been opened with ?debug, and stays while the log is on
+    if (DEBUG) document.getElementById('debug-toggle').hidden = false;
     // the page reloads, so the log watches the player from its very start
     b.addEventListener('click', function () {
       try { if (DEBUG) localStorage.removeItem(DBG_ON_KEY); else localStorage.setItem(DBG_ON_KEY, '1'); } catch (e) {}
@@ -1470,7 +1471,13 @@
     a.onplaying = function () { c.played = true; held = false; if (c.live) liveUnhold(c.live); lastProgress = Date.now(); setPlaying(true); setStatus('st_onair'); attachCapture(c); };
     a.onwaiting = function () { if (wanted) setStatus('st_buffering'); if (c.live) liveStall(c.live); };
     // started again, by anyone (the system after taking the sound away, too): the download must be running
-    a.onplay = function () { if (c.live && cur === c) liveUnhold(c.live); };
+    a.onplay = function () {
+      if (cur !== c) return;
+      if (c.live) liveUnhold(c.live);
+      // started again by anyone: no longer "paused by the system". Before, the flag stayed until sound came,
+      // and the phone's notification kept showing "paused" (and could be dropped) while the player waited for data.
+      if (held && wanted) { held = false; updateMediaSession(); }
+    };
     // Android pauses the element itself when another app takes the sound (a call, a video, a messenger's ping).
     // Without noticing it the page kept saying "On air" and the lock-screen Play button did nothing.
     // A short interruption ends by itself (the browser plays on, onplaying clears the flag); a long one waits for Play.
@@ -1605,15 +1612,6 @@
     // In the background a stalled player is left alone: reloading it there (load()) pauses it, Android then refuses
     // to start it again from the background, the media session closes and the notification goes. Left alone, the
     // player keeps its session and may pick up by itself; on the page's return a fresh player starts at once.
-    if (document.hidden && BG_RETRY) {
-      // test mode: try it, and log the outcome ("reconnect: play refused" or "a:playing" in the background)
-      var nowB = Date.now();
-      if ((cur.audio.error || cur.audio.ended || nowB - lastProgress > 12000) && nowB - lastReconnect > 20000) {
-        dbg('bgretry: reconnecting in the background', dbgState());
-        reconnect(true);
-      }
-      return;
-    }
     if (document.hidden) { if (cur.audio.error || cur.audio.ended) reconnectDue = true; return; }
     var now = Date.now();
     var limit = document.hidden ? Math.max(stallLimit, STALL_HIDDEN) : stallLimit;
@@ -1672,14 +1670,15 @@
 
   // phones can suspend a stream in the background; pick it up again on return
   document.addEventListener('visibilitychange', function () {
-    if (document.hidden || !wanted || held) return;
+    if (document.hidden || !wanted) return;
+    if (held && !(cur && cur.live)) return;   // the live engine looks after its download even while paused
     sampleProgress();
     dbg('back in front: check', dbgState());
     if (!cur) start();
     else if (cur.live) {
       var L = cur.live;
       if (reconnectDue || cur.audio.error) { failedTries = 0; start(); return; }
-      if (cur.audio.paused) { var pp = cur.audio.play(); if (pp && pp.catch) pp.catch(function () {}); }
+      if (cur.audio.paused && !held) { var pp = cur.audio.play(); if (pp && pp.catch) pp.catch(function () {}); }   // a system pause is the listener's to end
       L.frontAt = Date.now(); L.frontFails = L.bgFails || 0; L.bgFails = 0;
       liveNudge(L, 'back in front');
       if (ctx && mode === 'capture') {
@@ -2361,7 +2360,7 @@
       if (act === 'fold') { dbgView.hidden = !dbgView.hidden; b.textContent = dbgView.hidden ? 'Розгорнути' : 'Згорнути'; }
       if (act === 'clear' && confirm('Очистити журнал і забути вибір плеєра на цьому телефоні?')) { dbgLines = []; try { localStorage.removeItem(DBG_KEY); localStorage.removeItem(DBG_PREV_KEY); localStorage.removeItem(BG_BLOCKED_KEY); localStorage.removeItem(MSE_OFF_KEY); } catch (x) {} dbgView.textContent = ''; }
     });
-    dbg('page loaded', 'mode=' + mode + ' engine=' + engine + (BG_RETRY ? ' bgretry' : '') + ' page version: ' + PAGE_VERSION);
+    dbg('page loaded', 'mode=' + mode + ' engine=' + engine + ' page version: ' + PAGE_VERSION);
   })();
 
   // ---- edit mode: open the page with ?edit, change the texts right on the page, then download the new index.html ----
