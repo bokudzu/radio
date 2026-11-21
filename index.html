@@ -424,8 +424,8 @@
   .artists li { display: inline; }
   .artists li + li::before { content: " · "; color: var(--muted); }
   .note { color: var(--muted); }
-  .artists a, .slot-artist a.person, .team a { color: inherit; text-decoration-color: var(--line); }
-  .artists a:hover, .slot-artist a.person:hover, .team a:hover { color: var(--accent); text-decoration-color: var(--accent); }
+  .artists a, .slot-artist a.person, .slot-title a, .team a { color: inherit; text-decoration-color: var(--line); }
+  .artists a:hover, .slot-artist a.person:hover, .slot-title a:hover, .team a:hover { color: var(--accent); text-decoration-color: var(--accent); }
   .subscribe { position: relative; display: inline-block; margin: 1.25rem 0 0; }
   .subscribe-btn {
     display: inline-flex;
@@ -1381,7 +1381,8 @@
   var localPlace = localZone.indexOf('/') > 0 ? localZone.split('/').pop().replace(/_/g, ' ').replace(/^Kiev$/, 'Kyiv') : '';
 
   // ---- the timetable's source: the public Google Calendar of KCMD Radio ----
-  // Event title: "English name / Ukrainian name" (the part after " / " is optional).
+  // Event title: "English / Ukrainian" (the part after " / " is optional): the piece or the person, as you like.
+  // A known name anywhere in the title or the description's first line links to its KCMD Portfolio profile.
   // Event description (optional): the piece or programme, the same way: "English / Ukrainian".
   // If the calendar can't be read or has no events, the timetable stays empty.
   // Set USE_FALLBACK to true to show the list written in KCMD_TIMETABLE above in that case.
@@ -1495,7 +1496,7 @@
       return '<li class="' + cls + '" id="slot-' + String(key).replace(/[^a-z0-9_-]/gi, '') + '">' +
         '<span class="slot-date">' + esc(day) + '</span>' +
         '<span class="slot-artist">' + personLink(who, 'person') + flag +
-          (what ? '<span class="slot-title">' + esc(what) + '</span>' : '') + more + '</span>' +
+          (what ? '<span class="slot-title">' + linkNames(what) + '</span>' : '') + more + '</span>' +
         '<span class="slot-time"><span class="slot-kyiv">' + esc(time) + '</span></span>' +
         panel +
         '</li>';
@@ -1537,7 +1538,7 @@
     document.getElementById('next-when').textContent = dayWord(it.start) + ', ' + hhmm(it.start) + '–' + hhmm(it.end);
     var who = (lang === 'uk' && it.artist_uk) || it.artist;
     var what = (lang === 'uk' && it.title_uk) || it.title;
-    document.getElementById('next-what').innerHTML = personLink(who) + (what ? ' — <em>' + esc(what) + '</em>' : '');
+    document.getElementById('next-what').innerHTML = personLink(who) + (what ? ' — <em>' + linkNames(what) + '</em>' : '');
     document.getElementById('next-rel').textContent = live ? t('nxLeft', { t: span(it.end - now) }) : t('nxIn', { t: span(it.start - now) });
     var bar = document.getElementById('next-bar');
     bar.hidden = !live;
