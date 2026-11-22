@@ -1012,7 +1012,7 @@
   // A panel at the bottom copies or shares the log.
   // also switched on by the Debug button at the foot of the page: kept in this browser until switched off
   var DBG_ON_KEY = 'kcmd-radio-debug-on';
-  var PAGE_VERSION = '2026-11-22 release-5';
+  var PAGE_VERSION = '2026-11-22 release-7';
   var DEBUG = /[?&]debug(\b|=|&|$)/.test(location.search);
   try { if (localStorage.getItem(DBG_ON_KEY) === '1') DEBUG = true; } catch (e) {}
   (function () {
@@ -1173,6 +1173,14 @@
     return dur;
   }
 
+  // 0.5 s of encoded silence (MP3, 44.1 kHz stereo, 32 kbit/s; made with ffmpeg/LAME)
+  var LEAD_IN = '//sQZAAP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/+xJkIg/wAABpAAAACAAADSAAAAEAAAGkAAAAIAAANIAAAARVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/+xBkRI/wAABpAAAACAAADSAAAAEAAAGkAAAAIAAANIAAAARVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/7EmRmj/AAAGkAAAAIAAANIAAAAQAAAaQAAAAgAAA0gAAABFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/7EGSJD/AAAGkAAAAIAAANIAAAAQAAAaQAAAAgAAA0gAAABFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//sSZKsP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAEVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//sQZM2P8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAEVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/+xJk3Q/wAABpAAAACAAADSAAAAEAAAGkAAAAIAAANIAAAARVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/+xBk3Y/wAABpAAAACAAADSAAAAEAAAGkAAAAIAAANIAAAARVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/7EmTdD/AAAGkAAAAIAAANIAAAAQAAAaQAAAAgAAA0gAAABFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/7EGTdj/AAAGkAAAAIAAANIAAAAQAAAaQAAAAgAAA0gAAABFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//sSZN0P8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAEVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//sQZN2P8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAEVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/+xJk3Q/wAABpAAAACAAADSAAAAEAAAGkAAAAIAAANIAAAARVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/+xBk3Y/wAABpAAAACAAADSAAAAEAAAGkAAAAIAAANIAAAARVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/7EmTdD/AAAGkAAAAIAAANIAAAAQAAAaQAAAAgAAA0gAAABFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/7EGTdj/AAAGkAAAAIAAANIAAAAQAAAaQAAAAgAAA0gAAABFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//sSZN0P8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAEVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//sQZN2P8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAEVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/+xJk3Q/wAABpAAAACAAADSAAAAEAAAGkAAAAIAAANIAAAARVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/+xBk3Y/wAABpAAAACAAADSAAAAEAAAGkAAAAIAAANIAAAARVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ==';
+  var noLeadIn = false;   // set if a phone's player rejects the lead-in: then the page goes on without it
+  function leadInBytes() {
+    var bin = atob(LEAD_IN), out = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
   function liveSetup(c) {
     var L = { c: c, gen: 0, ms: new MediaSource(), sb: null, ctl: null, pending: [], queue: [], queueDur: 0,
       holding: true, target: LIVE_MIN, state: 'idle', lastData: Date.now(), connStart: Date.now(), fails: 0,
@@ -1195,6 +1203,9 @@
     fetch(STREAM + '?t=' + Date.now(), { signal: ctl.signal, cache: 'no-store' }).then(function (r) {
       if (gen !== L.gen || L.dead) return;
       if (!r.ok || !r.body) throw new Error('HTTP ' + r.status);
+      // every answer, not only the first, must be the stream: an error page in its place would break the decoder
+      var ctNow = (r.headers.get('content-type') || '').toLowerCase();
+      if (ctNow && ctNow.indexOf('audio/') !== 0 && ctNow.indexOf('application/octet-stream') !== 0) throw new Error('not audio: ' + ctNow);
       if (!L.sb) {
         var raw = r.headers.get('content-type') || '', type = liveType(raw);
         dbg('live: stream type', (raw || '?') + ' → ' + (type || 'not playable this way'));
@@ -1204,6 +1215,16 @@
         try { L.sb.mode = 'sequence'; } catch (e) {}   // pieces follow each other in time, whatever came between
         L.sb.addEventListener('updateend', function () { livePump(L); });
         L.sb.addEventListener('error', function () { dbg('live: append error'); });
+        // Half a second of silence goes in at once, before the buffer is full. Chrome on Android does not let sound
+        // START while the page is in the background: a listener who pressed Play and left during the first seconds
+        // had the player paused the moment the buffer was full (seen in the log, 22 Nov 20:48). With the silence the
+        // player has already played in front, so later sound in the background is no new start.
+        if (type === 'audio/mpeg' && !noLeadIn) {
+          var sil = leadInBytes();
+          L.leadIn = true;
+          L.pending.push({ gen: 0, bytes: sil, dur: 0.5 });
+          livePump(L);
+        }
       }
       L.everHeaders = true; L.state = 'streaming'; L.fails = 0; L.slowTries = 0;
       var reader = r.body.getReader();
@@ -1261,7 +1282,28 @@
       liveTake(L, gen, hay);
     }
   }
+  // the first whole frame in a piece: a frame header whose next frame also starts where it should
+  function firstSync(b) {
+    for (var i = 0; i + 7 <= b.length; i++) {
+      var f = frameAt(b, i);
+      if (!f) continue;
+      var n = i + f.len;
+      if (n + 7 > b.length) return i;   // too short to check the next one: take it
+      var g = frameAt(b, n);
+      if (g) return i;
+    }
+    return -1;
+  }
   function liveTake(L, gen, bytes) {
+    // A new connection (or what is left after a dropped repeat) may begin in the middle of a frame. The decoder of
+    // some phones gives up on such bytes for good (log 22 Nov 20:51: "stream parsing failed", the player dead until
+    // the page was seen again), so everything before the first whole frame is left out.
+    if (L.syncGen !== gen) {
+      var k = firstSync(bytes);
+      if (k < 0) return;   // no frame in this piece yet: wait for the next
+      if (k > 0) { dbg('live: skipped ' + k + ' bytes to the first whole frame'); bytes = bytes.subarray(k); }
+      L.syncGen = gen;
+    }
     L.bytesSeen += bytes.length;
     var t = L.tail ? new Uint8Array(Math.min(4096, L.tail.length + bytes.length)) : new Uint8Array(Math.min(4096, bytes.length));
     if (bytes.length >= t.length) t.set(bytes.subarray(bytes.length - t.length));
@@ -1345,6 +1387,23 @@
     L.heldSince = 0;
     if (L.paused) { L.paused = false; liveConnect(L, 'playing again after a pause'); }
     else if (wasHeld) dbg('live: playing again, the download never stopped');
+  }
+  // a new MediaSource on the same element, the buffer target kept; at most 3 times in 5 minutes
+  var rebuilds = [];
+  function liveRebuild(c) {
+    var now = Date.now();
+    rebuilds = rebuilds.filter(function (t0) { return now - t0 < 300000; });
+    if (rebuilds.length >= 3 || cur !== c) { dbg('live: not rebuilding again so soon; waiting for the page'); return; }
+    rebuilds.push(now);
+    var old = c.live, target = old ? old.target : LIVE_MIN;
+    if (old) liveRelease(old);
+    dbg('live: rebuilding the player in place');
+    c.rebuiltAt = now;
+    liveSetup(c);
+    c.live.target = target;
+    lastReconnect = now;
+    var p = c.audio.play();
+    if (p && p.catch) p.catch(function (e) { dbg('rebuild: play refused', e && (e.name + ': ' + e.message)); });
   }
   function liveRelease(L) {
     L.dead = true; L.gen++;
@@ -1502,7 +1561,9 @@
     c.played = false;
     lastProgress = Date.now(); lastTime = 0; stallLimit = STALL_FIRST;   // a new source starts at 0: that is no progress yet
     held = false;
-    a.onplaying = function () { c.played = true; held = false; if (c.live) liveUnhold(c.live); lastProgress = Date.now(); setPlaying(true); setStatus('st_onair'); attachCapture(c); };
+    reconnectDue = false;   // a new player: a fresh start due for the old one is done (log 22 Nov 20:52: a needless second restart)
+    a.onplaying = function () { if (c.rebuiltAt && !c.audio.error) reconnectDue = false;   // the rebuilt player plays: no fresh start needed
+      if (!document.hidden) c.playedInFront = true; c.played = true; held = false; if (c.live) liveUnhold(c.live); lastProgress = Date.now(); setPlaying(true); setStatus('st_onair'); attachCapture(c); };
     a.onwaiting = function () { if (wanted) setStatus('st_buffering'); if (c.live) liveStall(c.live); };
     // started again, by anyone (the system after taking the sound away, too): the download must be running
     a.onplay = function () {
@@ -1518,6 +1579,9 @@
     a.onpause = function () {
       if (!wanted || cur !== c || a.ended || Date.now() - lastReconnect < 1500) return;
       held = true;
+      // Chrome pausing a first start in the background is not the listener's or another app's doing:
+      // the radio plays on as soon as the page is seen again
+      c.autoResume = document.hidden && (!c.playedInFront || Date.now() - (c.rebuiltAt || 0) < 60000);
       if (c.live) liveHold(c.live);
       setPlaying(false);
       setStatus('st_paused');
@@ -1532,8 +1596,15 @@
       if (!wanted || cur !== c) return;
       if (c.live) {   // the live engine: its downloads mend themselves, so an error here is the player's own
         dbg('live: player error', a.error ? 'code=' + a.error.code + ' ' + (a.error.message || '') : '');
+        if (!c.played && c.live.leadIn && !noLeadIn) { noLeadIn = true; dbg('live: trying again without the lead-in'); start(); return; }
         if (!c.played) { liveGiveUp(c.live, 'player error before any sound'); return; }
-        if (document.hidden) { reconnectDue = true; return; }   // a fresh player when the page is seen again
+        if (document.hidden) {
+          // in the background: rebuild it on the same element (a new player there may not be allowed to start);
+          // if that fails too, a fresh player when the page is seen again
+          reconnectDue = true;
+          liveRebuild(c);
+          return;
+        }
         start(); return;
       }
       // the stream refused Web Audio before it ever played (no cross-origin access): play it plainly instead
@@ -1712,6 +1783,7 @@
     else if (cur.live) {
       var L = cur.live;
       if (reconnectDue || cur.audio.error) { failedTries = 0; start(); return; }
+      if (held && cur.autoResume) { cur.autoResume = false; dbg('back in front: playing on (Chrome had paused the first start in the background)'); resumeHeld(); return; }
       if (cur.audio.paused && !held) { var pp = cur.audio.play(); if (pp && pp.catch) pp.catch(function () {}); }   // a system pause is the listener's to end
       L.frontAt = Date.now(); L.frontFails = L.bgData ? 0 : (L.bgFails || 0); L.bgData = false; L.bgFails = 0; L.frontDry = !!L.bgDry; L.bgDry = false;
       liveNudge(L, 'back in front');
