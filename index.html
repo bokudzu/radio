@@ -1012,7 +1012,7 @@
   // A panel at the bottom copies or shares the log.
   // also switched on by the Debug button at the foot of the page: kept in this browser until switched off
   var DBG_ON_KEY = 'kcmd-radio-debug-on';
-  var PAGE_VERSION = '2026-11-22 release-7';
+  var PAGE_VERSION = '2026-11-22 release-8';
   var DEBUG = /[?&]debug(\b|=|&|$)/.test(location.search);
   try { if (localStorage.getItem(DBG_ON_KEY) === '1') DEBUG = true; } catch (e) {}
   (function () {
@@ -1312,9 +1312,14 @@
     var item = { gen: gen, bytes: bytes, dur: measure(L, bytes) };
     if (L.holding) {
       L.queue.push(item); L.queueDur += item.dur;
-      if (liveAhead(L) + L.queueDur >= L.target) liveFlush(L);
+      if (liveAhead(L) + L.queueDur >= liveFillTo(L)) liveFlush(L);
     } else { L.pending.push(item); livePump(L); }
   }
+  // How much to gather before the sound goes on. After a stall, while the listener looks at the page, 5 s are enough:
+  // they hear the radio again soon instead of watching "Buffering" for 10-15 s. In the background, and at the first
+  // start, the whole target. A refill that starts in the background and ends in front goes on at once.
+  var LIVE_FRONT_REFILL = 5;
+  function liveFillTo(L) { return L.flushes && !document.hidden ? Math.min(L.target, LIVE_FRONT_REFILL) : L.target; }
   function liveAhead(L) {
     var a = L.c.audio;
     try { var b = a.buffered; return b.length ? Math.max(0, b.end(b.length - 1) - a.currentTime) : 0; } catch (e) { return 0; }
@@ -1787,6 +1792,7 @@
       if (cur.audio.paused && !held) { var pp = cur.audio.play(); if (pp && pp.catch) pp.catch(function () {}); }   // a system pause is the listener's to end
       L.frontAt = Date.now(); L.frontFails = L.bgData ? 0 : (L.bgFails || 0); L.bgData = false; L.bgFails = 0; L.frontDry = !!L.bgDry; L.bgDry = false;
       liveNudge(L, 'back in front');
+      if (L.holding && L.flushes && liveAhead(L) + L.queueDur >= liveFillTo(L)) liveFlush(L);
       if (ctx && mode === 'capture') {
         if (ctx.state !== 'running') { try { ctx.resume(); } catch (e) {} }
         if (!cur.src) attachCapture(cur);
