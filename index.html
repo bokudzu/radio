@@ -34,6 +34,8 @@
       var q = new URLSearchParams(location.search), said = '';
       if (q.has('notrack')) { localStorage.setItem('umami.disabled', '1'); said = 'off'; }
       if (q.has('track')) { localStorage.removeItem('umami.disabled'); said = 'on'; }
+      // the editor and the admin view are the team's own: such a browser stops counting itself, quietly
+      if (!said && (q.has('edit') || q.has('admin'))) localStorage.setItem('umami.disabled', '1');
       if (!said) return;
       // the rest of the address stays exactly as it was (?debug stays ?debug)
       var rest = location.search.slice(1).split('&').filter(function (p) { return p && !/^(no)?track(=|$)/.test(p); }).join('&');
@@ -1041,7 +1043,7 @@
   // A panel at the bottom copies or shares the log.
   // also switched on by the Debug button at the foot of the page: kept in this browser until switched off
   var DBG_ON_KEY = 'kcmd-radio-debug-on';
-  var PAGE_VERSION = '2026-11-23 release-9';
+  var PAGE_VERSION = '2026-11-23 release-10';
   var DEBUG = /[?&]debug(\b|=|&|$)/.test(location.search);
   try { if (localStorage.getItem(DBG_ON_KEY) === '1') DEBUG = true; } catch (e) {}
   (function () {
@@ -1227,6 +1229,7 @@
     L.ctl = ctl; L.state = 'connecting'; L.paused = false;
     L.connStart = L.lastData = Date.now();
     L.carry = null;
+    if (why !== 'open' && sess && cur && cur.live === L) sess.reconnects += 1;
     if (L.tail) { L.probeGen = gen; L.probe = null; }   // the first data of this connection is matched against the old
     dbg('live: connect', why + ' | ' + dbgState());
     fetch(STREAM + '?t=' + Date.now(), { signal: ctl.signal, cache: 'no-store' }).then(function (r) {
@@ -1446,6 +1449,7 @@
   }
   function liveGiveUp(L, why) {
     dbg('live: switching to the plain player', why);
+    track('engine_fallback', { why: why });
     if (why === 'type') { try { localStorage.setItem(MSE_OFF_KEY, String(Date.now())); } catch (e) {} }
     engine = 'src';
     if (cur === L.c && wanted) start();
@@ -1589,6 +1593,7 @@
     }
     if (mode !== 'webaudio') a.volume = Number(vol.value);
     dbg('start', 'mode=' + mode + ' engine=' + engine);
+    if (sess) sess.restarts += 1;   // the first start is the press of Play; every later one is a restart
     dbgWatch(a);
     cur = c;
     zeroTime = 0;
@@ -1597,8 +1602,8 @@
     held = false;
     reconnectDue = false;   // a new player: a fresh start due for the old one is done (log 22 Nov 20:52: a needless second restart)
     a.onplaying = function () { if (c.rebuiltAt && !c.audio.error) reconnectDue = false;   // the rebuilt player plays: no fresh start needed
-      if (!document.hidden) c.playedInFront = true; c.played = true; held = false; if (c.live) liveUnhold(c.live); lastProgress = Date.now(); setPlaying(true); setStatus('st_onair'); attachCapture(c); };
-    a.onwaiting = function () { if (wanted) setStatus('st_buffering'); if (c.live) liveStall(c.live); };
+      if (!document.hidden) c.playedInFront = true; c.played = true; held = false; sessionSound(); if (c.live) liveUnhold(c.live); lastProgress = Date.now(); setPlaying(true); setStatus('st_onair'); attachCapture(c); };
+    a.onwaiting = function () { if (wanted) setStatus('st_buffering'); if (c.played && sess && cur === c) sess.waits += 1; if (c.live) liveStall(c.live); };
     // started again, by anyone (the system after taking the sound away, too): the download must be running
     a.onplay = function () {
       if (cur !== c) return;
@@ -1628,6 +1633,7 @@
     a.onended = function () { if (cur === c && !c.live) reconnect(true); };
     a.onerror = function () {
       if (!wanted || cur !== c) return;
+      sessionProblem('stream_error', a.error ? 'code ' + a.error.code + (a.error.message ? ': ' + a.error.message : '') : 'unknown');
       if (c.live) {   // the live engine: its downloads mend themselves, so an error here is the player's own
         dbg('live: player error', a.error ? 'code=' + a.error.code + ' ' + (a.error.message || '') : '');
         if (!c.played && c.live.leadIn && !noLeadIn) { noLeadIn = true; dbg('live: trying again without the lead-in'); start(); return; }
@@ -1654,7 +1660,7 @@
       dbg('start: play refused', e && (e.name + ': ' + e.message));
       if (cur !== c || e.name === 'AbortError') return;
       if (mode !== 'plain') { mode = 'plain'; start(); return; }
-      if (wanted) { setStatus('st_failed'); wanted = false; setPlaying(false); }
+      if (wanted) { setStatus('st_failed'); sessionProblem('play_fail', e && e.name); wanted = false; setPlaying(false); endSession(); }
     });
   }
   function stop() {
@@ -1695,6 +1701,7 @@
     if (!cur) { start(); return; }
     var a = cur.audio, c = cur;
     dbg('reconnect', 'ended=' + !!ended + ' | ' + dbgState());
+    if (sess) sess.reconnects += 1;
     lastReconnect = Date.now();
     lastProgress = Date.now();
     lastTime = 0;             // the reloaded source starts at 0: that is no progress yet
@@ -1774,28 +1781,89 @@
     setInterval(function () { dbg('alive', dbgState()); }, 10000);
   }
 
-  // listening time counts only the seconds the sound actually plays (not connecting, not paused)
-  var PING_MIN = 5;          // one 'listening' event per 5 minutes of playback (keeps the event count low)
-  var heard = 0, pinged = 0, session = false;
+  // ---- listening analytics (Umami) ----
+  // Listening time is read from the player itself (how far its position moved), not counted by a timer:
+  // phones slow down or stop a page's timers in the background, and the old count lost that time.
+  // Every minute of listening, and every time the page goes to the background, the new seconds are sent as one
+  // 'listen' event; the sum of their "seconds" is the real listening time, even when the tab is just closed.
+  // Each event says what was on air: the broadcast from the timetable, 'TACET' during an alert, or 'stream'.
+  var LISTEN_FLUSH = 60;
+  var heard = 0, sent = 0, session = false, lastPos = null, lastTick = 0;
+  var sess = null;           // one press of Play: how it went (time to sound, stalls, reconnects, errors)
+  var identified = false;
+  function onAirNow() {
+    if (nowState && nowState.kind === 'silent') return 'TACET';
+    var now = new Date(), it = (lastItems || []).filter(function (x) { return now >= x.start && now < x.end; })[0];
+    return it ? it.artist : 'stream';
+  }
+  function listenCtx() {
+    return { lang: lang, show: onAirNow(), bg: document.hidden, engine: engine + '/' + mode };
+  }
   setInterval(function () {
-    if (!session || !player.classList.contains('is-playing') || !cur || cur.audio.paused) return;
-    heard += 1;
-    if (heard - pinged >= PING_MIN * 60) { pinged = heard; track('listening', { minutes: PING_MIN, lang: lang }); }
+    if (!session || !cur || cur.audio.paused || held) { lastPos = null; return; }
+    var p = cur.audio.currentTime, now = Date.now();
+    // a forward step no bigger than the time that really passed (a jump to the live edge is not listening)
+    if (lastPos !== null && p > lastPos) heard += Math.min(p - lastPos, (now - lastTick) / 1000 + 2);
+    lastPos = p; lastTick = now;
+    if (heard - sent >= LISTEN_FLUSH) flushListen('tick');
   }, 1000);
+  function flushListen(why) {
+    var d = Math.round(heard - sent);
+    if (d < 5) return;
+    sent += d;
+    var data = listenCtx();
+    data.seconds = d; data.why = why;
+    track('listen', data);
+  }
+  document.addEventListener('visibilitychange', function () { if (document.hidden && session) flushListen('hide'); });
+  function sessionStart() {
+    heard = 0; sent = 0; lastPos = null; session = true;
+    sess = { t0: Date.now(), ok: false, waits: 0, reconnects: 0, restarts: -1, errors: 0, failSent: false };
+    track('play_start', listenCtx());
+  }
   function endSession() {
     if (!session) return;
+    flushListen('stop');
     session = false;
-    track('play_stop', { seconds: heard, minutes: Math.round(heard / 60), lang: lang });
+    var data = listenCtx();
+    data.seconds = Math.round(heard);
+    if (sess) {
+      data.waits = sess.waits; data.reconnects = sess.reconnects;
+      data.restarts = Math.max(0, sess.restarts); data.errors = sess.errors; data.sound = sess.ok;
+    }
+    track('play_stop', data);
   }
   window.addEventListener('pagehide', endSession);
+  // the first sound after Play: how long it took
+  function sessionSound() {
+    if (!session || !sess || sess.ok) return;
+    sess.ok = true;
+    track('play_ok', { ms: Date.now() - sess.t0, engine: engine + '/' + mode, bg: document.hidden });
+    // properties of the visit (no personal id): seen as session data in Umami
+    if (!identified) {
+      identified = true;
+      try {
+        if (window.umami && typeof window.umami.identify === 'function') {
+          window.umami.identify({ lang: lang, engine: engine + '/' + mode, android: IS_ANDROID,
+            ios: /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) });
+        }
+      } catch (e) {}
+    }
+  }
+  // the stream could not start or broke: the first problem of each press of Play is sent, the rest are counted
+  function sessionProblem(kind, why) {
+    if (sess) sess.errors += 1;
+    if (sess && sess.failSent) return;
+    if (sess) sess.failSent = true;
+    track(kind, { why: String(why || '').slice(0, 80), engine: engine + '/' + mode, bg: document.hidden, sound: !!(sess && sess.ok) });
+  }
 
   btn.addEventListener('click', function () {
     dbg('button: ' + (wanted && !held ? 'pause' : 'play'));
     if (wanted && held) { resumeHeld(); return; }   // the system paused it: Play brings it back, it does not switch off
     wanted = !wanted;
     if (wanted) {
-      heard = 0; pinged = 0; session = true;
-      track('play_start', { lang: lang });
+      sessionStart();
       start();
     } else {
       stop();
@@ -1996,8 +2064,19 @@
   }
   onLangChange.push(renderNow);
 
+  // TACET in the analytics: an alert that begins while someone listens, and whether they were still listening
+  // when it ended. Seen only while the page is open in front (the check pauses in the background).
+  var tacetWith = null;   // null: no alert seen; true/false: listening when it began
   function setNow(st) {
     var changed = JSON.stringify(st) !== JSON.stringify(nowState);
+    var was = nowState && nowState.kind;
+    if (st.kind === 'silent' && was !== 'silent' && was !== undefined) {
+      tacetWith = session;
+      if (session) { flushListen('tacet'); track('tacet_start', { lang: lang, bg: document.hidden }); }
+    } else if (was === 'silent' && st.kind !== 'silent' && tacetWith !== null) {
+      if (tacetWith) track('tacet_end', { stayed: session, lang: lang });
+      tacetWith = null;
+    }
     nowState = st; renderNow();
     if (changed && wanted) updateMediaSession();
   }
@@ -2143,6 +2222,10 @@
     b.setAttribute('aria-expanded', String(open));
     b.querySelector('span').textContent = t(open ? 'descLess' : 'descMore');
     if (panel) panel.hidden = !open;
+    if (open) {
+      var slotIt = lastItems.filter(function (x) { return itemKey(x) === key; })[0];
+      track('slot_details', { show: slotIt ? slotIt.artist : '', past: !!(slotIt && new Date() >= slotIt.end) });
+    }
   });
 
   function renderTimetable() {
@@ -2264,6 +2347,25 @@
       return;
     }
     if (sub.open && !sub.contains(e.target)) sub.open = false;
+  });
+  // ---- clicks on links in the analytics: subscribing to the calendar, and every link that leaves the site ----
+  sub.addEventListener('toggle', function () { if (sub.open) track('subscribe_open'); });
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('a[href]');
+    if (!a || document.documentElement.classList.contains('ed-on')) return;
+    var href = a.getAttribute('href') || '';
+    if (a.closest('.subscribe-menu')) { track('subscribe', { via: /^webcal:/i.test(href) ? 'ical' : 'google', lang: lang }); return; }
+    var u; try { u = new URL(a.href); } catch (x) { return; }
+    if (!/^https?:$/.test(u.protocol) || u.host === location.host) return;
+    var where = a.closest('.links') ? 'links' : a.closest('.next-card') ? 'next' : a.closest('.timetable') ? 'timetable' :
+      a.closest('.artists') ? 'artists' : a.closest('.credits') ? 'credits' : a.closest('footer') ? 'footer' :
+      a.closest('.topbar') ? 'top' : a.closest('.join') ? 'take-part' : 'text';
+    var to = u.host.replace(/^www\./, ''), data = { where: where, lang: lang };
+    if (/docs\.google\.com$/.test(to) && /\/forms\//.test(u.pathname)) to = 'form';
+    else if (/(^|\.)kcmd\.eu$/.test(to) && /\/portfolio\//.test(u.pathname)) { to = 'portfolio'; data.person = u.pathname.split('/').filter(Boolean).pop(); }
+    else if (to === 't.me') to = 'telegram';
+    data.to = to;
+    track('out', data);
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && sub.open) { sub.open = false; sub.querySelector('summary').focus(); } });
   sub.querySelectorAll('.subscribe-menu a').forEach(function (a) { a.addEventListener('click', function () { sub.open = false; }); });
@@ -2690,7 +2792,15 @@
     var UMAMI_API = 'https://api.umami.is/v1';                    // Umami Cloud API
     var WEBSITE_ID = 'b56cf6b6-550c-49b2-a369-431a49c24ed5';
     var KEY_STORE = 'kcmd-radio-umami-key', HIST_STORE = 'kcmd-radio-admin-history';
-    var EVENTS = { play_start: 'Натиснули «слухати»', listening: '5 хвилин прослуховування', play_stop: 'Зупинили', lang_switch: 'Змінили мову', next_details: '«Детальніше» з картки', subscribe_link: 'Посилання на підписку', bg_hint: 'Показано підказку про фон', bg_hint_ok: '«Зрозуміло» в підказці' };
+    var EVENTS = {
+      play_start: 'Натиснули «слухати»', play_ok: 'Звук пішов', play_fail: 'Стрім не запустився', stream_error: 'Помилка стріму',
+      engine_fallback: 'Перехід на простий плеєр', listen: 'Хвилина прослуховування', listening: '5 хвилин прослуховування (стара версія)',
+      play_stop: 'Зупинили', tacet_start: 'Тривога під час слухання', tacet_end: 'Відбій (хто слухав)',
+      lang_switch: 'Змінили мову', next_details: '«Детальніше» з картки', slot_details: '«Детальніше» в розкладі', past_toggle: 'Минулі етери',
+      subscribe_open: 'Відкрили «Підписатися»', subscribe: 'Підписалися на календар', subscribe_link: 'Посилання на підписку',
+      out: 'Перехід за посиланням', chat_toggle: 'Відкрили/закрили чат', chat_send: 'Повідомлення в чат',
+      bg_hint: 'Показано підказку про фон', bg_hint_ok: '«Зрозуміло» в підказці'
+    };
     function $(id) { return document.getElementById(id); }
     document.documentElement.classList.add('adm-on');
     $('adm').hidden = false;
