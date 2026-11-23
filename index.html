@@ -25,7 +25,36 @@
 <meta name="twitter:card" content="summary_large_image">
 <!-- Umami analytics: replace YOUR-WEBSITE-ID with the Website ID from Umami (Settings → Websites → Edit).
      Self-hosted Umami: change src to https://<your-umami-domain>/script.js -->
-<script defer src="https://cloud.umami.is/script.js" data-website-id="b56cf6b6-550c-49b2-a369-431a49c24ed5"></script>
+<!-- ?notrack: this browser is not counted in Umami from now on (the team's own phones and computers);
+     ?track: counted again. It runs before Umami's script, so the very visit that opens the link is not counted either.
+     The address is cleaned afterwards, so a shared link never carries it. -->
+<script>
+  (function () {
+    try {
+      var q = new URLSearchParams(location.search), said = '';
+      if (q.has('notrack')) { localStorage.setItem('umami.disabled', '1'); said = 'off'; }
+      if (q.has('track')) { localStorage.removeItem('umami.disabled'); said = 'on'; }
+      if (!said) return;
+      // the rest of the address stays exactly as it was (?debug stays ?debug)
+      var rest = location.search.slice(1).split('&').filter(function (p) { return p && !/^(no)?track(=|$)/.test(p); }).join('&');
+      history.replaceState(null, '', location.pathname + (rest ? '?' + rest : '') + location.hash);
+      // a short note at the top, so the person sees it worked
+      document.addEventListener('DOMContentLoaded', function () {
+        var n = document.createElement('div');
+        n.setAttribute('role', 'status');
+        n.textContent = said === 'off'
+          ? 'Цей браузер більше не враховується в статистиці · This browser is no longer counted'
+          : 'Цей браузер знову враховується в статистиці · This browser is counted again';
+        n.style.cssText = 'position:fixed;left:50%;top:1rem;transform:translateX(-50%);z-index:70;max-width:calc(100% - 2rem);' +
+          'padding:0.6rem 1rem;border-radius:999px;background:var(--accent);color:var(--accent-ink);font:500 0.875rem/1.4 "Libre Franklin",sans-serif;text-align:center;box-shadow:0 8px 24px rgba(11,14,20,0.18)';
+        document.body.appendChild(n);
+        setTimeout(function () { n.remove(); }, 5000);
+      });
+    } catch (e) {}
+  })();
+</script>
+<!-- data-domains: counted only on the real site, never from a test copy opened as a file -->
+<script defer src="https://cloud.umami.is/script.js" data-website-id="b56cf6b6-550c-49b2-a369-431a49c24ed5" data-domains="radio.kcmd.eu"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@300;400;500;600&family=Ubuntu+Sans+Mono:wght@400;500&display=swap">
@@ -1012,7 +1041,7 @@
   // A panel at the bottom copies or shares the log.
   // also switched on by the Debug button at the foot of the page: kept in this browser until switched off
   var DBG_ON_KEY = 'kcmd-radio-debug-on';
-  var PAGE_VERSION = '2026-11-22 release-8';
+  var PAGE_VERSION = '2026-11-23 release-9';
   var DEBUG = /[?&]debug(\b|=|&|$)/.test(location.search);
   try { if (localStorage.getItem(DBG_ON_KEY) === '1') DEBUG = true; } catch (e) {}
   (function () {
