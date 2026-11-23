@@ -432,6 +432,8 @@
   .slot.is-past { color: var(--muted); }
   .slot.is-past .slot-kyiv { font-weight: 400; }
   .tt-intro { margin: -0.25rem 0 1.5rem; }
+  .rotation .slot { grid-template-columns: 1fr; }
+  .rotation .slot-desc { grid-column: 1 / -1; }
   .tz-note { margin: 1rem 0 0; color: var(--muted); font-size: 0.9rem; }
   .slot-more {
     display: inline-flex;
@@ -787,6 +789,13 @@
     <p class="tz-note" id="tz-note"></p>
   </section>
 
+  <section aria-labelledby="rotation-title" id="rotation-section" hidden>
+    <h2 id="rotation-title" data-i18n="rotation">In rotation</h2>
+    <p class="tt-intro" data-i18n="rotIntro"></p>
+    <ol class="timetable rotation" id="rotation"></ol>
+    <p class="tz-note" data-i18n="rotAlso"></p>
+  </section>
+
   <!-- ===== TIMETABLE: edit here =====
        One line per broadcast:
        date      — YYYY-MM-DD
@@ -805,6 +814,24 @@
     ];
   </script>
   <!-- ===== end of timetable ===== -->
+
+  <!-- ===== IN ROTATION: works that play between broadcasts but had no broadcast of their own =====
+       Past broadcasts from the calendar join "In rotation" by themselves; list only the others here.
+       artist / artist_uk — name;  title / title_uk — the piece;  desc / desc_uk — text (blank line = new paragraph)
+  -->
+  <script>
+    window.KCMD_ROTATION = [
+      { artist: 'KOMA', artist_uk: 'КОМА',
+        title: 'Safer, Less Dangerous', title_uk: 'Більш безпечно, менш небезпечно',
+        desc: 'A track from the forthcoming EP by multi-instrumentalist and sound producer KOMA: a trip-hop/electronica piece about living and travelling across Ukraine, where your sense of personal safety shifts from one region to the next.\n\nKOMA is the solo project of Alona Kovalenko, a musician and sound producer from the Poltava region. She plays drums and makes music that blends ambient, experimental, jazz, trip-hop and electronica. She also composes and performs for theatre and performance projects.\n\nhttps://www.instagram.com/komasounds/',
+        desc_uk: 'Трек із майбутнього EP мультиінструменталістки й саундпродюсерки КОМА: твір у стилі trip-hop/electronica про життя й подорожі Україною, де від регіону до регіону змінюється відчуття особистої безпеки.\n\nКОМА — сольний проєкт Альони Коваленко, музикантки та саундпродюсерки з Полтавщини. Вона грає на барабанах і створює музику, поєднуючи ambient, experimental, jazz, trip-hop та electronica. Також Альона працює композиторкою й виконавицею в театральних і перформативних проєктах.\n\nhttps://www.instagram.com/komasounds/' },
+      { artist: 'Embrion Bormana', artist_uk: 'Embrion Bormana',
+        title: 'Sunstroke Blues', title_uk: 'Sunstroke Blues',
+        desc: 'Sunstroke Blues was created during the Bakota Soundscape project at the Bakota Hub music residency in Ukraine, August 2026.\n\nEmbrion Bormana is an improvised glitch jazz project that combines live baritone saxophone, live looping and heavy electronics on the edge of rhythmic noise and industrial techno, with touches of ambient and dark jazz. It is a musical construction kit where styles are only raw material to be reworked: sound spaces shift and flicker in seemingly familiar shades as they flow into one another, held together by improvised baritone saxophone lines. Embrion Bormana works not with music as such but with sign systems and what makes them recognisable. It is the project not of a musician or a composer but of an engineer who does not play music but plays at music, assembling the unexpected from fragments of culture.\n\nhttps://onepagelink.com/embrionbormana',
+        desc_uk: 'Трек «Sunstroke Blues» створено під час проєкту Bakota Soundscape у музичній резиденції Bakota Hub (Україна, серпень 2026).\n\nEmbrion Bormana — імпровізаційний glitch jazz проєкт, побудований на поєднанні живого баритон-саксофона, live looping’у та важкої електроніки на межі rhythmic noise та industrial techno з вкрапленнями ambient і dark jazz. Це музичний конструктор, де стилі — лише сировина для переробки. Звукові простори змінюються, мерехтять нібито знайомими відтінками, перетікаючи в наступні, а скріплюють це розмаїття імпровізаційні партії баритон-саксофона. Embrion Bormana працює не з музикою як такою, а зі знаковими системами й критеріями їх упізнаваності. Це проєкт не музиканта й композитора, а інженера, який не грає музику, а грає в музику, складаючи несподіване з уламків культури.\n\nhttps://onepagelink.com/embrionbormana' },
+    ];
+  </script>
+  <!-- ===== end of in rotation ===== -->
 
   <section aria-labelledby="about">
     <h2 id="about" data-i18n="about">About the project</h2>
@@ -867,7 +894,7 @@
       silence: 'Air raid alert in Kyiv.',
       silenceRest: ' Every channel is silent until it ends, then a 30-second signal by a Ukrainian artist breaks the silence and each channel returns to its programme.',
       linkTelegram: 'Chat', linkListen: 'Listen to all V2in channels', linkPropose: 'Take part', linkLinktree: 'Radio Tallinn 1965',
-      timetable: 'Timetable', next: 'Next', onNow: 'Now', subscribe: 'Subscribe', subGoogle: 'Google Calendar', subscribeIcal: 'Apple / Outlook (iCal)', descMore: 'Read more', descLess: 'Hide', pastShow: 'Show past broadcasts', pastHide: 'Hide past broadcasts',
+      timetable: 'Timetable', next: 'Next', onNow: 'Now', subscribe: 'Subscribe', subGoogle: 'Google Calendar', subscribeIcal: 'Apple / Outlook (iCal)', descMore: 'Read more', descLess: 'Hide', rotation: 'In rotation', rotIntro: 'Between broadcasts, these works play on the channel in random order.', rotAlso: 'Also in rotation: experimental recordings sent in by artists, and generative music.', pastShow: 'Show past broadcasts', pastHide: 'Hide past broadcasts',
       tzNote: 'Times are shown in your time zone.', tzNoteZone: 'Times are shown in your time zone ({place}).',
       ttIntro: 'Premieres and programmes made for the radio. Between them, the channel plays the KCMD archive, recordings sent in by artists and generative music. New broadcasts will be added over the coming days.',
       about: 'About the project',
@@ -914,7 +941,7 @@
       silence: 'Повітряна тривога в Києві.',
       silenceRest: ' Усі канали мовчать до відбою. Після відбою тишу на всіх каналах порушує 30-секундний сигнал, створений українськими артист_ками, а потім кожен канал повертається до своєї програми.',
       linkTelegram: 'Чат', linkListen: 'Слухати всі канали V2in', linkPropose: 'Долучитися', linkLinktree: 'Radio Tallinn 1965',
-      timetable: 'Розклад', next: 'Наступний етер', onNow: 'зараз', subscribe: 'Підписатися', subGoogle: 'Google Calendar', subscribeIcal: 'Apple / Outlook (iCal)', descMore: 'Детальніше', descLess: 'Згорнути', pastShow: 'Показати минулі етери', pastHide: 'Сховати минулі етери',
+      timetable: 'Розклад', next: 'Наступний етер', onNow: 'зараз', subscribe: 'Підписатися', subGoogle: 'Google Calendar', subscribeIcal: 'Apple / Outlook (iCal)', descMore: 'Детальніше', descLess: 'Згорнути', rotation: 'У ротації', rotIntro: 'Між етерами ці твори звучать на каналі у випадковому порядку.', rotAlso: 'Також у ротації — експериментальні записи, надіслані артист_ками, і генеративна музика.', pastShow: 'Показати минулі етери', pastHide: 'Сховати минулі етери',
       tzNote: 'Час показано у вашому часовому поясі.', tzNoteZone: 'Час показано у вашому часовому поясі ({place}).',
       ttIntro: 'Премʼєри й програми, створені для радіо. Між ними на каналі звучать архів KCMD, записи, надіслані артист_ками, і генеративна музика. Нові етери додаватимуться впродовж наступних днів.',
       about: 'Про проєкт',
@@ -2170,9 +2197,9 @@
     return d.toLocaleTimeString('en-GB', { timeZone: ZONE, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
   }
   function loadCalendar() {
-    var since = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();   // the past week too, shown greyed
+    var since = '2026-11-15T00:00:00Z';   // everything since launch: past broadcasts feed "In rotation"
     var url = 'https://www.googleapis.com/calendar/v3/calendars/' + encodeURIComponent(CAL_ID) + '/events' +
-      '?key=' + encodeURIComponent(CAL_KEY) + '&singleEvents=true&orderBy=startTime&maxResults=50' +
+      '?key=' + encodeURIComponent(CAL_KEY) + '&singleEvents=true&orderBy=startTime&maxResults=250' +
       '&timeMin=' + encodeURIComponent(since);
     fetch(url, { cache: 'no-store' }).then(function (r) {
       // on an error Google says why (a blocked referrer, a disabled API, a private calendar): pass that on
@@ -2238,6 +2265,7 @@
       };
     })).slice().sort(function (a, b) { return a.start - b.start; });
     var now = new Date();
+    items = items.filter(function (it) { return now - it.end < 7 * 24 * 3600000; });   // past broadcasts: last week only
     var nextFound = false;
     // past broadcasts fold under one small round button at the top of the list; it opens them, and closes them again
     var pastCount = items.filter(function (it) { return now >= it.end; }).length;
@@ -2278,7 +2306,46 @@
     var note = document.getElementById('tz-note');
     note.textContent = localPlace ? t('tzNoteZone', { place: localPlace }) : t('tzNote');
     note.hidden = !items.length;
+    renderRotation();
   }
+  // ---- in rotation: past broadcasts from the calendar (newest first), then KCMD_ROTATION ----
+  function renderRotation() {
+    var now = new Date();
+    var past = (calItems || []).filter(function (it) { return now >= it.end; })
+      .sort(function (a, b) { return b.start - a.start; });
+    var extra = (window.KCMD_ROTATION || []).map(function (r, i) {
+      return { id: 'extra-' + i, artist: r.artist, artist_uk: r.artist_uk, title: r.title, title_uk: r.title_uk, desc: r.desc, desc_uk: r.desc_uk };
+    });
+    var items = past.concat(extra);
+    document.getElementById('rotation-section').hidden = !items.length;
+    document.getElementById('rotation').innerHTML = items.map(function (it) {
+      var who = (lang === 'uk' && it.artist_uk) || it.artist;
+      var what = (lang === 'uk' && it.title_uk) || it.title;
+      var desc = (lang === 'uk' && it.desc_uk) || it.desc || '';
+      var key = 'rot-' + (it.id || it.artist);
+      var open = openDesc.has(key), descId = 'desc-' + key.replace(/[^a-z0-9_-]/gi, '');
+      var more = desc ? '<button type="button" class="slot-more" data-key="' + esc(key) + '" data-who="' + esc(it.artist) + '" aria-expanded="' + open + '" aria-controls="' + descId + '">' +
+          '<span>' + esc(t(open ? 'descLess' : 'descMore')) + '</span>' +
+          '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+        '</button>' : '';
+      var panel = desc ? '<div class="slot-desc" id="' + descId + '"' + (open ? '' : ' hidden') + '>' + paragraphs(desc) + '</div>' : '';
+      return '<li class="slot">' +
+        '<span class="slot-artist">' + personLink(who, 'person') +
+          (what ? '<span class="slot-title">' + linkNames(what) + '</span>' : '') + more + '</span>' +
+        panel + '</li>';
+    }).join('');
+  }
+  document.getElementById('rotation').addEventListener('click', function (e) {
+    var b = e.target.closest('.slot-more');
+    if (!b) return;
+    var key = b.getAttribute('data-key');
+    if (openDesc.has(key)) openDesc.delete(key); else openDesc.add(key);
+    var open = openDesc.has(key), panel = document.getElementById(b.getAttribute('aria-controls'));
+    b.setAttribute('aria-expanded', String(open));
+    b.querySelector('span').textContent = t(open ? 'descLess' : 'descMore');
+    if (panel) panel.hidden = !open;
+    if (open) track('rotation_details', { show: b.getAttribute('data-who') || '' });
+  });
   // ---- the "Next" card ----
   var lastItems = [];
   var nextCard = document.getElementById('next-card');
@@ -2796,7 +2863,7 @@
       play_start: 'Натиснули «слухати»', play_ok: 'Звук пішов', play_fail: 'Стрім не запустився', stream_error: 'Помилка стріму',
       engine_fallback: 'Перехід на простий плеєр', listen: 'Хвилина прослуховування', listening: '5 хвилин прослуховування (стара версія)',
       play_stop: 'Зупинили', tacet_start: 'Тривога під час слухання', tacet_end: 'Відбій (хто слухав)',
-      lang_switch: 'Змінили мову', next_details: '«Детальніше» з картки', slot_details: '«Детальніше» в розкладі', past_toggle: 'Минулі етери',
+      lang_switch: 'Змінили мову', next_details: '«Детальніше» з картки', slot_details: '«Детальніше» в розкладі', past_toggle: 'Минулі етери', rotation_details: '«Детальніше» в ротації',
       subscribe_open: 'Відкрили «Підписатися»', subscribe: 'Підписалися на календар', subscribe_link: 'Посилання на підписку',
       out: 'Перехід за посиланням', chat_toggle: 'Відкрили/закрили чат', chat_send: 'Повідомлення в чат',
       bg_hint: 'Показано підказку про фон', bg_hint_ok: '«Зрозуміло» в підказці'
