@@ -185,10 +185,24 @@
     margin: 0.1rem 0 0;
     color: var(--muted);
     overflow: hidden;
-    text-overflow: ellipsis;
     white-space: nowrap;
   }
   .now-line.is-silent { color: var(--text); white-space: normal; text-wrap: pretty; }
+  /* a title too long for its place runs as a ticker: a short pause at the start, then it slides left and comes round again */
+  .now-track { display: inline-block; white-space: nowrap; }
+  .now-track > span { display: inline-block; }
+  .now-dup { display: none !important; }
+  .now-line.is-scrolling {
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 1.5rem), transparent);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 1.5rem), transparent);
+  }
+  .now-line.is-scrolling .now-track > span { padding-right: 2.5rem; }
+  .now-line.is-scrolling .now-dup { display: inline-block !important; }
+  .now-line.is-scrolling .now-track { animation: now-marquee var(--now-dur, 12s) linear infinite; }
+  .now-line.is-scrolling:hover .now-track { animation-play-state: paused; }
+  @keyframes now-marquee { 0%, 15% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+  /* less motion asked for: the whole title on two or more lines instead */
+  @media (prefers-reduced-motion: reduce) { .now-line { white-space: normal; } .now-track { white-space: normal; display: inline; } }
   .status {
     margin: 0.1rem 0 0;
     font-family: "Ubuntu Sans Mono", ui-monospace, monospace;
@@ -1070,7 +1084,7 @@
   // A panel at the bottom copies or shares the log.
   // also switched on by the Debug button at the foot of the page: kept in this browser until switched off
   var DBG_ON_KEY = 'kcmd-radio-debug-on';
-  var PAGE_VERSION = '2026-11-23 release-10';
+  var PAGE_VERSION = '2026-11-24 release-11';
   var DEBUG = /[?&]debug(\b|=|&|$)/.test(location.search);
   try { if (localStorage.getItem(DBG_ON_KEY) === '1') DEBUG = true; } catch (e) {}
   (function () {
@@ -2085,11 +2099,41 @@
     } else if (nowState.kind === 'offline') text = t('offline');
     else if (nowState.kind === 'unreachable') { text = t('unreachable'); silent = true; }
     else if (nowState.kind === 'line') text = nowState.text;
-    nowEl.textContent = text;
+    // the same line every 5 s: left as it is, so a running ticker doesn't jump back to its start
+    if (text === nowText && silent === nowSilent) return;
+    nowText = text; nowSilent = silent;
+    nowEl.classList.remove('is-scrolling');
+    nowEl.title = text;
     nowEl.hidden = !text;
     nowEl.classList.toggle('is-silent', silent);
+    if (silent || !text) { nowEl.textContent = text; return; }
+    // the title twice in a row: when it is too long, the pair slides left by half and starts over without a seam
+    var track = document.createElement('span'), one = document.createElement('span'), two = document.createElement('span');
+    track.className = 'now-track';
+    one.textContent = text;
+    two.textContent = text; two.className = 'now-dup'; two.setAttribute('aria-hidden', 'true');
+    track.appendChild(one); track.appendChild(two);
+    nowEl.textContent = '';
+    nowEl.appendChild(track);
+    fitNow();
   }
-  onLangChange.push(renderNow);
+  var nowText = null, nowSilent = false;
+  // a ticker only when the title is wider than its place (and the visitor has not asked for less motion)
+  var NOW_SPEED = 35;   // pixels per second
+  function fitNow() {
+    var track = nowEl.querySelector('.now-track');
+    nowEl.classList.remove('is-scrolling');
+    if (!track || nowEl.hidden) return;
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var w = track.firstChild.offsetWidth;
+    if (w <= nowEl.clientWidth + 1) return;
+    nowEl.style.setProperty('--now-dur', Math.max(8, (w + 40) / NOW_SPEED).toFixed(1) + 's');
+    nowEl.classList.add('is-scrolling');
+  }
+  var fitTimer = null;
+  window.addEventListener('resize', function () { clearTimeout(fitTimer); fitTimer = setTimeout(fitNow, 150); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitNow);   // the real font is wider or narrower
+  onLangChange.push(function () { nowText = null; renderNow(); });
 
   // TACET in the analytics: an alert that begins while someone listens, and whether they were still listening
   // when it ended. Seen only while the page is open in front (the check pauses in the background).
