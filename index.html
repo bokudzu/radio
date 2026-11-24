@@ -1084,7 +1084,7 @@
   // A panel at the bottom copies or shares the log.
   // also switched on by the Debug button at the foot of the page: kept in this browser until switched off
   var DBG_ON_KEY = 'kcmd-radio-debug-on';
-  var PAGE_VERSION = '2026-11-24 release-11';
+  var PAGE_VERSION = '2026-11-24 release-14';
   var DEBUG = /[?&]debug(\b|=|&|$)/.test(location.search);
   try { if (localStorage.getItem(DBG_ON_KEY) === '1') DEBUG = true; } catch (e) {}
   (function () {
@@ -1568,6 +1568,7 @@
     a.removeAttribute('src');
     a.load();
     if (cur.live) liveRelease(cur.live);
+    stopTap(cur);
     if (cur.src) { try { cur.src.disconnect(); } catch (e) {} }
     if (cur.sink) { try { cur.sink.disconnect(); } catch (e) {} }
     cur = null;
@@ -1820,6 +1821,22 @@
       navigator.connection.addEventListener('change', function () { dbg('net ' + (navigator.connection.effectiveType || '?')); });
     }
     setInterval(function () { dbg('alive', dbgState()); }, 10000);
+    // the picture: is the strip open, how big, what level the analyser hears, how much of the strip is drawn
+    setInterval(function () {
+      if (!wanted) return;
+      var cv = strip.canvas, inked = '?';
+      try {
+        if (cv.width && cv.height) {
+          var px = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data, n = 0;
+          for (var i = 3; i < px.length; i += 4) if (px[i]) n++;
+          inked = Math.round(100 * n / (px.length / 4)) + '%';
+        }
+      } catch (e) { inked = 'err ' + e.name; }
+      dbg('wave', 'open=' + player.classList.contains('wave-open') + ' analyser=' + !!(cur && cur.analyser) +
+        ' bypass=' + !!(cur && cur.bypass) + (cur && cur.tap ? ' tap=' + cur.tap.ok + ' pieces' : '') + ' vol=' + (cur ? cur.audio.volume.toFixed(2) + '/' + (cur.gain ? cur.gain.gain.value.toFixed(2) : '-') : '-') +
+        ' canvas=' + cv.width + 'x' + cv.height + ' level=' + waveLevel.toFixed(4) + ' inked=' + inked +
+        (ctx ? ' ctx=' + ctx.state + ' sr=' + ctx.sampleRate : ' no ctx') + (waveErr ? ' lastErr=' + waveErr : ''));
+    }, 10000);
   }
 
   // ---- listening analytics (Umami) ----
@@ -1913,8 +1930,101 @@
   });
   vol.addEventListener('input', function () {
     if (!cur) return;
-    if (cur.gain) cur.gain.gain.value = Number(vol.value); else cur.audio.volume = Number(vol.value);
+    if (cur.gain && !cur.bypass) cur.gain.gain.value = Number(vol.value); else cur.audio.volume = Number(vol.value);
   });
+  // Safari (seen on macOS 18.6) plays this live stream straight to the speakers, past Web Audio: the analyser hears
+  // only zeros and the gain does nothing, so the picture stayed empty and the volume slider did nothing.
+  // When the sound has run for 4 s and not one sample reached the analyser, the page notices it: the slider then sets
+  // the player's own volume and the empty strip closes. If a signal does come later, Web Audio takes over again.
+  // During an air raid alert the stream itself is silence, so nothing is judged then.
+  setInterval(function () {
+    var c = cur;
+    if (!c || !c.gain || c.bypass || c.graphOk || mode !== 'webaudio') return;
+    if (c.audio.paused || c.audio.currentTime < 4 || (nowState && nowState.kind === 'silent')) return;
+    c.bypass = true;
+    c.gain.gain.value = 1;
+    c.audio.volume = Number(vol.value);
+    dbg('webaudio: no signal reaches the analyser; the browser plays past Web Audio. Volume now on the player, picture from a copy of the stream');
+    track('webaudio_bypass');
+    startTap(c);
+  }, 1000);
+  // ---- the picture's own copy of the stream, for WebKit (as on v2in.stream, web/index.html startTap) ----
+  // WebKit hands a live stream's Web Audio tap exact zeros (WebKit bug 180696). Then the page downloads the stream a
+  // second time, cuts it at MP3 frames, decodes the pieces and shows those samples; the sound still comes from the
+  // player. It costs a second connection for such listeners only, and the picture is not exactly in step with the sound.
+  function startTap(c) {
+    if (c.tap || !ctx) return;
+    var tap = { ac: window.AbortController ? new AbortController() : null, queue: [], at: 0, rate: 44100,
+      win: new Float32Array(c.buf.length), ok: 0 };
+    c.tap = tap;
+    c.realAnalyser = c.analyser;
+    c.analyser = { getFloatTimeDomainData: function (buf) { buf.set(tap.win.subarray(tap.win.length - buf.length)); } };
+    var pending = new Uint8Array(0), tail = new Uint8Array(0), tailN = 0, busy = Promise.resolve();
+    function cut() {
+      var i = 0, at = [];
+      while (i + 7 <= pending.length && !frameAt(pending, i)) i++;
+      for (var f; i + 7 <= pending.length && (f = frameAt(pending, i)) && i + f.len <= pending.length; i += f.len) at.push(i);
+      var chunk = pending.slice(at.length ? at[0] : i, i);
+      pending = pending.slice(i);
+      if (at.length < 4) return;
+      // a piece decoded alone begins with ~40 ms of silence: the last 3 frames of the piece before go in front of it,
+      // and what they decode to is dropped
+      var both = new Uint8Array(tail.length + chunk.length); both.set(tail); both.set(chunk, tail.length);
+      var lead = tailN, frames = tailN + at.length;
+      tail = chunk.slice(at[at.length - 3] - at[0]); tailN = 3;
+      busy = busy.then(function () {
+        return ctx.decodeAudioData(both.buffer).then(function (ab) {
+          if (c.tap !== tap) return;
+          var smp = ab.getChannelData(0);
+          tap.queue.push(smp.subarray(Math.round(smp.length * lead / frames))); tap.rate = ab.sampleRate;
+          while (tap.queue.length > 12) tap.queue.shift();
+          if (!tap.ok++) dbg('tap: the picture now comes from the copy of the stream');
+        }).catch(function () {});   // a piece that does not decode is skipped
+      });
+    }
+    fetch(STREAM + '?tap=' + Date.now(), { signal: tap.ac ? tap.ac.signal : undefined, cache: 'no-store' }).then(function (r) {
+      if (!r.ok || !r.body) throw new Error('HTTP ' + r.status);
+      var rd = r.body.getReader();
+      function next() {
+        return rd.read().then(function (res) {
+          if (res.done || c.tap !== tap) return;
+          var n = new Uint8Array(pending.length + res.value.length); n.set(pending); n.set(res.value, pending.length); pending = n;
+          if (pending.length >= 8192) cut();
+          return next();
+        });
+      }
+      return next();
+    }).catch(function (e) { if (c.tap === tap) dbg('tap: the copy of the stream broke', e && e.message); });
+  }
+  function stopTap(c) {
+    if (!c.tap) return;
+    if (c.tap.ac) { try { c.tap.ac.abort(); } catch (e) {} }
+    c.tap = null;
+    if (c.realAnalyser) { c.analyser = c.realAnalyser; c.realAnalyser = null; }
+  }
+  // each frame the window moves on by as many samples as the frame lasted, taken off the decoded queue
+  function tapFrame(c, dt) {
+    var tp = c.tap, n = Math.min(tp.win.length, Math.round(tp.rate * (dt || 1 / 60)));
+    tp.win.copyWithin(0, n);
+    var k = tp.win.length - n;
+    while (k < tp.win.length && tp.queue.length) {
+      var q = tp.queue[0], m = Math.min(tp.win.length - k, q.length - tp.at);
+      tp.win.set(q.subarray(tp.at, tp.at + m), k); k += m; tp.at += m;
+      if (tp.at >= q.length) { tp.queue.shift(); tp.at = 0; }
+    }
+    tp.win.fill(0, k);
+  }
+  function graphSignal(c) {   // a real sample reached the analyser: Web Audio carries the sound
+    if (c.graphOk) return;
+    c.graphOk = true;
+    if (c.bypass) {
+      c.bypass = false;
+      stopTap(c);
+      c.audio.volume = 1;
+      c.gain.gain.value = Number(vol.value);
+      dbg('webaudio: signal reaches the analyser again; volume back on Web Audio');
+    }
+  }
 
   // phones can suspend a stream in the background; pick it up again on return
   document.addEventListener('visibilitychange', function () {
@@ -2039,7 +2149,15 @@
         for (var x = 0; x < step; x++) { var oo = (y2 * step + x) * 4; p[oo] = r0; p[oo + 1] = g0; p[oo + 2] = b0; p[oo + 3] = a; }
       }
     } else { w.peak = 0; for (var i3 = 3; i3 < p.length; i3 += 4) p[i3] = 0; }
-    if (!still) { g.globalCompositeOperation = 'copy'; g.drawImage(cv, -step, 0); g.globalCompositeOperation = 'source-over'; }
+    // the picture moves one column left through a second canvas: Safari may draw nothing when a canvas is
+    // drawn onto itself in 'copy' mode, which left the strip empty there
+    if (!still) {
+      if (!w.tmp) w.tmp = document.createElement('canvas');
+      if (w.tmp.width !== cw || w.tmp.height !== h) { w.tmp.width = cw; w.tmp.height = h; }
+      var tg = w.tmp.getContext('2d');
+      tg.clearRect(0, 0, cw, h); tg.drawImage(cv, 0, 0);
+      g.clearRect(0, 0, cw, h); g.drawImage(w.tmp, -step, 0);
+    }
     g.putImageData(w.col, cw - step, 0);
     w.drawn = true;
     return true;
@@ -2062,10 +2180,24 @@
   var stillMq = window.matchMedia('(prefers-reduced-motion: reduce)');
   var lastFrame = 0, zeroTime = 0, lastSound = -1e9;
   function cssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+  // one failed frame must not stop the picture for good: the next frame is asked for first, a failure is logged
+  var waveErr = '', waveLevel = 0;
   function draw(now) {
+    requestAnimationFrame(draw);
+    try { drawFrame(now); } catch (e) {
+      var msg = e && (e.name + ': ' + e.message);
+      if (msg !== waveErr) { waveErr = msg; dbg('wave: drawing failed', msg); }
+    }
+  }
+  function drawFrame(now) {
     var dt = lastFrame ? Math.min(0.1, (now - lastFrame) / 1000) : 0;
     lastFrame = now;
     var on = !!(cur && cur.analyser && player.classList.contains('is-playing'));
+    if (on && cur.tap) tapFrame(cur, dt);
+    if (on && cur.bypass && cur.realAnalyser) {   // still listen for a real signal
+      cur.realAnalyser.getFloatTimeDomainData(cur.buf);
+      for (var bi = 0; bi < cur.buf.length; bi++) if (cur.buf[bi] !== 0) { graphSignal(cur); break; }
+    }
     // the strip is open whenever the stream plays; while the signal is silence (during an alert)
     // it shows a thin flat line, the picture of silence, and the spectrogram takes over when sound returns
     var silent = false;
@@ -2073,6 +2205,8 @@
       cur.analyser.getFloatTimeDomainData(cur.buf);
       var level = 0;
       for (var li = 0; li < cur.buf.length; li++) { var lv = Math.abs(cur.buf[li]); if (lv > level) level = lv; }
+      waveLevel = level;
+      if (level > 0 && !cur.bypass) graphSignal(cur);
       if (level > 0.001) lastSound = now;
       silent = now - lastSound >= 1500;   // a short gap between pieces doesn't count as silence
     }
@@ -2082,7 +2216,6 @@
       on: on, analyser: cur && cur.analyser, buf: cur && cur.buf, dt: dt,
       still: stillMq.matches, color: cssVar('--accent'), sr: ctx ? ctx.sampleRate : 48000
     });
-    requestAnimationFrame(draw);
   }
   requestAnimationFrame(draw);
 
@@ -2910,7 +3043,7 @@
       lang_switch: 'Змінили мову', next_details: '«Детальніше» з картки', slot_details: '«Детальніше» в розкладі', past_toggle: 'Минулі етери', rotation_details: '«Детальніше» в ротації',
       subscribe_open: 'Відкрили «Підписатися»', subscribe: 'Підписалися на календар', subscribe_link: 'Посилання на підписку',
       out: 'Перехід за посиланням', chat_toggle: 'Відкрили/закрили чат', chat_send: 'Повідомлення в чат',
-      bg_hint: 'Показано підказку про фон', bg_hint_ok: '«Зрозуміло» в підказці'
+      bg_hint: 'Показано підказку про фон', bg_hint_ok: '«Зрозуміло» в підказці', webaudio_bypass: 'Браузер грає повз Web Audio (Safari)'
     };
     function $(id) { return document.getElementById(id); }
     document.documentElement.classList.add('adm-on');
