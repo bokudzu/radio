@@ -1084,7 +1084,7 @@
   // A panel at the bottom copies or shares the log.
   // also switched on by the Debug button at the foot of the page: kept in this browser until switched off
   var DBG_ON_KEY = 'kcmd-radio-debug-on';
-  var PAGE_VERSION = '2026-11-24 release-14';
+  var PAGE_VERSION = '2026-11-24 release-15';
   var DEBUG = /[?&]debug(\b|=|&|$)/.test(location.search);
   try { if (localStorage.getItem(DBG_ON_KEY) === '1') DEBUG = true; } catch (e) {}
   (function () {
@@ -1696,6 +1696,7 @@
       setTimeout(function () { if (cur === c) reconnect(true); }, 2000);
     };
     if (engine === 'mse') liveSetup(c); else a.src = STREAM + '?t=' + Date.now();
+    if (mode === 'webaudio' && IS_WEBKIT) goBypass(c, 'WebKit');
     setStatus('st_connecting');
     var p = a.play();
     if (p && p.catch) p.catch(function (e) {
@@ -1940,14 +1941,22 @@
   setInterval(function () {
     var c = cur;
     if (!c || !c.gain || c.bypass || c.graphOk || mode !== 'webaudio') return;
-    if (c.audio.paused || c.audio.currentTime < 4 || (nowState && nowState.kind === 'silent')) return;
+    if (c.audio.paused || c.audio.currentTime < 1.5 || (nowState && nowState.kind === 'silent')) return;
+    goBypass(c, 'no signal reaches the analyser');
+  }, 500);
+  // Safari and every iPhone browser (all WebKit) are known to do this, so there the copy starts with the press of Play,
+  // and the picture comes with the sound instead of seconds later. If a real signal does come, all goes back.
+  var IS_WEBKIT = (/AppleWebKit/.test(navigator.userAgent) && !/(Chrome|Chromium|Edg|OPR)\//.test(navigator.userAgent)) ||
+    /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  function goBypass(c, why) {
+    if (!c || !c.gain || c.bypass) return;
     c.bypass = true;
     c.gain.gain.value = 1;
     c.audio.volume = Number(vol.value);
-    dbg('webaudio: no signal reaches the analyser; the browser plays past Web Audio. Volume now on the player, picture from a copy of the stream');
-    track('webaudio_bypass');
+    dbg('webaudio: ' + why + '; the browser plays past Web Audio. Volume on the player, picture from a copy of the stream');
+    track('webaudio_bypass', { why: why });
     startTap(c);
-  }, 1000);
+  }
   // ---- the picture's own copy of the stream, for WebKit (as on v2in.stream, web/index.html startTap) ----
   // WebKit hands a live stream's Web Audio tap exact zeros (WebKit bug 180696). Then the page downloads the stream a
   // second time, cuts it at MP3 frames, decodes the pieces and shows those samples; the sound still comes from the
