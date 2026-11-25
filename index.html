@@ -2,6 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<!-- radio.kcmd.eu/?test opens the test page (land.html, stream kcmd-test); the other parameters go with it -->
+<script>
+  if (/(^|&)test(=|&|$)/.test(location.search.slice(1))) location.replace('land.html' + location.search + location.hash);
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <!-- favicon: the files live next to this page -->
 <link rel="icon" href="favicon.ico" sizes="32x32">
