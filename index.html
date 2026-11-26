@@ -3177,6 +3177,34 @@
       chunksInOrder.forEach(function (c) { out.set(src.subarray(c.src, c.src + c.len), o); o += c.len; });
       return out;
     }
+    // The strip must not start empty: it is filled with the sound that comes just before the clip (a stretch as long as the
+    // strip takes to cross), computed at once from the decoded sound with the same maths as the live columns below.
+    function prefill(buffer, pre, sg, st, SW, SH, pxs, col) {
+      var ch = buffer.getChannelData(0), sr = buffer.sampleRate, img = sg.createImageData(SW, SH), p = img.data;
+      var hi = Math.min(HI_HZ, sr / 2), re = st.re, im = st.im, dbs = new Float32Array(SH), bins = new Int32Array(SH), dt = 1 / pxs, x, y, i;
+      for (y = 0; y < SH; y++) {
+        var f = LO_HZ * Math.pow(hi / LO_HZ, 1 - y / SH);
+        bins[y] = Math.min(FFT_N / 2 - 1, Math.max(1, Math.round(f / sr * FFT_N)));
+      }
+      for (x = 0; x < SW; x++) {
+        var end = Math.round((pre - (SW - 1 - x) / pxs) * sr);   // the window ends where this column's moment is
+        if (end <= 0) continue;                                  // before the first sound there is nothing to show
+        for (i = 0; i < FFT_N; i++) { var j = end - FFT_N + i; re[i] = (j >= 0 && j < ch.length ? ch[j] : 0) * hann[i]; im[i] = 0; }
+        fft(re, im);
+        var top = -Infinity;
+        for (y = 0; y < SH; y++) {
+          dbs[y] = 20 * Math.log10(Math.hypot(re[bins[y]], im[bins[y]]) / (FFT_N / 4) + 1e-9);
+          if (dbs[y] > top) top = dbs[y];
+        }
+        st.top = Math.max(top, Math.min(CEIL_DB, (st.top == null ? top : st.top) - (RANGE / FALL) * dt));
+        for (y = 0; y < SH; y++) {
+          var a = Math.round(255 * Math.pow(Math.max(0, Math.min(1, (dbs[y] - (st.top - RANGE)) / RANGE)), 1.5)), o = (y * SW + x) * 4;
+          p[o] = col[0]; p[o + 1] = col[1]; p[o + 2] = col[2]; p[o + 3] = a;
+        }
+      }
+      sg.putImageData(img, 0, 0);
+    }
+    clipApi.prefill = prefill;
     function render(ac, buffer, title, onTime) {
       var L = CLIP_LAYOUT;
       var SW = Math.max(16, Math.round(L.strip.w)), SH = Math.max(16, Math.round(L.strip.h)), col = rgb(L.colors.accent);
@@ -3190,6 +3218,9 @@
       var dest = ac.createMediaStreamDestination();
       src.connect(an); an.connect(dest);   // not to ac.destination: nothing is played aloud
       var buf = new Float32Array(an.fftSize), st = { re: new Float32Array(FFT_N), im: new Float32Array(FFT_N), top: null };
+      // the clip starts `pre` seconds into the downloaded sound; what lies before it fills the strip from the first frame
+      var pre = Math.max(0, Math.min(SW / L.speed, buffer.duration - SECS));
+      prefill(buffer, pre, sg, st, SW, SH, L.speed, col);
       // Instagram wants MP4 (H.264 + AAC): Safari and Chrome 126+ can record it; others give WebM
       var mime = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm']
         .filter(function (m) { return MediaRecorder.isTypeSupported(m); })[0] || '';
@@ -3197,7 +3228,7 @@
       var rec = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 6000000, audioBitsPerSecond: 128000 } : {});
       var chunks = [];
       rec.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
-      dbg('clip: audio in hand', buffer.duration.toFixed(1) + ' s');
+      dbg('clip: audio in hand', buffer.duration.toFixed(1) + ' s, lead-in ' + pre.toFixed(1) + ' s');
       return new Promise(function (resolve, reject) {
         var finished = false, aborted = false, timer = null, T0 = 0, last = 0, frames = 0;
         // the screen went off or the page was left: the picture would freeze while the sound goes on, so the try is dropped
@@ -3229,7 +3260,7 @@
         }
         T0 = last = performance.now();
         rec.start(1000);
-        src.start(0, 0, SECS);
+        src.start(0, pre, SECS);
         // exactly SECS seconds of the clock, whatever the animation does
         timer = setTimeout(function () { finished = true; try { rec.requestData(); } catch (e) {} rec.stop(); }, SECS * 1000);
         requestAnimationFrame(frame);
@@ -3265,7 +3296,9 @@
       var fonts = loadFonts(), lock = null;
       // the phone must not dim the screen: a page that goes to the background stops drawing, and the clip comes out short
       if (navigator.wakeLock && navigator.wakeLock.request) navigator.wakeLock.request('screen').then(function (l) { lock = l; }, function () {});
-      grab((SECS + 3) * 1000, function (s) { say('clipGrab', { s: s }); })
+      // the sound that comes before the clip fills the strip at the start: as long as the strip takes to cross
+      var lead = Math.ceil(CLIP_LAYOUT.strip.w / CLIP_LAYOUT.speed * 10) / 10;
+      grab((SECS + lead + 2) * 1000, function (s) { say('clipGrab', { s: s }); })
         .then(function (bytes) { return Promise.all([decode(ac, bytes.buffer), fonts]); })
         .then(function (res) { return render(ac, res[0], title, function (s) { say('clipRec', { s: s }); }); })
         .then(function (blob) {
