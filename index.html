@@ -3018,6 +3018,165 @@
       sg.clearRect(0, 0, SW, SH); sg.drawImage(tg.canvas, -n, 0);
       sg.putImageData(img, SW - n, 0);
     }
+    // Chrome records MP4 in pieces ("fragmented") and the header carries no total length: Android's gallery and some apps then
+    // show only the first piece (about 3 s of 15). This rewrites the file as an ordinary MP4: the same encoded video and
+    // sound, but with the sample tables and the real duration in the header.
+    function unfragment(src) {
+      var dv = new DataView(src.buffer, src.byteOffset, src.byteLength);
+      function u32(o) { return dv.getUint32(o); }
+      function u64(o) { return dv.getUint32(o) * 4294967296 + dv.getUint32(o + 4); }
+      function box(o) {
+        var sz = u32(o), h = 8, t = String.fromCharCode(src[o + 4], src[o + 5], src[o + 6], src[o + 7]);
+        if (sz === 1) { sz = u64(o + 8); h = 16; } else if (sz === 0) sz = src.length - o;
+        return { t: t, o: o, size: sz, h: h };
+      }
+      function kids(b) {
+        var out = [], o = b.o + b.h, end = b.o + b.size;
+        while (o + 8 <= end) { var k = box(o); if (k.size < 8) break; out.push(k); o += k.size; }
+        return out;
+      }
+      function find(b, t) { return kids(b).filter(function (k) { return k.t === t; })[0]; }
+      function cat(arrs) {
+        var n = 0, o = 0, out;
+        arrs.forEach(function (a) { n += a.length; });
+        out = new Uint8Array(n);
+        arrs.forEach(function (a) { out.set(a, o); o += a.length; });
+        return out;
+      }
+      function w32(v) { return new Uint8Array([(v >>> 24) & 255, (v >>> 16) & 255, (v >>> 8) & 255, v & 255]); }
+      function tag(s) { return new Uint8Array([s.charCodeAt(0), s.charCodeAt(1), s.charCodeAt(2), s.charCodeAt(3)]); }
+      function mk(type, parts) { var body = cat(parts); return cat([w32(body.length + 8), tag(type), body]); }
+      function raw(b) { return src.slice(b.o, b.o + b.size); }
+
+      var top = kids({ o: 0, h: 0, size: src.length }), ftyp = top.filter(function (b) { return b.t === 'ftyp'; })[0];
+      var moov = top.filter(function (b) { return b.t === 'moov'; })[0];
+      if (!moov || !ftyp) throw new Error('not an MP4 with a moov');
+      var mvex = find(moov, 'mvex');
+      if (!mvex) throw new Error('not fragmented');
+      var trex = {};
+      kids(mvex).filter(function (k) { return k.t === 'trex'; }).forEach(function (k) {
+        trex[u32(k.o + 12)] = { dur: u32(k.o + 20), size: u32(k.o + 24), flags: u32(k.o + 28) };
+      });
+      // the tracks of the header
+      var tracks = {}, order = [];
+      kids(moov).filter(function (k) { return k.t === 'trak'; }).forEach(function (trak) {
+        var tkhd = find(trak, 'tkhd'), mdia = find(trak, 'mdia'), mdhd = find(mdia, 'mdhd'), hdlr = find(mdia, 'hdlr');
+        var stsd = find(find(find(mdia, 'minf'), 'stbl'), 'stsd');
+        var id = u32(tkhd.o + (src[tkhd.o + 8] === 1 ? 28 : 20));
+        tracks[id] = { id: id, box: trak, ts: u32(mdhd.o + (src[mdhd.o + 8] === 1 ? 28 : 20)),
+          handler: String.fromCharCode(src[hdlr.o + 16], src[hdlr.o + 17], src[hdlr.o + 18], src[hdlr.o + 19]),
+          stsd: raw(stsd), sizes: [], durs: [], syncs: [], ctos: [], chunks: [], total: 0, anyCto: false, negCto: false };
+        order.push(id);
+      });
+      // the samples of every piece
+      var chunksInOrder = [];
+      top.filter(function (b) { return b.t === 'moof'; }).forEach(function (moof) {
+        kids(moof).filter(function (k) { return k.t === 'traf'; }).forEach(function (traf) {
+          var tfhd = find(traf, 'tfhd'), fl = u32(tfhd.o + 8) & 0xFFFFFF, id = u32(tfhd.o + 12), p = tfhd.o + 16;
+          var tr = tracks[id], d = trex[id] || { dur: 0, size: 0, flags: 0 }, base = moof.o;
+          if (!tr) return;
+          var dDur = d.dur, dSize = d.size, dFlags = d.flags;
+          if (fl & 1) { base = u64(p); p += 8; }
+          if (fl & 2) p += 4;
+          if (fl & 8) { dDur = u32(p); p += 4; }
+          if (fl & 0x10) { dSize = u32(p); p += 4; }
+          if (fl & 0x20) { dFlags = u32(p); p += 4; }
+          kids(traf).filter(function (k) { return k.t === 'trun'; }).forEach(function (trun) {
+            var ver = src[trun.o + 8], tf = u32(trun.o + 8) & 0xFFFFFF, n = u32(trun.o + 12), q = trun.o + 16, off = 0, first = null;
+            if (tf & 1) { off = dv.getInt32(q); q += 4; }
+            if (tf & 4) { first = u32(q); q += 4; }
+            var start = base + off, pos = start;
+            for (var i = 0; i < n; i++) {
+              var dur = dDur, size = dSize, flags = (i === 0 && first !== null) ? first : dFlags, cto = 0;
+              if (tf & 0x100) { dur = u32(q); q += 4; }
+              if (tf & 0x200) { size = u32(q); q += 4; }
+              if (tf & 0x400) { flags = u32(q); q += 4; }
+              if (tf & 0x800) { cto = ver ? dv.getInt32(q) : u32(q); q += 4; }
+              tr.sizes.push(size); tr.durs.push(dur); tr.ctos.push(cto); tr.total += dur;
+              if (cto) tr.anyCto = true;
+              if (cto < 0) tr.negCto = true;
+              if (!(flags & 0x10000)) tr.syncs.push(tr.sizes.length);   // 1-based numbers of the key frames
+              pos += size;
+            }
+            var ch = { tr: tr, n: n, src: start, len: pos - start, out: 0 };
+            tr.chunks.push(ch); chunksInOrder.push(ch);
+          });
+        });
+      });
+      if (!chunksInOrder.length) throw new Error('no samples');
+
+      function table(type, ver, rows) { return mk(type, [w32(ver << 24)].concat(rows)); }
+      function stblOf(tr) {
+        var parts = [tr.stsd], i, rows;
+        // stts: runs of equal sample durations
+        rows = [null]; var runs = [];
+        tr.durs.forEach(function (d) { var r = runs[runs.length - 1]; if (r && r[1] === d) r[0]++; else runs.push([1, d]); });
+        rows[0] = w32(runs.length); runs.forEach(function (r) { rows.push(w32(r[0]), w32(r[1])); });
+        parts.push(table('stts', 0, rows));
+        if (tr.handler === 'vide' && tr.syncs.length < tr.sizes.length) {
+          rows = [w32(tr.syncs.length)]; tr.syncs.forEach(function (s) { rows.push(w32(s)); });
+          parts.push(table('stss', 0, rows));
+        }
+        if (tr.anyCto) {
+          runs = [];
+          tr.ctos.forEach(function (c) { var r = runs[runs.length - 1]; if (r && r[1] === c) r[0]++; else runs.push([1, c]); });
+          rows = [w32(runs.length)]; runs.forEach(function (r) { rows.push(w32(r[0]), w32(r[1] >>> 0)); });
+          parts.push(table('ctts', tr.negCto ? 1 : 0, rows));
+        }
+        // stsc: samples per chunk, grouped
+        runs = [];
+        tr.chunks.forEach(function (c, k) { var r = runs[runs.length - 1]; if (!r || r[1] !== c.n) runs.push([k + 1, c.n]); });
+        rows = [w32(runs.length)]; runs.forEach(function (r) { rows.push(w32(r[0]), w32(r[1]), w32(1)); });
+        parts.push(table('stsc', 0, rows));
+        rows = [w32(0), w32(tr.sizes.length)]; tr.sizes.forEach(function (s) { rows.push(w32(s)); });
+        parts.push(table('stsz', 0, rows));
+        rows = [w32(tr.chunks.length)]; tr.chunks.forEach(function (c) { rows.push(w32(c.out)); });
+        parts.push(table('stco', 0, rows));
+        return mk('stbl', parts);
+      }
+      // a copy of a header box with its duration field replaced
+      function patched(b, tsAt, durAt, value) {
+        var c = raw(b), v = new DataView(c.buffer), ver = c[8];
+        if (ver === 1) { v.setUint32(durAt[1], Math.floor(value / 4294967296)); v.setUint32(durAt[1] + 4, value >>> 0); }
+        else v.setUint32(durAt[0], value);
+        return c;
+      }
+      function buildMoov() {
+        var mvhd = find(moov, 'mvhd'), mvTs = u32(mvhd.o + (src[mvhd.o + 8] === 1 ? 28 : 20)), mvDur = 0, parts = [];
+        order.forEach(function (id) { var tr = tracks[id]; mvDur = Math.max(mvDur, Math.round(tr.total * mvTs / tr.ts)); });
+        kids(moov).forEach(function (k) {
+          if (k.t === 'mvex') return;
+          if (k.t === 'mvhd') { parts.push(patched(k, 0, [24, 32], mvDur)); return; }
+          if (k.t !== 'trak') { parts.push(raw(k)); return; }
+          var tr = tracks[order.filter(function (id) { return tracks[id].box.o === k.o; })[0]];
+          var mdia = find(k, 'mdia'), minf = find(mdia, 'minf');
+          var minfParts = kids(minf).map(function (x) { return x.t === 'stbl' ? stblOf(tr) : raw(x); });
+          var mdiaParts = kids(mdia).map(function (x) {
+            if (x.t === 'mdhd') return patched(x, 0, [24, 32], tr.total);
+            if (x.t === 'minf') return mk('minf', minfParts);
+            return raw(x);
+          });
+          var trakParts = kids(k).map(function (x) {
+            if (x.t === 'tkhd') return patched(x, 0, [28, 36], Math.round(tr.total * mvTs / tr.ts));
+            if (x.t === 'mdia') return mk('mdia', mdiaParts);
+            return raw(x);
+          });
+          parts.push(mk('trak', trakParts));
+        });
+        return mk('moov', parts);
+      }
+      // the header's size does not depend on the offsets in it: build it once to learn the size, then for real
+      var head = raw(ftyp), moovSize = buildMoov().length, at = head.length + moovSize + 8;
+      chunksInOrder.forEach(function (c) { c.out = at; at += c.len; });
+      var moovBytes = buildMoov(), mdatSize = at - (head.length + moovSize);
+      if (mdatSize > 4294967295) throw new Error('too big');
+      var out = new Uint8Array(at), o = 0;
+      out.set(head, o); o += head.length;
+      out.set(moovBytes, o); o += moovBytes.length;
+      out.set(cat([w32(mdatSize), tag('mdat')]), o); o += 8;
+      chunksInOrder.forEach(function (c) { out.set(src.subarray(c.src, c.src + c.len), o); o += c.len; });
+      return out;
+    }
     function render(ac, buffer, title, onTime) {
       var L = CLIP_LAYOUT;
       var SW = Math.max(16, Math.round(L.strip.w)), SH = Math.max(16, Math.round(L.strip.h)), col = rgb(L.colors.accent);
@@ -3049,8 +3208,15 @@
           document.removeEventListener('visibilitychange', onVis);
           stream.getTracks().forEach(function (tr) { tr.stop(); });
           dbg('clip: recorded', ((performance.now() - T0) / 1000).toFixed(1) + ' s, ' + frames + ' frames');
-          if (aborted) reject(new Error('hidden'));
-          else resolve(new Blob(chunks, { type: (rec.mimeType || mime || 'video/webm').split(';')[0] }));
+          var type = (rec.mimeType || mime || 'video/webm').split(';')[0], whole = new Blob(chunks, { type: type });
+          if (aborted) { reject(new Error('hidden')); return; }
+          if (!/mp4/.test(type) || !whole.arrayBuffer) { resolve(whole); return; }
+          // Chrome's MP4 has no length in its header; write it as an ordinary MP4 (if that fails, the file is still good)
+          whole.arrayBuffer().then(function (buf) {
+            var fixed = unfragment(new Uint8Array(buf));
+            dbg('clip: header rewritten', buf.byteLength + ' → ' + fixed.length + ' bytes');
+            resolve(new Blob([fixed], { type: type }));
+          }).catch(function (e) { dbg('clip: header not rewritten', e && e.message); resolve(whole); });
         };
         function frame(now) {
           if (finished) return;
