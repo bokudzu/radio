@@ -309,6 +309,7 @@
   .chat-list li { padding: 0.35rem 0; overflow-wrap: anywhere; }
   .chat-who { font-weight: 600; margin-right: 0.35rem; }
   .chat-body { white-space: pre-wrap; }
+  .chat-track { display: block; margin-top: 0.1rem; font-size: 0.78rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .chat-time { margin-left: 0.4rem; font-family: "Ubuntu Sans Mono", ui-monospace, monospace; font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
   .chat-empty { color: var(--muted); }
   .chat-hide { margin-left: 0.4rem; padding: 0; border: 0; background: none; color: var(--accent); font: inherit; font-size: 0.75rem; cursor: pointer; }
@@ -2743,6 +2744,8 @@
     var countEl = document.getElementById('chat-count');
     var OPEN_KEY = 'kcmd-radio-chat-open';
     var msgs = new Map(), sb = null, errKey = '';
+    var COLS = 'id,created_at,name,body,hidden', hasTrack = true;   // hasTrack: the table has the `track` column (see supabase-chat-track.sql)
+    function onAir() { return nowState.kind === 'line' ? String(nowState.text || '').slice(0, 200) : ''; }
 
     // closed by default: a slim bar with the latest message; opening it is remembered in this browser
     function setOpen(open, focus) {
@@ -2769,6 +2772,7 @@
         return '<li><span class="chat-who">' + esc(m.name) + '</span>' +
           '<span class="chat-body">' + esc(m.body) + '</span>' +
           '<time class="chat-time" datetime="' + esc(m.created_at) + '">' + esc(when(new Date(m.created_at))) + '</time>' +
+          (m.track ? '<span class="chat-track" title="' + esc(m.track) + '">♪ ' + esc(m.track) + '</span>' : '') +
           (EDIT ? '<button type="button" class="chat-hide" data-id="' + m.id + '">' + esc(t('chatHide')) + '</button>' : '') +
           '</li>';
       }).join('') : '<li class="chat-empty">' + esc(t('chatEmpty')) + '</li>';
@@ -2797,7 +2801,15 @@
       sb = client;
       Promise.resolve(sb.from('chat_settings').select('enabled,cleared_at').eq('id', 1).maybeSingle())
         .then(function (r) { if (r && r.data) applySettings(r.data); else clearedAt = ''; })
-        .then(function () { return sb.from('messages').select('id,created_at,name,body,hidden').order('id', { ascending: false }).limit(150); })
+        .then(function () { return sb.from('messages').select(COLS + ',track').order('id', { ascending: false }).limit(150); })
+        .then(function (res) {
+          // the table may not have the `track` column yet: then the chat works as before
+          if (res.error && /track/.test(String(res.error.message || ''))) {
+            hasTrack = false;
+            return sb.from('messages').select(COLS).order('id', { ascending: false }).limit(150);
+          }
+          return res;
+        })
         .then(function (res) {
           if (res.error) throw res.error;
           res.data.forEach(keep);
@@ -2830,7 +2842,16 @@
       setErr('');
       sendBtn.disabled = true;
       try { localStorage.setItem(NAME_KEY, name); } catch (x) {}
-      Promise.resolve(sb.from('messages').insert({ name: name, body: body }).select()).then(function (res) {
+      var row = { name: name, body: body }, tr = onAir();
+      if (hasTrack && tr) row.track = tr;
+      var send = Promise.resolve(sb.from('messages').insert(row).select()).then(function (res) {
+        if (res.error && row.track && /track/.test(String(res.error.message || ''))) {
+          hasTrack = false;
+          return sb.from('messages').insert({ name: name, body: body }).select();
+        }
+        return res;
+      });
+      send.then(function (res) {
         sendBtn.disabled = false;
         if (res.error) {
           var m = String(res.error.message || '');
