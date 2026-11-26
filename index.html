@@ -39,7 +39,7 @@
       if (q.has('notrack')) { localStorage.setItem('umami.disabled', '1'); said = 'off'; }
       if (q.has('track')) { localStorage.removeItem('umami.disabled'); said = 'on'; }
       // the editor and the admin view are the team's own: such a browser stops counting itself, quietly
-      if (!said && (q.has('edit') || q.has('admin'))) localStorage.setItem('umami.disabled', '1');
+      if (!said && (q.has('edit') || q.has('admin') || q.has('clipedit'))) localStorage.setItem('umami.disabled', '1');
       if (!said) return;
       // the rest of the address stays exactly as it was (?debug stays ?debug)
       var rest = location.search.slice(1).split('&').filter(function (p) { return p && !/^(no)?track(=|$)/.test(p); }).join('&');
@@ -333,6 +333,49 @@
     .chat-form { grid-template-columns: 1fr auto; }
     .chat-name { grid-column: 1 / -1; }
   }
+  /* the 15-second video for sharing */
+  .clip { margin-top: 0.75rem; display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; }
+  .clip-btn {
+    padding: 0.5rem 1rem; border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); border-radius: 999px;
+    background: none; color: var(--accent); font: inherit; font-size: 0.95rem; font-weight: 500; cursor: pointer;
+  }
+  .clip-btn:hover:not(:disabled) { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+  .clip-btn:disabled { opacity: 0.6; cursor: default; }
+  .clip-msg { flex-basis: 100%; margin: 0; font-size: 0.875rem; color: var(--muted); }
+  .clip-msg:empty { display: none; }
+  /* ---- layout editor for the video (open the page with ?clipedit) ---- */
+  .ce-on main, .ce-on footer { display: none; }
+  .ce { display: flex; gap: 1.5rem; align-items: flex-start; justify-content: center; padding: 1rem; }
+  .ce.ce-stack { flex-direction: column; align-items: center; }
+  .ce-stage { position: relative; flex: none; background: #0b0e14; box-shadow: 0 0 0 1px var(--line), 0 12px 40px rgba(11,14,20,0.25); touch-action: none; user-select: none; }
+  .ce-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .ce-box { position: absolute; cursor: move; touch-action: none; outline: 1px dashed transparent; }
+  .ce-box[hidden] { display: none; }
+  .ce-box:hover { outline-color: rgba(156,199,216,0.7); }
+  .ce-box.sel { outline: 2px solid #ff6b9d; }
+  .ce-guide { position: absolute; top: 0; bottom: 0; width: 1px; background: #ff6b9d; display: none; pointer-events: none; }
+  .ce-panel { width: min(24rem, 100%); flex: none; font-size: 0.9rem; }
+  .ce:not(.ce-stack) .ce-panel { position: sticky; top: 1rem; max-height: calc(100vh - 2rem); overflow-y: auto; padding-right: 0.5rem; }
+  .ce-panel h1 { font-size: 1.4rem; font-weight: 400; margin: 0 0 0.5rem; }
+  .ce-panel h2 { font-size: 1rem; font-weight: 600; margin: 1.25rem 0 0.5rem; }
+  .ce-note { margin: 0.25rem 0 0.75rem; font-size: 0.85rem; color: var(--muted); line-height: 1.45; }
+  .ce-row { display: grid; grid-template-columns: 1fr 8.5rem; gap: 0.5rem; align-items: center; margin: 0.35rem 0; }
+  .ce-row input[type="text"], .ce-row input[type="number"] {
+    min-width: 0; padding: 0.35rem 0.6rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--text); font: inherit;
+  }
+  .ce-row input[type="color"] { width: 100%; height: 2rem; padding: 0; border: 1px solid var(--line); border-radius: 8px; background: none; }
+  .ce-row input[type="range"] { width: 100%; accent-color: var(--accent); }
+  #ce-title { grid-column: 1 / -1; }
+  .ce-chk { display: flex; gap: 0.5rem; align-items: center; margin: 0.3rem 0; }
+  .ce-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.15rem 0; }
+  .ce-item button { flex: 1; text-align: left; padding: 0.3rem 0.7rem; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--text); font: inherit; cursor: pointer; }
+  .ce-item.sel button { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .ce-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-top: 1.25rem; }
+  .ce-actions .ce-note { flex-basis: 100%; margin: 0; }
+  .ce-actions button { padding: 0.45rem 0.9rem; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--text); font: inherit; font-weight: 500; cursor: pointer; }
+  .ce-actions button:hover { border-color: var(--accent); color: var(--accent); }
+  .ce-actions .ce-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .ce-actions .ce-primary:hover { color: var(--accent-ink); opacity: 0.9; }
   .tacet-note { margin: 1rem 0 0; color: var(--muted); font-size: 0.95rem; }
   /* a hint for Android listeners whose phone stops Chrome's network in the background */
   .bg-hint {
@@ -758,6 +801,12 @@
     <button type="button" class="bg-hint-ok" id="bg-hint-ok" data-i18n="bgHintOk">Got it</button>
   </div>
 
+  <div class="clip" id="clip">
+    <button type="button" class="clip-btn" id="clip-btn"></button>
+    <button type="button" class="next-more" id="clip-redo" data-i18n="clipRedo" hidden></button>
+    <p class="clip-msg" id="clip-msg" role="status"></p>
+  </div>
+
   <section class="chat" id="chat" aria-label="Chat" hidden>
     <button type="button" class="chat-bar" id="chat-bar" aria-expanded="false" aria-controls="chat-panel">
       <span class="chat-label" id="chat-label">Chat</span>
@@ -908,6 +957,13 @@
       nxNext: 'Next', nxLive: 'On air now', nxToday: 'today', nxTomorrow: 'tomorrow',
       nxIn: 'in {t}', nxLeft: '{t} left', nxDays: '{d} days', nxH: '{h} h', nxHM: '{h} h {m} min', nxM: '{m} min',
       nxMore: 'Details ↓',
+      clipBtn: 'Make a 15 s video to share', clipReady: 'Share the video', clipRedo: 'Make another',
+      clipNeedPlay: 'Press play first: the video is made from what you are listening to.',
+      clipGrab: 'Collecting the sound… {s} s. Keep this page open.',
+      clipRec: 'Recording the video… {s} s. Keep this page open.',
+      clipDone: 'Done. Tap “Share the video” and choose Instagram.',
+      clipErr: 'The video could not be made on this device.',
+      clipHidden: 'The screen went off or the page was left while recording. Try again and keep the screen on.',
       silenceAt: 'Air raid alert in Kyiv since {t} Kyiv time.',
       silence: 'Air raid alert in Kyiv.',
       silenceRest: ' Every channel is silent until it ends, then a 30-second signal by a Ukrainian artist breaks the silence and each channel returns to its programme.',
@@ -955,6 +1011,13 @@
       nxNext: 'Далі', nxLive: 'Зараз в етері', nxToday: 'сьогодні', nxTomorrow: 'завтра',
       nxIn: 'через {t}', nxLeft: 'ще {t}', nxDays: '{d} дн.', nxH: '{h} год', nxHM: '{h} год {m} хв', nxM: '{m} хв',
       nxMore: 'Детальніше ↓',
+      clipBtn: 'Зробити відео на 15 с', clipReady: 'Поділитися відео', clipRedo: 'Зробити ще раз',
+      clipNeedPlay: 'Спершу натисніть «слухати»: відео робиться з того, що ви зараз слухаєте.',
+      clipGrab: 'Збираємо звук… {s} с. Не закривайте сторінку.',
+      clipRec: 'Записуємо відео… {s} с. Не закривайте сторінку.',
+      clipDone: 'Готово. Натисніть «Поділитися відео» і виберіть Instagram.',
+      clipErr: 'Не вдалося зробити відео на цьому пристрої.',
+      clipHidden: 'Екран згас або сторінку згорнули під час запису. Спробуйте ще раз і не вимикайте екран.',
       silenceAt: 'Повітряна тривога в Києві з {t} за київським часом.',
       silence: 'Повітряна тривога в Києві.',
       silenceRest: ' Усі канали мовчать до відбою. Після відбою тишу на всіх каналах порушує 30-секундний сигнал, створений українськими артист_ками, а потім кожен канал повертається до своєї програми.',
@@ -2650,7 +2713,7 @@
   }
   (function chat() {
     if (!CHAT_URL || !CHAT_KEY) return;
-    if (/[?&]admin(\b|=|&|$)/.test(location.search)) return;   // the admin view shows the chat's switch instead
+    if (/[?&](admin|clipedit)(\b|=|&|$)/.test(location.search)) return;   // the admin view shows the chat's switch instead
     var EDIT = /[?&]edit(\b|=|&|$)/.test(location.search);   // in edit mode each message gets a "Hide" button
     var NAME_KEY = 'kcmd-radio-chat-name', MOD_KEY = 'kcmd-radio-chat-mod';
     var section = document.getElementById('chat'), list = document.getElementById('chat-list');
@@ -2779,6 +2842,538 @@
         render();
       });
     });
+  })();
+
+  // ==== CLIP LAYOUT START ==== (the editor at ?clipedit rewrites everything between these two lines)
+  var CLIP_LAYOUT = {
+    "colors": { "bg": "#0b0e14", "card": "#131823", "line": "#252c3a", "text": "#e7eaf0", "muted": "#8e97a8", "accent": "#9cc7d8" },
+    "speed": 120,
+    "card": { "show": true, "x": 60, "y": 140, "w": 960, "h": 800, "r": 40 },
+    "btn": { "show": true, "x": 170, "y": 240, "r": 60 },
+    "name": { "show": true, "text": "KCMD Radio", "x": 260, "y": 230, "size": 46 },
+    "status": { "show": true, "x": 272, "y": 279, "size": 30 },
+    "title": { "show": true, "x": 100, "y": 372, "size": 52, "w": 880, "lines": 2 },
+    "strip": { "show": true, "x": 100, "y": 490, "w": 880, "h": 270 },
+    "progress": { "show": true, "x": 100, "y": 792, "w": 880, "h": 4 },
+    "url": { "show": true, "text": "radio.kcmd.eu", "x": 100, "y": 890, "size": 34 }
+  };
+  // ==== CLIP LAYOUT END ====
+
+  // ---- a 15-second video for Instagram: player card + running spectrogram + track title ----
+  // The page downloads its own 15 s copy of the stream, decodes it, plays it into a MediaStreamDestination (not to the
+  // speakers: the listener already hears the radio), draws the picture on a canvas and records both with MediaRecorder.
+  // The radio on the page is not touched, and it works the same on iOS, where the page's own audio can't be tapped.
+  // About 15 s of download + 15 s of recording. The finished file is handed to the phone's share sheet (Instagram is in it).
+  // Where each element sits is CLIP_LAYOUT above; open the page with ?clipedit to move the elements with the mouse.
+  var CLIP_W = 1080, CLIP_H = 1080, CLIP_SECS = 15;
+  var clipApi = {};
+  (function clip() {
+    var W = CLIP_W, H = CLIP_H, SECS = CLIP_SECS;
+    var btn = document.getElementById('clip-btn'), redo = document.getElementById('clip-redo'), msg = document.getElementById('clip-msg');
+    var busy = false, ready = null, msgKey = '', msgVars = null;
+
+    function fontOf(weight, size, mono) {
+      return weight + ' ' + size + 'px ' + (mono ? '"Ubuntu Sans Mono", ui-monospace, monospace' : '"Libre Franklin", "Helvetica Neue", Arial, sans-serif');
+    }
+    function loadFonts() {
+      return Promise.all(['300 40px "Libre Franklin"', '400 40px "Libre Franklin"', '500 40px "Libre Franklin"', '600 40px "Libre Franklin"', '400 30px "Ubuntu Sans Mono"']
+        .map(function (f) { return document.fonts && document.fonts.load ? document.fonts.load(f) : null; })).catch(function () {});
+    }
+    function rr(g, x, y, w, h, r) {
+      r = Math.max(0, Math.min(r, w / 2, h / 2));
+      g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);
+      g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
+    }
+    function wrap(g, text, maxW, lines) {
+      var out = [], line = '';
+      String(text).split(/\s+/).forEach(function (w) {
+        var s = line ? line + ' ' + w : w;
+        if (g.measureText(s).width > maxW && line) { out.push(line); line = w; } else line = s;
+      });
+      out.push(line);
+      if (out.length > lines) {
+        out = out.slice(0, lines);
+        var l = out[lines - 1];
+        while (l.length > 1 && g.measureText(l + '…').width > maxW) l = l.slice(0, -1);
+        out[lines - 1] = l + '…';
+      }
+      return out;
+    }
+    // The whole picture of one frame, from the layout. If `boxes` is given, the place of every element is written into it
+    // (the layout editor needs it to know what to grab).
+    function compose(g, strip, title, el, L, boxes) {
+      var C = L.colors, B = boxes || {}, e;
+      function put(id, x, y, w, h) { B[id] = { x: x, y: y, w: w, h: h }; }
+      function text(id, weight, mono, color) {
+        var e = L[id];
+        if (!e.show) { delete B[id]; return; }
+        g.font = fontOf(weight, e.size, mono); g.fillStyle = color;
+        var ctr = e.align === 'center', w = g.measureText(e.text).width;
+        g.textAlign = ctr ? 'center' : 'left';
+        g.fillText(e.text, e.x, e.y);
+        g.textAlign = 'left';
+        put(id, ctr ? e.x - w / 2 : e.x, e.y - e.size * 0.8, w, e.size * 1.05);
+      }
+      g.fillStyle = C.bg; g.fillRect(0, 0, W, H);
+      g.textBaseline = 'alphabetic'; g.textAlign = 'left';
+      e = L.card;
+      if (e.show) {
+        g.fillStyle = C.card; rr(g, e.x, e.y, e.w, e.h, e.r); g.fill();
+        g.strokeStyle = C.line; g.lineWidth = 2; g.stroke();
+        put('card', e.x, e.y, e.w, e.h);
+      } else delete B.card;
+      e = L.btn;
+      if (e.show) {
+        g.fillStyle = C.accent; g.beginPath(); g.arc(e.x, e.y, e.r, 0, 2 * Math.PI); g.fill();
+        g.fillStyle = C.bg;
+        var bw = e.r * 0.27, bh = e.r * 0.93;
+        g.fillRect(e.x - e.r * 0.33, e.y - bh / 2, bw, bh); g.fillRect(e.x + e.r * 0.1, e.y - bh / 2, bw, bh);
+        put('btn', e.x - e.r, e.y - e.r, 2 * e.r, 2 * e.r);
+      } else delete B.btn;
+      text('name', 600, false, C.text);
+      e = L.status;
+      if (e.show) {
+        var word = t('st_onair'), dr = e.size * 0.27;
+        g.font = fontOf(400, e.size, true);
+        var sw = g.measureText(word).width;
+        g.fillStyle = C.accent; g.beginPath(); g.arc(e.x, e.y - e.size * 0.37, dr, 0, 2 * Math.PI); g.fill();
+        g.fillStyle = C.muted; g.fillText(word, e.x + e.size * 0.73, e.y);
+        put('status', e.x - dr, e.y - e.size * 0.8, e.size * 0.73 + sw + dr, e.size * 1.05);
+      } else delete B.status;
+      e = L.title;
+      if (e.show) {
+        g.font = fontOf(400, e.size); g.fillStyle = C.text;
+        var lines = wrap(g, title, e.w, Math.max(1, Math.round(e.lines))), lh = e.size * 1.26;
+        lines.forEach(function (l, i) { g.fillText(l, e.x, e.y + i * lh); });
+        put('title', e.x, e.y - e.size * 0.8, e.w, (lines.length - 1) * lh + e.size * 1.05);
+      } else delete B.title;
+      e = L.strip;
+      if (e.show) { g.drawImage(strip, e.x, e.y, e.w, e.h); put('strip', e.x, e.y, e.w, e.h); } else delete B.strip;
+      e = L.progress;
+      if (e.show) {
+        g.fillStyle = C.line; g.fillRect(e.x, e.y, e.w, e.h);
+        g.fillStyle = C.accent; g.fillRect(e.x, e.y, e.w * Math.max(0, Math.min(1, el / SECS)), e.h);
+        put('progress', e.x, e.y - 6, e.w, e.h + 12);
+      } else delete B.progress;
+      text('url', 500, false, C.accent);
+    }
+    clipApi.compose = compose;
+    clipApi.fonts = loadFonts;
+
+    function say(key, vars) { msgKey = key; msgVars = vars; msg.textContent = key ? t(key, vars) : ''; }
+    function label() { btn.textContent = t(ready ? 'clipReady' : 'clipBtn'); }
+    if (!btn) return;
+    onLangChange.push(function () { label(); if (msgKey) msg.textContent = t(msgKey, msgVars); });
+
+    // download SECS+1 s of the live stream, cut it to whole frames
+    function grab(ms, tick) {
+      var ctl = new AbortController(), t0 = Date.now(), parts = [], got = 0;
+      return fetch(STREAM + '?clip=' + t0, { cache: 'no-store', signal: ctl.signal }).then(function (r) {
+        if (!r.ok || !r.body) throw new Error('HTTP ' + r.status);
+        var rd = r.body.getReader();
+        return (function next() {
+          return rd.read().then(function (x) {
+            var left = ms - (Date.now() - t0);
+            if (x.value) { parts.push(x.value); got += x.value.length; }
+            tick(Math.max(0, Math.ceil(left / 1000)));
+            if (x.done || left <= 0) { try { ctl.abort(); } catch (e) {} return; }
+            return next();
+          });
+        })();
+      }).then(function () {
+        var all = new Uint8Array(got), o = 0;
+        parts.forEach(function (p) { all.set(p, o); o += p.length; });
+        var k = firstSync(all);
+        if (k < 0) throw new Error('no audio frame');
+        return all.slice(k);
+      });
+    }
+    function decode(ac, buf) {
+      return new Promise(function (res, rej) { var p = ac.decodeAudioData(buf, res, rej); if (p && p.then) p.then(res, rej); });
+    }
+    // one more column of the spectrogram, the same maths as the strip on the page (drawSpectre)
+    function column(st, an, buf, sr, dt, sg, tg, SW, SH, pxs, col) {
+      an.getFloatTimeDomainData(buf);
+      var peak = 0;
+      for (var q = 0; q < buf.length; q++) { var av = Math.abs(buf[q]); if (av > peak) peak = av; }
+      if (!peak) return;
+      var off = buf.length - FFT_N, re = st.re, im = st.im;
+      for (var i = 0; i < FFT_N; i++) { re[i] = buf[off + i] * hann[i]; im[i] = 0; }
+      fft(re, im);
+      var hi = Math.min(HI_HZ, sr / 2), dbs = new Float32Array(SH), top = -Infinity, y, x;
+      for (y = 0; y < SH; y++) {
+        var f = LO_HZ * Math.pow(hi / LO_HZ, 1 - y / SH);
+        var k = Math.min(FFT_N / 2 - 1, Math.max(1, Math.round(f / sr * FFT_N)));
+        dbs[y] = 20 * Math.log10(Math.hypot(re[k], im[k]) / (FFT_N / 4) + 1e-9);
+        if (dbs[y] > top) top = dbs[y];
+      }
+      st.top = Math.max(top, Math.min(CEIL_DB, (st.top == null ? top : st.top) - (RANGE / FALL) * dt));
+      var n = Math.max(1, Math.round(dt * pxs)), img = sg.createImageData(n, SH), p = img.data;
+      for (y = 0; y < SH; y++) {
+        var a = Math.round(255 * Math.pow(Math.max(0, Math.min(1, (dbs[y] - (st.top - RANGE)) / RANGE)), 1.5));
+        for (x = 0; x < n; x++) { var o = (y * n + x) * 4; p[o] = col[0]; p[o + 1] = col[1]; p[o + 2] = col[2]; p[o + 3] = a; }
+      }
+      // the strip moves left through a second canvas (Safari: a canvas drawn onto itself may stay empty)
+      tg.clearRect(0, 0, SW, SH); tg.drawImage(sg.canvas, 0, 0);
+      sg.clearRect(0, 0, SW, SH); sg.drawImage(tg.canvas, -n, 0);
+      sg.putImageData(img, SW - n, 0);
+    }
+    function render(ac, buffer, title, onTime) {
+      var L = CLIP_LAYOUT;
+      var SW = Math.max(16, Math.round(L.strip.w)), SH = Math.max(16, Math.round(L.strip.h)), col = rgb(L.colors.accent);
+      var cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+      var g = cv.getContext('2d');
+      var sc = document.createElement('canvas'), tmp = document.createElement('canvas');
+      sc.width = tmp.width = SW; sc.height = tmp.height = SH;
+      var sg = sc.getContext('2d'), tg = tmp.getContext('2d');
+      var src = ac.createBufferSource(); src.buffer = buffer;
+      var an = ac.createAnalyser(); an.fftSize = 2048;
+      var dest = ac.createMediaStreamDestination();
+      src.connect(an); an.connect(dest);   // not to ac.destination: nothing is played aloud
+      var buf = new Float32Array(an.fftSize), st = { re: new Float32Array(FFT_N), im: new Float32Array(FFT_N), top: null };
+      // Instagram wants MP4 (H.264 + AAC): Safari and Chrome 126+ can record it; others give WebM
+      var mime = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm']
+        .filter(function (m) { return MediaRecorder.isTypeSupported(m); })[0] || '';
+      var stream = new MediaStream(cv.captureStream(30).getVideoTracks().concat(dest.stream.getAudioTracks()));
+      var rec = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 6000000, audioBitsPerSecond: 128000 } : {});
+      var chunks = [];
+      rec.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
+      dbg('clip: audio in hand', buffer.duration.toFixed(1) + ' s');
+      return new Promise(function (resolve, reject) {
+        var finished = false, aborted = false, timer = null, T0 = 0, last = 0, frames = 0;
+        // the screen went off or the page was left: the picture would freeze while the sound goes on, so the try is dropped
+        function onVis() { if (document.hidden && !finished) { finished = aborted = true; clearTimeout(timer); try { rec.stop(); } catch (e) {} } }
+        document.addEventListener('visibilitychange', onVis);
+        rec.onerror = function (e) { finished = true; reject((e && e.error) || new Error('recorder')); };
+        rec.onstop = function () {
+          document.removeEventListener('visibilitychange', onVis);
+          stream.getTracks().forEach(function (tr) { tr.stop(); });
+          dbg('clip: recorded', ((performance.now() - T0) / 1000).toFixed(1) + ' s, ' + frames + ' frames');
+          if (aborted) reject(new Error('hidden'));
+          else resolve(new Blob(chunks, { type: (rec.mimeType || mime || 'video/webm').split(';')[0] }));
+        };
+        function frame(now) {
+          if (finished) return;
+          var dt = Math.min(0.1, (now - last) / 1000), el = Math.min(SECS, (now - T0) / 1000);
+          last = now; frames++;
+          column(st, an, buf, ac.sampleRate, dt, sg, tg, SW, SH, L.speed, col);
+          compose(g, sc, title, el, L);
+          onTime(Math.ceil(SECS - el));
+          requestAnimationFrame(frame);
+        }
+        T0 = last = performance.now();
+        rec.start(1000);
+        src.start(0, 0, SECS);
+        // exactly SECS seconds of the clock, whatever the animation does
+        timer = setTimeout(function () { finished = true; try { rec.requestData(); } catch (e) {} rec.stop(); }, SECS * 1000);
+        requestAnimationFrame(frame);
+      });
+    }
+    function deliver(r) {
+      var ext = /mp4/.test(r.blob.type) ? 'mp4' : 'webm';
+      var file = new File([r.blob], 'kcmd-radio.' + ext, { type: r.blob.type });
+      track('clip_share', { ext: ext, lang: lang });
+      // the share sheet needs a fresh tap, so this runs from the second button press, not right after rendering
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file], title: 'KCMD Radio' }).catch(function () {});
+        return;
+      }
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(r.blob); a.download = file.name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
+    }
+    function reset() { ready = null; redo.hidden = true; label(); say(''); }
+    redo.addEventListener('click', reset);
+
+    btn.addEventListener('click', function () {
+      if (ready) { deliver(ready); return; }
+      if (busy) return;
+      if (!wanted || !cur) { say('clipNeedPlay'); return; }
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC || !window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream || !window.AbortController) { say('clipErr'); return; }
+      busy = true; btn.disabled = true;
+      var title = nowState.kind === 'line' ? nowState.text : 'KCMD Radio';
+      var ac = new AC(); ac.resume();   // made inside the tap, so the phone lets it run
+      track('clip_start', { lang: lang, show: onAirNow() });
+      var fonts = loadFonts(), lock = null;
+      // the phone must not dim the screen: a page that goes to the background stops drawing, and the clip comes out short
+      if (navigator.wakeLock && navigator.wakeLock.request) navigator.wakeLock.request('screen').then(function (l) { lock = l; }, function () {});
+      grab((SECS + 3) * 1000, function (s) { say('clipGrab', { s: s }); })
+        .then(function (bytes) { return Promise.all([decode(ac, bytes.buffer), fonts]); })
+        .then(function (res) { return render(ac, res[0], title, function (s) { say('clipRec', { s: s }); }); })
+        .then(function (blob) {
+          ready = { blob: blob, title: title };
+          redo.hidden = false; label(); say('clipDone');
+          track('clip_ready', { type: blob.type, kb: Math.round(blob.size / 1024) });
+        })
+        .catch(function (e) { console.warn('[clip] ' + (e && e.message)); say(e && e.message === 'hidden' ? 'clipHidden' : 'clipErr'); track('clip_fail', { why: String(e && e.message || '').slice(0, 80) }); })
+        .then(function () { busy = false; btn.disabled = false; try { ac.close(); } catch (e) {} if (lock) { try { lock.release(); } catch (e) {} } });
+    });
+  })();
+
+  // ---- layout editor for the video: open the page with ?clipedit ----
+  // The preview is drawn by the very same function as the real video, so what is seen here is what is recorded.
+  // Elements are dragged with the mouse or finger; the result is downloaded as a new index.html (the layout is
+  // written between the CLIP LAYOUT markers) or copied as JSON. Unsaved changes stay in this browser.
+  if (/[?&]clipedit(\b|=|&|$)/.test(location.search)) (function clipEditor() {
+    var DRAFT = 'kcmd-radio-clip-draft-square', L = CLIP_LAYOUT, ORIG = JSON.parse(JSON.stringify(CLIP_LAYOUT));
+    var W = CLIP_W, H = CLIP_H;
+    var ORDER = ['card', 'btn', 'name', 'status', 'title', 'strip', 'progress', 'url'];
+    var NAMES = { card: 'Картка плеєра', btn: 'Кнопка', name: 'Назва каналу',
+      status: 'Статус «On air»', title: 'Назва треку', strip: 'Спектрограма', progress: 'Смужка прогресу', url: 'Адреса' };
+    var FIELDS = {
+      card: [['x', 'X'], ['y', 'Y'], ['w', 'Ширина'], ['h', 'Висота'], ['r', 'Заокруглення']],
+      btn: [['x', 'X (центр)'], ['y', 'Y (центр)'], ['r', 'Радіус']],
+      name: [['text', 'Текст'], ['x', 'X'], ['y', 'Y (низ рядка)'], ['size', 'Розмір']],
+      status: [['x', 'X (крапка)'], ['y', 'Y (низ рядка)'], ['size', 'Розмір']],
+      title: [['x', 'X'], ['y', 'Y (низ першого рядка)'], ['size', 'Розмір'], ['w', 'Ширина'], ['lines', 'Макс. рядків']],
+      strip: [['x', 'X'], ['y', 'Y'], ['w', 'Ширина'], ['h', 'Висота']],
+      progress: [['x', 'X'], ['y', 'Y'], ['w', 'Ширина'], ['h', 'Товщина']],
+      url: [['text', 'Текст'], ['x', 'X (центр)'], ['y', 'Y (низ рядка)'], ['size', 'Розмір']]
+    };
+    var COLORS = { bg: 'Фон', card: 'Картка', line: 'Рамка', text: 'Текст', muted: 'Другорядний текст', accent: 'Акцент' };
+    var sel = 'title', scale = 0.4, drag = null, lastBoxes = {}, stripCache = null;
+    document.documentElement.classList.add('ce-on');
+    try { localStorage.setItem('umami.disabled', '1'); } catch (e) {}
+    document.title = 'KCMD Radio · макет відео';
+
+    function copy(o) { return JSON.parse(JSON.stringify(o)); }
+    function setAll(src) { Object.keys(src).forEach(function (k) { L[k] = copy(src[k]); }); }
+    try {
+      var d = JSON.parse(localStorage.getItem(DRAFT) || 'null');
+      if (d) Object.keys(d).forEach(function (k) { if (L[k] && typeof d[k] === 'object') Object.assign(L[k], d[k]); else if (k in L) L[k] = d[k]; });
+    } catch (e) {}
+    function saveDraft() { try { localStorage.setItem(DRAFT, JSON.stringify(L)); } catch (e) {} }
+    function changed() { return JSON.stringify(L) !== JSON.stringify(ORIG); }
+
+    var root = document.createElement('div');
+    root.className = 'ce';
+    root.innerHTML =
+      '<div class="ce-left"><div class="ce-stage" id="ce-stage"><canvas id="ce-cv" width="' + W + '" height="' + H + '"></canvas>' +
+      '<div class="ce-guide" id="ce-guide"></div>' +
+      '<div id="ce-boxes"></div></div></div>' +
+      '<aside class="ce-panel">' +
+        '<h1>Макет відео</h1>' +
+        '<p class="ce-note">Тягніть елементи на макеті. Стрілки на клавіатурі зсувають вибраний елемент на 1 px, зі Shift — на 10. Відео квадратне, 1080×1080.</p>' +
+        '<label class="ce-row">Назва треку для перегляду<input id="ce-title" type="text" value="Embrion Bormana - Sunstroke Blues"></label>' +
+        '<label class="ce-row"><span>Прогрес відео: <span id="ce-elv">7</span> с</span><input id="ce-el" type="range" min="0" max="15" step="0.1" value="7"></label>' +
+        '<label class="ce-chk"><input type="checkbox" id="ce-with" checked> Картка рухається разом із вмістом</label>' +
+        '<label class="ce-chk"><input type="checkbox" id="ce-snap" checked> Притягувати до центру</label>' +
+        '<h2>Елементи</h2><div id="ce-list"></div>' +
+        '<h2 id="ce-selname"></h2><div id="ce-fields"></div>' +
+        '<h2>Кольори й рух</h2><div id="ce-colors"></div>' +
+        '<label class="ce-row">Швидкість спектрограми, px/с<input id="ce-speed" type="number" min="10" max="600" step="5"></label>' +
+        '<div class="ce-actions"><span id="ce-count" class="ce-note"></span>' +
+          '<button type="button" id="ce-reset">Скасувати зміни</button>' +
+          '<button type="button" id="ce-copy">Копіювати JSON</button>' +
+          '<button type="button" class="ce-primary" id="ce-save">Завантажити index.html</button></div>' +
+        '<p class="ce-note">Завантажений index.html замінює файл на сайті; нова розкладка діє і в самому відео, і тут.</p>' +
+      '</aside>';
+    document.body.insertBefore(root, document.body.firstChild);
+    function $(id) { return document.getElementById(id); }
+    var stage = $('ce-stage'), cv = $('ce-cv'), g = cv.getContext('2d'), boxHost = $('ce-boxes'), guide = $('ce-guide');
+    var boxEls = {};
+    ORDER.forEach(function (id) {
+      var b = document.createElement('div');
+      b.className = 'ce-box'; b.setAttribute('data-id', id); b.title = NAMES[id];
+      boxHost.appendChild(b); boxEls[id] = b;
+    });
+
+    // a made-up spectrogram, only for the preview
+    function fakeStrip(w, h, color) {
+      var key = w + 'x' + h + color;
+      if (stripCache && stripCache.key === key) return stripCache.cv;
+      var c = document.createElement('canvas'); c.width = w; c.height = h;
+      var gg = c.getContext('2d'), img = gg.createImageData(w, h), p = img.data, col = rgb(color), seed = 7;
+      function rnd() { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
+      for (var x = 0; x < w; x++) {
+        for (var y = 0; y < h; y++) {
+          var yy = y / h, v = 0;
+          for (var k = 1; k <= 3; k++) {
+            var pos = 0.78 - 0.13 * k + 0.05 * Math.sin(x / (70 + k * 30) + k);
+            v += Math.exp(-Math.pow((yy - pos) / 0.014, 2)) * (0.9 / k) * (0.5 + 0.5 * Math.sin(x / 40 + k * 2));
+          }
+          v += 0.06 * rnd();
+          var o = (y * w + x) * 4;
+          p[o] = col[0]; p[o + 1] = col[1]; p[o + 2] = col[2]; p[o + 3] = Math.round(255 * Math.pow(Math.max(0, Math.min(1, v)), 1.2));
+        }
+      }
+      gg.putImageData(img, 0, 0);
+      stripCache = { key: key, cv: c };
+      return c;
+    }
+
+    function draw() {
+      var boxes = {};
+      var sw = Math.max(16, Math.round(L.strip.w)), sh = Math.max(16, Math.round(L.strip.h));
+      clipApi.compose(g, fakeStrip(sw, sh, L.colors.accent), $('ce-title').value || 'KCMD Radio', Number($('ce-el').value), L, boxes);
+      lastBoxes = boxes;
+      place();
+      saveDraft();
+      $('ce-count').textContent = changed() ? 'Є незбережені зміни' : 'Без змін';
+    }
+    function place() {
+      ORDER.forEach(function (id) {
+        var b = lastBoxes[id], el = boxEls[id];
+        el.hidden = !b;
+        if (!b) return;
+        el.style.left = b.x * scale + 'px'; el.style.top = b.y * scale + 'px';
+        el.style.width = Math.max(12, b.w * scale) + 'px'; el.style.height = Math.max(12, b.h * scale) + 'px';
+        el.classList.toggle('sel', id === sel);
+      });
+    }
+    function fit() {
+      var wide = window.innerWidth >= 900;
+      scale = wide ? Math.min((window.innerHeight - 32) / H, (window.innerWidth - 32 - 24 - 400) / W) : Math.min((window.innerWidth - 32) / W, 0.6);
+      scale = Math.max(0.15, scale);
+      stage.style.width = W * scale + 'px'; stage.style.height = H * scale + 'px';
+      root.classList.toggle('ce-stack', !wide);
+      place();
+    }
+    window.addEventListener('resize', fit);
+
+    // ---- the list, the fields ----
+    function buildList() {
+      $('ce-list').innerHTML = ORDER.map(function (id) {
+        return '<div class="ce-item' + (id === sel ? ' sel' : '') + '" data-id="' + id + '">' +
+          '<input type="checkbox" data-show title="Показувати"' + (L[id].show ? ' checked' : '') + '>' +
+          '<button type="button" data-sel>' + NAMES[id] + '</button></div>';
+      }).join('');
+    }
+    function buildFields() {
+      $('ce-selname').textContent = NAMES[sel];
+      $('ce-fields').innerHTML = FIELDS[sel].map(function (f) {
+        var isText = f[0] === 'text';
+        return '<label class="ce-row">' + f[1] + '<input data-key="' + f[0] + '" type="' + (isText ? 'text' : 'number') + '" step="1" value="' +
+          String(L[sel][f[0]]).replace(/"/g, '&quot;') + '"></label>';
+      }).join('');
+    }
+    function syncFields() {
+      $('ce-fields').querySelectorAll('input').forEach(function (inp) {
+        if (document.activeElement !== inp) inp.value = L[sel][inp.getAttribute('data-key')];
+      });
+    }
+    function select(id) { sel = id; buildList(); buildFields(); place(); }
+    $('ce-list').addEventListener('click', function (e) {
+      var item = e.target.closest('.ce-item'); if (!item) return;
+      var id = item.getAttribute('data-id');
+      if (e.target.matches('[data-show]')) { L[id].show = e.target.checked; draw(); return; }
+      select(id);
+    });
+    $('ce-fields').addEventListener('input', function (e) {
+      var inp = e.target, k = inp.getAttribute('data-key');
+      if (!k) return;
+      if (inp.type === 'number') { var v = Number(inp.value); if (!isFinite(v)) return; L[sel][k] = v; } else L[sel][k] = inp.value;
+      draw();
+    });
+    $('ce-colors').innerHTML = Object.keys(COLORS).map(function (k) {
+      return '<label class="ce-row ce-color">' + COLORS[k] + '<input type="color" data-color="' + k + '" value="' + L.colors[k] + '"></label>';
+    }).join('');
+    $('ce-colors').addEventListener('input', function (e) {
+      var k = e.target.getAttribute('data-color'); if (!k) return;
+      L.colors[k] = e.target.value; draw();
+    });
+    $('ce-speed').value = L.speed;
+    $('ce-speed').addEventListener('input', function (e) { var v = Number(e.target.value); if (v > 0) { L.speed = v; saveDraft(); } });
+    $('ce-title').addEventListener('input', draw);
+    $('ce-el').addEventListener('input', function () { $('ce-elv').textContent = $('ce-el').value; draw(); });
+
+    // ---- dragging ----
+    boxHost.addEventListener('pointerdown', function (e) {
+      var b = e.target.closest('.ce-box'); if (!b) return;
+      e.preventDefault();
+      var id = b.getAttribute('data-id');
+      if (sel !== id) select(id);
+      var orig = {};
+      ORDER.forEach(function (i) { orig[i] = { x: L[i].x, y: L[i].y }; });
+      drag = { id: id, x0: e.clientX, y0: e.clientY, orig: orig, boxes: copy(lastBoxes) };
+      try { b.setPointerCapture(e.pointerId); } catch (x) {}
+    });
+    boxHost.addEventListener('pointermove', function (e) {
+      if (!drag) return;
+      var dx = (e.clientX - drag.x0) / scale, dy = (e.clientY - drag.y0) / scale, ids = [drag.id];
+      if (drag.id === 'card' && $('ce-with').checked) {
+        var cb = drag.boxes.card;
+        ORDER.forEach(function (i) {
+          var bb = drag.boxes[i]; if (i === 'card' || !bb) return;
+          var cx = bb.x + bb.w / 2, cy = bb.y + bb.h / 2;
+          if (cx >= cb.x && cx <= cb.x + cb.w && cy >= cb.y && cy <= cb.y + cb.h) ids.push(i);
+        });
+      }
+      var shift = 0;
+      guide.style.display = 'none';
+      if ($('ce-snap').checked) {
+        var bx = drag.boxes[drag.id], cxm = bx.x + dx + bx.w / 2;
+        if (Math.abs(cxm - W / 2) < 10) { shift = W / 2 - cxm; guide.style.left = (W / 2) * scale + 'px'; guide.style.display = 'block'; }
+      }
+      ids.forEach(function (i) {
+        L[i].x = Math.round(drag.orig[i].x + dx + shift);
+        L[i].y = Math.round(drag.orig[i].y + dy);
+      });
+      draw(); syncFields();
+    });
+    function endDrag() { drag = null; guide.style.display = 'none'; }
+    boxHost.addEventListener('pointerup', endDrag);
+    boxHost.addEventListener('pointercancel', endDrag);
+    document.addEventListener('keydown', function (e) {
+      if (!/^Arrow/.test(e.key) || /^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement || {}).tagName || '')) return;
+      e.preventDefault();
+      var n = e.shiftKey ? 10 : 1;
+      if (e.key === 'ArrowLeft') L[sel].x -= n; if (e.key === 'ArrowRight') L[sel].x += n;
+      if (e.key === 'ArrowUp') L[sel].y -= n; if (e.key === 'ArrowDown') L[sel].y += n;
+      draw(); syncFields();
+    });
+
+    // ---- reset, copy, download ----
+    $('ce-reset').addEventListener('click', function () {
+      if (!changed() || !confirm('Скасувати всі зміни й повернути макет, як на сайті?')) return;
+      setAll(ORIG); $('ce-speed').value = L.speed;
+      $('ce-colors').querySelectorAll('input').forEach(function (i) { i.value = L.colors[i.getAttribute('data-color')]; });
+      buildList(); buildFields(); draw();
+    });
+    $('ce-copy').addEventListener('click', function () {
+      var b = $('ce-copy'), txt = JSON.stringify(L, null, 2);
+      (navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(txt) : Promise.reject()).then(function () {
+        b.textContent = 'Скопійовано ✓'; setTimeout(function () { b.textContent = 'Копіювати JSON'; }, 2000);
+      }, function () { prompt('Скопіюйте вручну:', txt); });
+    });
+    var START = '// ==== CLIP LAYOUT START ====', END = '// ==== CLIP LAYOUT END ====';
+    function build(src) {
+      var a = src.indexOf(START), b = src.indexOf(END);
+      if (a < 0 || b < a) { alert('Не вдалося знайти в файлі місце з макетом (позначки CLIP LAYOUT). Файл не змінено.'); return null; }
+      var lineEnd = src.indexOf('\n', a);
+      var json = JSON.stringify(L, null, 2).replace(/<\//g, '<\\/').replace(/\n/g, '\n  ');
+      return src.slice(0, lineEnd + 1) + '  var CLIP_LAYOUT = ' + json + ';\n  ' + src.slice(b);
+    }
+    function download(text) {
+      var blob = new Blob([text], { type: 'text/html;charset=utf-8' });
+      var url = URL.createObjectURL(blob), link = document.createElement('a');
+      link.href = url; link.download = 'index.html';
+      document.body.appendChild(link); link.click(); link.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+    }
+    function pickFile() {
+      var inp = document.createElement('input');
+      inp.type = 'file'; inp.accept = '.html,text/html';
+      inp.onchange = function () {
+        var f = inp.files && inp.files[0]; if (!f) return;
+        f.text().then(function (src) { var out = build(src); if (out) download(out); });
+      };
+      alert('Оберіть файл index.html, у який записати новий макет.');
+      inp.click();
+    }
+    $('ce-save').addEventListener('click', function () {
+      if (location.protocol === 'file:') { pickFile(); return; }
+      fetch(location.pathname, { cache: 'no-store' })
+        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
+        .then(function (src) { var out = build(src); if (out) download(out); })
+        .catch(pickFile);
+    });
+
+    buildList(); buildFields(); fit();
+    draw();
+    clipApi.fonts().then(draw);   // the real fonts, once loaded
   })();
 
   applyLang();
