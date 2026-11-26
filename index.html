@@ -376,6 +376,24 @@
   .ce-actions button:hover { border-color: var(--accent); color: var(--accent); }
   .ce-actions .ce-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
   .ce-actions .ce-primary:hover { color: var(--accent-ink); opacity: 0.9; }
+  /* ---- the video from your own audio file (open the page with ?clip) ---- */
+  .cp-on main, .cp-on footer { display: none; }
+  .cp { display: flex; flex-wrap: wrap; gap: 1.5rem 2rem; align-items: flex-start; justify-content: center; max-width: 66rem; margin: 0 auto; padding: 1rem; }
+  .cp-left { flex: 1 1 18rem; max-width: 30rem; position: sticky; top: 1rem; }
+  .cp-left canvas { display: block; width: 100%; height: auto; border-radius: 12px; box-shadow: 0 0 0 1px var(--line); }
+  .cp-right { flex: 1 1 22rem; max-width: 30rem; font-size: 0.9rem; }
+  .cp-top { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+  .cp-top h1 { font-size: 1.4rem; font-weight: 400; margin: 0; }
+  .cp-drop { display: grid; gap: 0.35rem; place-items: center; text-align: center; padding: 2.25rem 1rem; border: 2px dashed var(--line); border-radius: 14px; background: var(--surface); cursor: pointer; }
+  .cp-drop[hidden] { display: none; }
+  .cp-drop small { color: var(--muted); }
+  .cp-drop:hover, .cp-drop.over { border-color: var(--accent); }
+  .cp-file { margin: 0 0 0.5rem; overflow-wrap: anywhere; }
+  .cp-wave { display: block; width: 100%; height: 120px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); touch-action: none; cursor: ew-resize; }
+  .cp-text { display: block; margin: 0.75rem 0; }
+  .cp-text span { display: block; margin-bottom: 0.25rem; }
+  .cp-text textarea { width: 100%; padding: 0.45rem 0.65rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--text); font: inherit; resize: vertical; }
+  .cp-result video { display: block; width: 100%; margin-top: 0.75rem; border-radius: 12px; background: #000; }
   .tacet-note { margin: 1rem 0 0; color: var(--muted); font-size: 0.95rem; }
   /* a hint for Android listeners whose phone stops Chrome's network in the background */
   .bg-hint {
@@ -957,7 +975,7 @@
       nxNext: 'Next', nxLive: 'On air now', nxToday: 'today', nxTomorrow: 'tomorrow',
       nxIn: 'in {t}', nxLeft: '{t} left', nxDays: '{d} days', nxH: '{h} h', nxHM: '{h} h {m} min', nxM: '{m} min',
       nxMore: 'Details ↓',
-      clipBtn: 'Make a 15-second video to share', clipReady: 'Share the video', clipRedo: 'Make another',
+      clipBtn: 'Make a 15 s video to share', clipReady: 'Share the video', clipRedo: 'Make another',
       clipNeedPlay: 'Press play first: the video is made from what you are listening to.',
       clipGrab: 'Collecting the sound… {s} s. Keep this page open.',
       clipRec: 'Recording the video… {s} s. Keep this page open.',
@@ -2713,7 +2731,7 @@
   }
   (function chat() {
     if (!CHAT_URL || !CHAT_KEY) return;
-    if (/[?&](admin|clipedit)(\b|=|&|$)/.test(location.search)) return;   // the admin view shows the chat's switch instead
+    if (/[?&](admin|clipedit|clip)(\b|=|&|$)/.test(location.search)) return;   // the admin view shows the chat's switch instead
     var EDIT = /[?&]edit(\b|=|&|$)/.test(location.search);   // in edit mode each message gets a "Hide" button
     var NAME_KEY = 'kcmd-radio-chat-name', MOD_KEY = 'kcmd-radio-chat-mod';
     var section = document.getElementById('chat'), list = document.getElementById('chat-list');
@@ -2901,7 +2919,7 @@
     }
     // The whole picture of one frame, from the layout. If `boxes` is given, the place of every element is written into it
     // (the layout editor needs it to know what to grab).
-    function compose(g, strip, title, el, L, boxes) {
+    function compose(g, strip, title, el, L, boxes, total) {
       var C = L.colors, B = boxes || {}, e;
       function put(id, x, y, w, h) { B[id] = { x: x, y: y, w: w, h: h }; }
       function text(id, weight, mono, color) {
@@ -2952,7 +2970,7 @@
       e = L.progress;
       if (e.show) {
         g.fillStyle = C.line; g.fillRect(e.x, e.y, e.w, e.h);
-        g.fillStyle = C.accent; g.fillRect(e.x, e.y, e.w * Math.max(0, Math.min(1, el / SECS)), e.h);
+        g.fillStyle = C.accent; g.fillRect(e.x, e.y, e.w * Math.max(0, Math.min(1, el / (total || SECS))), e.h);
         put('progress', e.x, e.y - 6, e.w, e.h + 12);
       } else delete B.progress;
       text('url', 500, false, C.accent);
@@ -3205,8 +3223,8 @@
       sg.putImageData(img, 0, 0);
     }
     clipApi.prefill = prefill;
-    function render(ac, buffer, title, onTime) {
-      var L = CLIP_LAYOUT;
+    function render(ac, buffer, title, onTime, o) {
+      var L = CLIP_LAYOUT, secs = o.secs, start = o.start;
       var SW = Math.max(16, Math.round(L.strip.w)), SH = Math.max(16, Math.round(L.strip.h)), col = rgb(L.colors.accent);
       var cv = document.createElement('canvas'); cv.width = W; cv.height = H;
       var g = cv.getContext('2d');
@@ -3218,9 +3236,8 @@
       var dest = ac.createMediaStreamDestination();
       src.connect(an); an.connect(dest);   // not to ac.destination: nothing is played aloud
       var buf = new Float32Array(an.fftSize), st = { re: new Float32Array(FFT_N), im: new Float32Array(FFT_N), top: null };
-      // the clip starts `pre` seconds into the downloaded sound; what lies before it fills the strip from the first frame
-      var pre = Math.max(0, Math.min(SW / L.speed, buffer.duration - SECS));
-      prefill(buffer, pre, sg, st, SW, SH, L.speed, col);
+      // the clip starts `start` seconds into the sound; what lies before it fills the strip from the first frame
+      if (!o.noPrefill) prefill(buffer, start, sg, st, SW, SH, L.speed, col);
       // Instagram wants MP4 (H.264 + AAC): Safari and Chrome 126+ can record it; others give WebM
       var mime = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm']
         .filter(function (m) { return MediaRecorder.isTypeSupported(m); })[0] || '';
@@ -3228,7 +3245,7 @@
       var rec = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 6000000, audioBitsPerSecond: 128000 } : {});
       var chunks = [];
       rec.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
-      dbg('clip: audio in hand', buffer.duration.toFixed(1) + ' s, lead-in ' + pre.toFixed(1) + ' s');
+      dbg('clip: audio in hand', buffer.duration.toFixed(1) + ' s, clip from ' + start.toFixed(1) + ' s, ' + secs.toFixed(1) + ' s long');
       return new Promise(function (resolve, reject) {
         var finished = false, aborted = false, timer = null, T0 = 0, last = 0, frames = 0;
         // the screen went off or the page was left: the picture would freeze while the sound goes on, so the try is dropped
@@ -3251,21 +3268,22 @@
         };
         function frame(now) {
           if (finished) return;
-          var dt = Math.min(0.1, (now - last) / 1000), el = Math.min(SECS, (now - T0) / 1000);
+          var dt = Math.min(0.1, (now - last) / 1000), el = Math.min(secs, (now - T0) / 1000);
           last = now; frames++;
           column(st, an, buf, ac.sampleRate, dt, sg, tg, SW, SH, L.speed, col);
-          compose(g, sc, title, el, L);
-          onTime(Math.ceil(SECS - el));
+          compose(g, sc, title, el, L, null, secs);
+          onTime(Math.ceil(secs - el));
           requestAnimationFrame(frame);
         }
         T0 = last = performance.now();
         rec.start(1000);
-        src.start(0, pre, SECS);
+        src.start(0, start, secs);
         // exactly SECS seconds of the clock, whatever the animation does
-        timer = setTimeout(function () { finished = true; try { rec.requestData(); } catch (e) {} rec.stop(); }, SECS * 1000);
+        timer = setTimeout(function () { finished = true; try { rec.requestData(); } catch (e) {} rec.stop(); }, secs * 1000);
         requestAnimationFrame(frame);
       });
     }
+    clipApi.render = render;
     function deliver(r) {
       var ext = /mp4/.test(r.blob.type) ? 'mp4' : 'webm';
       var file = new File([r.blob], 'kcmd-radio.' + ext, { type: r.blob.type });
@@ -3300,7 +3318,9 @@
       var lead = Math.ceil(CLIP_LAYOUT.strip.w / CLIP_LAYOUT.speed * 10) / 10;
       grab((SECS + lead + 2) * 1000, function (s) { say('clipGrab', { s: s }); })
         .then(function (bytes) { return Promise.all([decode(ac, bytes.buffer), fonts]); })
-        .then(function (res) { return render(ac, res[0], title, function (s) { say('clipRec', { s: s }); }); })
+        .then(function (res) { var L0 = CLIP_LAYOUT, got = res[0];
+          return render(ac, got, title, function (s) { say('clipRec', { s: s }); },
+            { start: Math.max(0, Math.min(L0.strip.w / L0.speed, got.duration - SECS)), secs: SECS }); })
         .then(function (blob) {
           ready = { blob: blob, title: title };
           redo.hidden = false; label(); say('clipDone');
@@ -3573,6 +3593,274 @@
     buildList(); buildFields(); fit();
     draw();
     clipApi.fonts().then(draw);   // the real fonts, once loaded
+  })();
+
+  // ---- the same video from your own audio file: open the page with ?clip ----
+  // A file is read in the browser (it never leaves the device), a stretch of it is chosen (start and length, with handles
+  // on the waveform), a text is typed, and the video is recorded exactly as the page's own clip is.
+  if (/[?&]clip(&|=|$)/.test(location.search)) (function clipTool() {
+    var MAX = 180, MIN = 1, AC = window.AudioContext || window.webkitAudioContext;
+    document.documentElement.classList.add('cp-on');
+    var S = {
+      uk: {
+        title: 'Відео зі свого аудіо',
+        intro: 'Завантажте запис, виберіть фрагмент і напишіть текст: вийде таке саме квадратне відео, як зі сторінки радіо.',
+        drop: 'Перетягніть сюди аудіофайл або натисніть, щоб вибрати',
+        hint: 'MP3, WAV, FLAC, M4A, OGG. Файл не залишає ваш пристрій.',
+        reading: 'Читаємо файл…', readErr: 'Не вдалося прочитати цей файл. Спробуйте MP3, WAV або M4A.', other: 'Інший файл',
+        wave: 'Потягніть краї виділення, щоб обрізати; потягніть усередині або клацніть, щоб пересунути фрагмент.',
+        start: 'Початок, с', dur: 'Тривалість, с', end: 'Кінець, с',
+        text: 'Текст (назва або опис треку)', textPh: 'Автор — Назва твору',
+        prefill: 'Смужка хвиль заповнена з першого кадру (звук перед початком)',
+        play: 'Прослухати фрагмент', stop: 'Зупинити', make: 'Створити відео',
+        note: 'Відео записується в реальному часі: на 30 с відео треба 30 с очікування. Найдовше — {max} с. Не вимикайте екран і не залишайте сторінку.',
+        rec: 'Записуємо відео… ще {s} с', done: 'Готово.', download: 'Завантажити', share: 'Поділитися',
+        prev: 'Так виглядатиме перший кадр.', err: 'Не вдалося зробити відео на цьому пристрої.', total: 'Довжина файлу'
+      },
+      en: {
+        title: 'A video from your own audio',
+        intro: 'Upload a recording, choose a stretch of it and type a text: you get the same square video as on the radio page.',
+        drop: 'Drop an audio file here or click to choose',
+        hint: 'MP3, WAV, FLAC, M4A, OGG. The file never leaves your device.',
+        reading: 'Reading the file…', readErr: 'This file could not be read. Try MP3, WAV or M4A.', other: 'Another file',
+        wave: 'Drag the edges of the selection to trim; drag inside it or click to move the stretch.',
+        start: 'Start, s', dur: 'Length, s', end: 'End, s',
+        text: 'Text (title or description of the track)', textPh: 'Artist — Title of the work',
+        prefill: 'The waves are in the strip from the first frame (the sound before the start)',
+        play: 'Play the stretch', stop: 'Stop', make: 'Make the video',
+        note: 'The video is recorded in real time: 30 s of video takes 30 s of waiting. The longest is {max} s. Keep the screen on and stay on this page.',
+        rec: 'Recording the video… {s} s left', done: 'Done.', download: 'Download', share: 'Share',
+        prev: 'This is what the first frame will look like.', err: 'The video could not be made on this device.', total: 'File length'
+      }
+    };
+    function s(k, v) {
+      var str = (S[lang] && S[lang][k]) || S.en[k] || '';
+      if (v) Object.keys(v).forEach(function (x) { str = str.replace('{' + x + '}', v[x]); });
+      return str;
+    }
+    var root = document.createElement('div');
+    root.className = 'cp';
+    root.innerHTML =
+      '<div class="cp-left"><canvas id="cp-prev" width="' + CLIP_W + '" height="' + CLIP_H + '"></canvas><p class="ce-note" data-k="prev"></p></div>' +
+      '<div class="cp-right">' +
+        '<div class="cp-top"><h1 data-k="title"></h1><div class="lang" role="group" aria-label="Language / Мова">' +
+          '<button type="button" data-lang="en" lang="en">EN</button><button type="button" data-lang="uk" lang="uk">УКР</button></div></div>' +
+        '<p class="ce-note" data-k="intro"></p>' +
+        '<label class="cp-drop" id="cp-drop"><input type="file" id="cp-file" accept="audio/*,video/*" hidden><span data-k="drop"></span><small data-k="hint"></small></label>' +
+        '<p class="ce-note" id="cp-msg" role="status" hidden></p>' +
+        '<div id="cp-edit" hidden>' +
+          '<p class="cp-file"><b id="cp-name"></b> · <span id="cp-len"></span> <button type="button" class="next-more" id="cp-other" data-k="other"></button></p>' +
+          '<canvas class="cp-wave" id="cp-wave"></canvas>' +
+          '<p class="ce-note" data-k="wave"></p>' +
+          '<label class="ce-row"><span data-k="start"></span><input id="cp-start" type="number" min="0" step="0.1"></label>' +
+          '<label class="ce-row"><span data-k="dur"></span><input id="cp-dur" type="number" min="' + MIN + '" max="' + MAX + '" step="0.1"></label>' +
+          '<label class="ce-row"><span data-k="end"></span><input id="cp-end" type="number" readonly tabindex="-1"></label>' +
+          '<label class="cp-text"><span data-k="text"></span><textarea id="cp-title" rows="2" maxlength="200" data-ph="textPh"></textarea></label>' +
+          '<label class="ce-chk"><input type="checkbox" id="cp-pre" checked> <span data-k="prefill"></span></label>' +
+          '<div class="ce-actions"><button type="button" id="cp-play"></button><button type="button" class="ce-primary" id="cp-make"></button></div>' +
+          '<p class="ce-note" id="cp-note"></p>' +
+          '<div class="cp-result" id="cp-result" hidden><video id="cp-video" controls playsinline></video>' +
+            '<div class="ce-actions"><button type="button" id="cp-dl"></button><button type="button" class="ce-primary" id="cp-share"></button></div></div>' +
+        '</div>' +
+      '</div>';
+    document.body.insertBefore(root, document.body.firstChild);
+    function $(id) { return document.getElementById(id); }
+    var buf = null, fileName = '', start = 0, dur = 15, peaks = null, drag = null, busy = false, resultBlob = null, resultUrl = '';
+    var play = null, playCtx = null, playT0 = 0, prevTimer = null, strip = document.createElement('canvas');
+    var wcv = $('cp-wave'), pcv = $('cp-prev'), pg = pcv.getContext('2d');
+
+    function apply() {
+      root.querySelectorAll('[data-k]').forEach(function (el) { el.textContent = s(el.getAttribute('data-k')); });
+      root.querySelectorAll('[data-ph]').forEach(function (el) { el.placeholder = s(el.getAttribute('data-ph')); });
+      $('cp-note').textContent = s('note', { max: MAX });
+      $('cp-play').textContent = s(play ? 'stop' : 'play');
+      $('cp-make').textContent = s('make');
+      $('cp-dl').textContent = s('download'); $('cp-share').textContent = s('share');
+      root.querySelectorAll('.lang button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-lang') === lang)); });
+      document.title = s('title');
+    }
+    root.querySelectorAll('.lang button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        lang = b.getAttribute('data-lang');
+        try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}
+        applyLang();
+      });
+    });
+    onLangChange.push(apply);
+    function say(text) { var m = $('cp-msg'); m.hidden = !text; m.textContent = text || ''; }
+    function fmt(x) { return (Math.round(x * 10) / 10).toString(); }
+    function clock(x) { var m = Math.floor(x / 60), r = Math.round(x % 60); return m + ':' + (r < 10 ? '0' : '') + r; }
+    function titleText() { return ($('cp-title').value || '').replace(/\s+/g, ' ').trim() || fileName.replace(/\.[^.]+$/, '') || 'KCMD Radio'; }
+
+    // ---- the first frame of the video, as it will be ----
+    function drawPrev() {
+      var L = CLIP_LAYOUT, SW = Math.max(16, Math.round(L.strip.w)), SH = Math.max(16, Math.round(L.strip.h));
+      strip.width = SW; strip.height = SH;
+      var sg = strip.getContext('2d');
+      if (buf && $('cp-pre').checked) {
+        clipApi.prefill(buf, start, sg, { re: new Float32Array(FFT_N), im: new Float32Array(FFT_N), top: null }, SW, SH, L.speed, rgb(L.colors.accent));
+      }
+      clipApi.compose(pg, strip, titleText(), 0, L, null, dur);
+    }
+    function schedulePrev() { clearTimeout(prevTimer); prevTimer = setTimeout(drawPrev, 150); }
+
+    // ---- the waveform and the chosen stretch ----
+    function computePeaks() {
+      var n = 2000, per = buf.length / n, out = new Float32Array(n), chs = [];
+      for (var c = 0; c < buf.numberOfChannels; c++) chs.push(buf.getChannelData(c));
+      for (var i = 0; i < n; i++) {
+        var a = Math.floor(i * per), b = Math.max(a + 1, Math.floor((i + 1) * per)), m = 0;
+        for (var c2 = 0; c2 < chs.length; c2++) for (var j = a; j < b; j += Math.max(1, (b - a) >> 4)) { var v = Math.abs(chs[c2][j]); if (v > m) m = v; }
+        out[i] = m;
+      }
+      var top = Math.max.apply(null, out) || 1;
+      for (var k = 0; k < n; k++) out[k] = Math.pow(out[k] / top, 0.7);
+      return out;
+    }
+    function drawWave() {
+      if (!buf) return;
+      var dpr = window.devicePixelRatio || 1, w = Math.round(wcv.clientWidth * dpr), h = Math.round(wcv.clientHeight * dpr);
+      if (wcv.width !== w || wcv.height !== h) { wcv.width = w; wcv.height = h; }
+      var g = wcv.getContext('2d'), acc = cssVar('--accent');
+      g.clearRect(0, 0, w, h);
+      g.fillStyle = cssVar('--muted'); g.globalAlpha = 0.55;
+      for (var x = 0; x < w; x++) {
+        var bh = Math.max(1, peaks[Math.min(peaks.length - 1, Math.floor(x / w * peaks.length))] * h * 0.9);
+        g.fillRect(x, (h - bh) / 2, 1, bh);
+      }
+      var x0 = start / buf.duration * w, x1 = (start + dur) / buf.duration * w;
+      g.globalAlpha = 0.18; g.fillStyle = acc; g.fillRect(x0, 0, x1 - x0, h);
+      g.globalAlpha = 1; g.fillRect(x0 - 2 * dpr, 0, 4 * dpr, h); g.fillRect(x1 - 2 * dpr, 0, 4 * dpr, h);
+      if (play && playCtx) {
+        var ph = Math.min(dur, playCtx.currentTime - playT0), xp = (start + ph) / buf.duration * w;
+        g.fillStyle = cssVar('--text'); g.fillRect(xp - dpr, 0, 2 * dpr, h);
+      }
+    }
+    function setSel(st, d) {
+      d = Math.max(MIN, Math.min(d, MAX, buf.duration));
+      st = Math.max(0, Math.min(st, buf.duration - d));
+      start = st; dur = d;
+      var f = document.activeElement;
+      if (f !== $('cp-start')) $('cp-start').value = fmt(start);
+      if (f !== $('cp-dur')) $('cp-dur').value = fmt(dur);
+      $('cp-end').value = fmt(start + dur);
+      drawWave(); schedulePrev();
+    }
+    $('cp-start').addEventListener('input', function (e) { var v = Number(e.target.value); if (isFinite(v)) setSel(v, dur); });
+    $('cp-dur').addEventListener('input', function (e) { var v = Number(e.target.value); if (isFinite(v) && v > 0) setSel(start, v); });
+    $('cp-title').addEventListener('input', schedulePrev);
+    $('cp-pre').addEventListener('change', drawPrev);
+    wcv.addEventListener('pointerdown', function (e) {
+      if (!buf) return;
+      var r = wcv.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * buf.duration, tol = 12 / r.width * buf.duration, end = start + dur, mode;
+      if (Math.abs(x - start) < tol) mode = 'l'; else if (Math.abs(x - end) < tol) mode = 'r'; else mode = 'm';
+      if (mode === 'm' && !(x > start && x < end)) setSel(x - dur / 2, dur);   // a click outside: the stretch moves there
+      drag = { mode: mode, x0: e.clientX, start: start, dur: dur, w: r.width };
+      try { wcv.setPointerCapture(e.pointerId); } catch (x2) {}
+    });
+    wcv.addEventListener('pointermove', function (e) {
+      if (!drag) return;
+      var dx = (e.clientX - drag.x0) / drag.w * buf.duration;
+      if (drag.mode === 'm') setSel(drag.start + dx, drag.dur);
+      else if (drag.mode === 'r') setSel(drag.start, drag.dur + dx);
+      else {
+        var end = drag.start + drag.dur, ns = Math.max(0, Math.min(drag.start + dx, end - MIN, end - 0));
+        ns = Math.max(ns, end - MAX);
+        setSel(ns, end - ns);
+      }
+    });
+    function endDrag() { drag = null; }
+    wcv.addEventListener('pointerup', endDrag); wcv.addEventListener('pointercancel', endDrag);
+    window.addEventListener('resize', drawWave);
+
+    // ---- listening to the chosen stretch ----
+    function stopPlay() {
+      if (play) { try { play.onended = null; play.stop(); } catch (e) {} }
+      play = null; $('cp-play').textContent = s('play'); drawWave();
+    }
+    $('cp-play').addEventListener('click', function () {
+      if (!buf) return;
+      if (play) { stopPlay(); return; }
+      if (!playCtx) playCtx = new AC();
+      playCtx.resume();
+      var src = playCtx.createBufferSource();
+      src.buffer = buf; src.connect(playCtx.destination);
+      play = src; playT0 = playCtx.currentTime;
+      src.onended = stopPlay;
+      src.start(0, start, dur);
+      $('cp-play').textContent = s('stop');
+      (function tick() { if (play !== src) return; drawWave(); requestAnimationFrame(tick); })();
+    });
+
+    // ---- the file ----
+    function load(file) {
+      if (!file) return;
+      stopPlay(); say(s('reading'));
+      $('cp-edit').hidden = true;
+      var ac = new AC();
+      file.arrayBuffer().then(function (ab) {
+        return new Promise(function (res, rej) { var p = ac.decodeAudioData(ab, res, rej); if (p && p.then) p.then(res, rej); });
+      }).then(function (b) {
+        try { ac.close(); } catch (e) {}
+        buf = b; fileName = file.name; peaks = computePeaks();
+        $('cp-name').textContent = fileName; $('cp-len').textContent = s('total') + ' ' + clock(buf.duration);
+        $('cp-drop').hidden = true; $('cp-edit').hidden = false; say('');
+        if (!$('cp-title').value) $('cp-title').value = fileName.replace(/\.[^.]+$/, '').replace(/[_]+/g, ' ');
+        setSel(0, Math.min(15, buf.duration));
+      }, function () { try { ac.close(); } catch (e) {} say(s('readErr')); });
+    }
+    $('cp-file').addEventListener('change', function (e) { load(e.target.files && e.target.files[0]); e.target.value = ''; });
+    $('cp-other').addEventListener('click', function () { $('cp-file').click(); });
+    var drop = $('cp-drop');
+    ['dragenter', 'dragover'].forEach(function (ev) { document.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add('over'); }); });
+    ['dragleave', 'drop'].forEach(function (ev) { document.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove('over'); }); });
+    document.addEventListener('drop', function (e) { load(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]); });
+
+    // ---- making the video ----
+    function slug() {
+      var x = titleText().toLowerCase().replace(/[^a-z0-9а-яіїєґ]+/gi, '-').replace(/^-+|-+$/g, '').slice(0, 40);
+      return 'kcmd-radio' + (x ? '-' + x : '');
+    }
+    $('cp-make').addEventListener('click', function () {
+      if (busy || !buf) return;
+      stopPlay();
+      busy = true; $('cp-make').disabled = true; $('cp-result').hidden = true;
+      var ac = new AC(), lock = null, o = { start: start, secs: dur, noPrefill: !$('cp-pre').checked };
+      ac.resume();   // made inside the tap, so the phone lets it run
+      if (navigator.wakeLock && navigator.wakeLock.request) navigator.wakeLock.request('screen').then(function (l) { lock = l; }, function () {});
+      track('clip_file_start', { secs: Math.round(dur), lang: lang });
+      clipApi.fonts()
+        .then(function () { return clipApi.render(ac, buf, titleText(), function (left) { say(s('rec', { s: left })); }, o); })
+        .then(function (blob) {
+          if (resultUrl) URL.revokeObjectURL(resultUrl);
+          resultBlob = blob; resultUrl = URL.createObjectURL(blob);
+          $('cp-video').src = resultUrl; $('cp-result').hidden = false;
+          say(s('done'));
+          track('clip_file_ready', { type: blob.type, kb: Math.round(blob.size / 1024) });
+        })
+        .catch(function (e) { console.warn('[clip tool] ' + (e && e.message)); say(e && e.message === 'hidden' ? t('clipHidden') : s('err')); })
+        .then(function () { busy = false; $('cp-make').disabled = false; try { ac.close(); } catch (e) {} if (lock) { try { lock.release(); } catch (e) {} } });
+    });
+    function fileOf() {
+      var ext = /mp4/.test(resultBlob.type) ? 'mp4' : 'webm';
+      return new File([resultBlob], slug() + '.' + ext, { type: resultBlob.type });
+    }
+    $('cp-dl').addEventListener('click', function () {
+      if (!resultBlob) return;
+      var a = document.createElement('a'), f = fileOf();
+      a.href = resultUrl; a.download = f.name;
+      document.body.appendChild(a); a.click(); a.remove();
+    });
+    $('cp-share').addEventListener('click', function () {
+      if (!resultBlob) return;
+      var f = fileOf();
+      if (navigator.canShare && navigator.canShare({ files: [f] })) navigator.share({ files: [f], title: 'KCMD Radio' }).catch(function () {});
+      else $('cp-dl').click();
+    });
+
+    apply();
+    clipApi.fonts().then(drawPrev);
+    drawPrev();
   })();
 
   applyLang();
