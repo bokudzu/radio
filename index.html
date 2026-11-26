@@ -1010,7 +1010,7 @@
       artists: 'KCMD Radio artists',
       more: '<a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener">Take part</a>',
       chat: 'Chat', chatNote: 'Write to other listeners. Be kind to each other. Links are not posted in the chat.',
-      chatName: 'Your name', chatMsg: 'Message', chatSend: 'Send', chatEmpty: 'Quiet so far. Write the first message.',
+      chatOnAir: 'Comment written while on air:', chatName: 'Your name', chatMsg: 'Message', chatSend: 'Send', chatEmpty: 'Quiet so far. Write the first message.',
       chatNeedName: 'Write your name first.', chatSlow: 'Wait a few seconds and try again.', chatLinks: 'Links are not posted in the chat.',
       chatErr: 'The message could not be sent. Try again.', chatHide: 'Hide', chatSecret: 'Moderator password:',
       chatOff: 'The chat is closed for now.',
@@ -1064,7 +1064,7 @@
       artists: 'Артист_ки KCMD Radio',
       more: '<a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener">Долучитися</a>',
       chat: 'Чат', chatNote: 'Напишіть іншим слухач_кам. Будьмо уважні одне до одного. Посилання в чаті не публікуються.',
-      chatName: 'Ваше імʼя', chatMsg: 'Повідомлення', chatSend: 'Надіслати', chatEmpty: 'Поки що тихо. Напишіть перше повідомлення.',
+      chatOnAir: 'Коментар написано, коли в ефірі звучало:', chatName: 'Ваше імʼя', chatMsg: 'Повідомлення', chatSend: 'Надіслати', chatEmpty: 'Поки що тихо. Напишіть перше повідомлення.',
       chatNeedName: 'Спершу напишіть своє імʼя.', chatSlow: 'Зачекайте кілька секунд і спробуйте ще раз.', chatLinks: 'Посилання в чаті не публікуються.',
       chatErr: 'Не вдалося надіслати. Спробуйте ще раз.', chatHide: 'Приховати', chatSecret: 'Пароль модератор_ки:',
       chatOff: 'Чат зараз закритий.',
@@ -2783,7 +2783,7 @@
         return '<li><span class="chat-who">' + esc(m.name) + '</span>' +
           '<span class="chat-body">' + esc(m.body) + '</span>' +
           '<time class="chat-time" datetime="' + esc(m.created_at) + '">' + esc(when(new Date(m.created_at))) + '</time>' +
-          (m.track ? '<span class="chat-track" title="' + esc(m.track) + '">♪ ' + esc(m.track) + '</span>' : '') +
+          (m.track ? '<span class="chat-track" title="' + esc(t('chatOnAir') + ' ' + m.track) + '">♪ ' + esc(m.track) + '</span>' : '') +
           (EDIT ? '<button type="button" class="chat-hide" data-id="' + m.id + '">' + esc(t('chatHide')) + '</button>' : '') +
           '</li>';
       }).join('') : '<li class="chat-empty">' + esc(t('chatEmpty')) + '</li>';
