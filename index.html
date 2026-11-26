@@ -434,6 +434,11 @@
   }
   .links-tg a:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
   .links-tg svg { width: 1rem; height: 1rem; flex: none; }
+  .links-social { display: flex; gap: 0.35rem; margin-left: auto; }
+  .links-social a { display: inline-flex; padding: 0.35rem; margin: -0.35rem 0; border-radius: 999px; color: var(--muted); transition: color 0.15s; }
+  .links-social a:hover, .links-social a:focus-visible { color: var(--accent); }
+  .links-social svg { width: 1.3rem; height: 1.3rem; }
+  @media (max-width: 34rem) { ul.links { column-gap: 1.25rem; } .links-social { flex-basis: 100%; margin-left: -0.35rem; gap: 0.6rem; } }
   .links {
     display: flex;
     flex-wrap: wrap;
@@ -848,10 +853,14 @@
   <p class="tacet-note" data-i18n-html="tacetNote">Whenever there is an air raid alert in Kyiv, all V2in channels fall silent.</p>
 
   <ul class="links">
-    <li><a href="https://v2in.stream/" target="_blank" rel="noopener" data-i18n="linkListen">Listen to all V2in channels</a></li>
+    <li><a href="https://v2in.stream/" target="_blank" rel="noopener" data-i18n="linkListen">V2in</a></li>
     <li><a href="https://linktr.ee/radiotallinn1965" target="_blank" rel="noopener" data-i18n="linkLinktree">Radio Tallinn 1965</a></li>
-    <li><a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener" data-i18n="linkPropose">Take part</a></li>
-    <li class="links-tg"><a href="https://t.me/kcmdradio" target="_blank" rel="noopener" title="Telegram"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.5 4.2 2.9 11.4c-.9.4-.9 1.5.1 1.8l4.6 1.4 1.8 5.5c.2.7 1.1.9 1.6.4l2.6-2.5 4.8 3.5c.7.5 1.6.1 1.8-.7l3.1-14.7c.2-.9-.7-1.6-1.6-1.2zM9.6 14.2l-.5 3.9-1.3-4.1 9.6-6.1-7.8 6.3z" fill="currentColor"/></svg><span data-i18n="linkTelegram">Chat</span></a></li>
+    <li><a href="https://docs.google.com/forms/d/e/1FAIpQLSeDAd-L4SfrI4BRgUGhQ_05dVGWW0oImP10-Czr_XLywVNcKA/viewform" target="_blank" rel="noopener" data-i18n="linkPropose">Join</a></li>
+    <li class="links-social">
+      <a href="https://instagram.com/newmusicdays" target="_blank" rel="noopener" title="Instagram @newmusicdays" aria-label="Instagram @newmusicdays"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17.3" cy="6.7" r="1.1" fill="currentColor"/></svg></a>
+      <a href="https://fb.com/newmusicdays" target="_blank" rel="noopener" title="Facebook @newmusicdays" aria-label="Facebook @newmusicdays"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.6 21v-7.6h2.6l.4-3h-3V8.6c0-.9.3-1.5 1.5-1.5h1.6V4.4c-.3 0-1.2-.1-2.3-.1-2.3 0-3.8 1.4-3.8 3.9v2.2H8v3h2.6V21z" fill="currentColor"/></svg></a>
+      <a href="https://t.me/newmusicdays" target="_blank" rel="noopener" title="Telegram @newmusicdays" aria-label="Telegram @newmusicdays"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.5 4.2 2.9 11.4c-.9.4-.9 1.5.1 1.8l4.6 1.4 1.8 5.5c.2.7 1.1.9 1.6.4l2.6-2.5 4.8 3.5c.7.5 1.6.1 1.8-.7l3.1-14.7c.2-.9-.7-1.6-1.6-1.2zM9.6 14.2l-.5 3.9-1.3-4.1 9.6-6.1-7.8 6.3z" fill="currentColor"/></svg></a>
+    </li>
   </ul>
 
 
@@ -986,7 +995,7 @@
       silenceAt: 'Air raid alert in Kyiv since {t} Kyiv time.',
       silence: 'Air raid alert in Kyiv.',
       silenceRest: ' Every channel is silent until it ends, then a 30-second signal by a Ukrainian artist breaks the silence and each channel returns to its programme.',
-      linkTelegram: 'Chat', linkListen: 'Listen to all V2in channels', linkPropose: 'Take part', linkLinktree: 'Radio Tallinn 1965',
+      linkTelegram: 'Chat', linkListen: 'V2in', linkPropose: 'Join', linkLinktree: 'Radio Tallinn 1965',
       timetable: 'Timetable', next: 'Next', onNow: 'Now', subscribe: 'Subscribe', subGoogle: 'Google Calendar', subscribeIcal: 'Apple / Outlook (iCal)', descMore: 'Read more', descLess: 'Hide', rotation: 'In rotation', rotIntro: 'Between broadcasts, these works play on the channel in random order.', rotAlso: 'Also in rotation: experimental recordings sent in by artists, and generative music.', pastShow: 'Show past broadcasts', pastHide: 'Hide past broadcasts',
       tzNote: 'Times are shown in your time zone.', tzNoteZone: 'Times are shown in your time zone ({place}).',
       ttIntro: 'Premieres and programmes made for the radio. Between them, the channel plays the KCMD archive, recordings sent in by artists and generative music. New broadcasts will be added over the coming days.',
@@ -1040,7 +1049,7 @@
       silenceAt: 'Повітряна тривога в Києві з {t} за київським часом.',
       silence: 'Повітряна тривога в Києві.',
       silenceRest: ' Усі канали мовчать до відбою. Після відбою тишу на всіх каналах порушує 30-секундний сигнал, створений українськими артист_ками, а потім кожен канал повертається до своєї програми.',
-      linkTelegram: 'Чат', linkListen: 'Слухати всі канали V2in', linkPropose: 'Долучитися', linkLinktree: 'Radio Tallinn 1965',
+      linkTelegram: 'Чат', linkListen: 'V2in', linkPropose: 'Долучитися', linkLinktree: 'Radio Tallinn 1965',
       timetable: 'Розклад', next: 'Наступний етер', onNow: 'зараз', subscribe: 'Підписатися', subGoogle: 'Google Calendar', subscribeIcal: 'Apple / Outlook (iCal)', descMore: 'Детальніше', descLess: 'Згорнути', rotation: 'У ротації', rotIntro: 'Між етерами ці твори звучать на каналі у випадковому порядку.', rotAlso: 'Також у ротації — експериментальні записи, надіслані артист_ками, і генеративна музика.', pastShow: 'Показати минулі етери', pastHide: 'Сховати минулі етери',
       tzNote: 'Час показано у вашому часовому поясі.', tzNoteZone: 'Час показано у вашому часовому поясі ({place}).',
       ttIntro: 'Премʼєри й програми, створені для радіо. Між ними на каналі звучать архів KCMD, записи, надіслані артист_ками, і генеративна музика. Нові етери додаватимуться впродовж наступних днів.',
