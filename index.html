@@ -1088,7 +1088,7 @@
   // A panel at the bottom copies or shares the log.
   // also switched on by the Debug button at the foot of the page: kept in this browser until switched off
   var DBG_ON_KEY = 'kcmd-radio-debug-on';
-  var PAGE_VERSION = '2026-11-24 release-15';
+  var PAGE_VERSION = '2026-11-26 release-16 (start buffer 4 s)';
   var DEBUG = /[?&]debug(\b|=|&|$)/.test(location.search);
   try { if (localStorage.getItem(DBG_ON_KEY) === '1') DEBUG = true; } catch (e) {}
   (function () {
@@ -1175,7 +1175,7 @@
 
   // ---- the live engine for phones (MSE): the page downloads the stream itself and feeds the player ----
   // Why: with a plain <audio src> Android's Chrome keeps only ~2.5 s of sound in hand, and a network switch (Wi-Fi to
-  // mobile data, one cell to the next) breaks the connection without any error. In the background a stuck player
+  // mobile data, one cell to the next) breaks the connection without any error. The first sound comes after 4 s in hand. In the background a stuck player
   // can't be restarted, so the radio went quiet until the listener came back (seen in the debug log).
   // Here the player is never restarted, only the download is: when no data has come for 5 s it is opened again,
   // in the background too, and the new data joins the old seamlessly. The player keeps 10 s of sound in hand;
@@ -1184,7 +1184,7 @@
   // A new connection may begin with a few seconds the old one already brought (servers send a burst on connect):
   // the page finds where the old data ended and drops the repeat, so nothing is heard twice.
   // ?engine=mse / ?engine=src force one or the other.
-  var LIVE_MIN = 10, LIVE_MAX = 15, LIVE_STEP = 2.5, LIVE_NODATA = 3500, LIVE_CONNECT_FIRST = 5000, LIVE_CONNECT_MAX = 12000;
+  var LIVE_MIN = 4, LIVE_MAX = 15, LIVE_STEP = 2.5, LIVE_NODATA = 3500, LIVE_CONNECT_FIRST = 5000, LIVE_CONNECT_MAX = 12000;
   var MSE_OFF_KEY = 'kcmd-radio-mse-off';
   // Some phones (Android's battery saver, background-data limits) stop Chrome's downloads in the background. The live
   // engine notices it (downloads failing only while the page is away, working at once when it's back) and shows the
